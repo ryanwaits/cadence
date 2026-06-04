@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>secondlayer-video · design playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=Public+Sans:wght@400;500;600&family=Caveat:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  /* ── Brand tokens (mirror src/brand/tokens.ts) ───────────────────────── */
+  :root {
+    --ink: #111111; --paper: #fafafa; --hairline: #e5e5e5;
+    --signal: #2563eb; --signal-soft: rgba(37,99,235,0.10);
+    --gold: #c08a2e; --gold-soft: rgba(192,138,46,0.16);
+    --title-white: #f7f6f2; --success: #22c55e;
+    --code-bg: #f7f5ee;
+    --kw: #0e9488; --nw: #8250df; --str: #c2410c; --num: #7c3aed; --fn: #2563eb; --punct: #5b6470;
+    --float-shadow: 0 30px 80px rgba(30,41,59,0.28), 0 2px 6px rgba(30,41,59,0.12);
+    --mono: "Fira Code", monospace; --display: "Sora", sans-serif; --body: "Public Sans", sans-serif; --note: "Caveat", cursive;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: var(--body); background: #1a1f29; color: var(--ink); }
+
+  /* The stage = a painting backdrop, like a real beat. Swap the src to try others. */
+  .stage {
+    position: relative; width: 1280px; height: 720px; margin: 32px auto; overflow: hidden;
+    border-radius: 10px; background: #cdd5dd;
+  }
+  .stage > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .haze { position: absolute; inset: 0; background:
+    radial-gradient(120% 90% at 50% 16%, rgba(250,248,242,0.55), rgba(250,248,242,0) 70%); }
+  .layer { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-content: center; padding: 0 70px; }
+
+  .eyebrow { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); text-align:center; }
+  .headline { font-family: var(--display); font-weight: 700; letter-spacing: -.025em; font-size: 48px; color: var(--title-white); text-align:center; text-shadow: 0 1px 2px rgba(30,41,59,.24), 0 6px 34px rgba(30,41,59,.42); }
+  .titleblock { position:absolute; top: 9%; left:0; right:0; }
+
+  /* ── Code window (mirror CodeWindow.tsx) ─────────────────────────────── */
+  .win { border-radius: 20px; background: color-mix(in srgb, var(--code-bg) 97%, transparent); box-shadow: var(--float-shadow); border: 1px solid rgba(255,255,255,.55); overflow: hidden; }
+  .win .bar { height: 48px; display:flex; align-items:center; gap: 9px; padding: 0 20px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .bar .name { flex:1; text-align:center; font-family: var(--mono); font-size: 13px; color: rgba(0,0,0,.34); margin-right: 50px; }
+  .code { font-family: var(--mono); font-size: 19px; line-height: 1.7; padding: 22px 32px 30px; white-space: pre; color: var(--ink); }
+  .kw{color:var(--kw)} .nw{color:var(--nw)} .str{color:var(--str)} .num{color:var(--num)} .fn{color:var(--fn)} .pu{color:var(--punct)}
+
+  /* ── A panel (mirror PanelCard + EventStream) ────────────────────────── */
+  .panel { border-radius: 20px; background: rgba(252,251,247,.95); box-shadow: var(--float-shadow); border: 1px solid rgba(255,255,255,.6); overflow:hidden; font-family: var(--mono); }
+  .panel .head { display:flex; align-items:center; justify-content:space-between; padding: 18px 22px; border-bottom: 1px solid var(--hairline); }
+  .panel .head .l { font-weight: 600; font-size: 16px; }
+  .panel .head .sub { color: rgba(0,0,0,.55); font-size: 14px; margin-left: 8px; }
+  .panel .head .live { color: #16a34a; font-family: var(--note); font-size: 16px; }
+  .row { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; margin: 3px 8px; border-radius: 8px; }
+  .row:nth-child(odd){ background: rgba(0,0,0,.035); }
+  .tok { font-size: 11px; font-weight: 700; color: var(--signal); background: var(--signal-soft); padding: 3px 7px; border-radius: 6px; }
+  .amt { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .caption { text-align:center; color: rgba(0,0,0,.5); font-family: var(--body); padding: 12px; }
+  h2.lbl { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing:.08em; color:#8a93a0; max-width:1280px; margin: 28px auto 4px; }
+</style>
+</head>
+<body>
+  <!--
+    DESIGN PLAYGROUND — iterate code-window + panel looks here, fast, no Remotion.
+    Duplicate a .stage block and vary it to A/B versions. Drive with:
+      /frontend-design  (greenfield variants)   ·   /impeccable live  (pick + regenerate)
+    When a version wins, port the markup/colors into the matching React component:
+      code window → src/components/CodeWindow.tsx + src/code/highlight.ts
+      panels      → src/components/panels/<Name>.tsx  (then register in panels/index.tsx + schema)
+  -->
+
+  <h2 class="lbl">Variant A — current</h2>
+  <div class="stage">
+    <img src="../public/backgrounds/pennybacker.png" alt="" />
+    <div class="haze"></div>
+    <div class="titleblock">
+      <div class="eyebrow">new in sdk 6.3</div>
+      <div class="headline">Every event, decoded.</div>
+    </div>
+    <div class="layer">
+      <div class="win">
+        <div class="bar"><span class="dot" style="background:#f6645f"></span><span class="dot" style="background:#f7bd45"></span><span class="dot" style="background:#2fc94e"></span><span class="name">events.ts</span></div>
+<div class="code"><span class="kw">const</span> { events } <span class="pu">=</span> <span class="kw">await</span> sl.<span class="fn">index</span>.<span class="fn">events</span>({
+  eventType: <span class="str">"ft_transfer"</span>,
+  limit: <span class="num">50</span>,
+});</div>
+      </div>
+      <div class="panel" style="align-self:center">
+        <div class="head"><div><span class="l">index.events</span><span class="sub">ft_transfer</span></div><span class="live">streaming…</span></div>
+        <div class="row"><div><span class="tok">sBTC</span> &nbsp;→ SP2J6…WVEF</div><span class="amt">1,200.00</span></div>
+        <div class="row"><div><span class="tok">USDA</span> &nbsp;→ SP3K9…X1A0</div><span class="amt">48.50</span></div>
+        <div class="row"><div><span class="tok">ALEX</span> &nbsp;→ SPF8M…7QQC</div><span class="amt">9,000.00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variant B — duplicate the block above and change one thing (theme, radius, density, a new panel). -->
+</body>
+</html>
