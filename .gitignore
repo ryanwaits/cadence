@@ -1,0 +1,14 @@
+node_modules/
+out/
+.next/
+*.log
+.DS_Store
+.env
+.env.*
+
+# Generated art candidates are throwaway; chosen heroes are committed under public/backgrounds/
+public/backgrounds/_candidates/
+themes/
+
+# retired cloud render service
+.wrangler/
