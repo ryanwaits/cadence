@@ -8,8 +8,25 @@
  */
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { manifestFromChangelogText, manifestFromReleaseBody } from "../src/adapters";
+
+/** Warn (don't fail) if a sibling package.json version disagrees with the changelog's. */
+function warnIfStale(changelogPath: string, changelogVersion: string) {
+  if (!changelogVersion) return;
+  try {
+    const pkgPath = join(dirname(changelogPath), "package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    const pkgVersion = String(pkg.version ?? "").replace(/^v/i, "").trim();
+    if (pkgVersion && pkgVersion !== changelogVersion) {
+      console.error(
+        `warning: ${pkgPath} is at ${pkgVersion} but the changelog's top entry is ${changelogVersion} — the changelog may be stale.`
+      );
+    }
+  } catch {
+    // no sibling package.json / unreadable — nothing to compare against
+  }
+}
 
 const args = process.argv.slice(2);
 const flag = (n: string) => {
@@ -44,6 +61,7 @@ if (release) {
 } else if (changelog) {
   const text = readFileSync(changelog, "utf8");
   manifest = manifestFromChangelogText(text, { product: flag("--product") ?? "package", install });
+  warnIfStale(changelog, manifest.version);
 } else {
   console.error("usage: changes.ts --release <owner/name> [--tag vX] | --changelog <path> [--product X] [--install '...']");
   process.exit(1);

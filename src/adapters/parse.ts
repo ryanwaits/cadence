@@ -3,6 +3,8 @@ import type { Feature } from "./types";
 /** Strip list markers, PR/commit refs, emoji, markdown links, and bold to plain text. */
 export function cleanBullet(line: string): string {
   let s = line.replace(/^\s*[-*]\s+/, "");
+  // changesets prefixes entries with the originating commit hash: "1a3a80d: …"
+  s = s.replace(/^[0-9a-f]{7,40}:\s+/i, "");
   s = s.replace(/\*\*/g, "");
   s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"); // [text](url) → text
   // strip trailing "(#123)" / "(abc1234)" refs, possibly repeated
