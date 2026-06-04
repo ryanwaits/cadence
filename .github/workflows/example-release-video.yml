@@ -1,0 +1,33 @@
+# Example: render a changelog video automatically when you publish a release.
+# In YOUR repo, replace `uses: ./` with `uses: <owner>/<this-repo>@v1`.
+name: Changelog video on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  video:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: video
+        uses: ./ # consumer repos: uses: <owner>/cadence@v1
+        with:
+          # repo + tag default to the release that triggered this run
+          template: changelog-reel
+          format: "16x9"
+          install: "npm i your-package" # the real install line for your closer
+          background: "gradient:#312e81,#0b1120"
+
+      # Keep the MP4 as a build artifact (expires) …
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cadence
+          path: ${{ steps.video.outputs.video }}
+
+      # … and/or attach it to the release permanently.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.video.outputs.video }}" --repo "${{ github.repository }}"

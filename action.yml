@@ -1,0 +1,66 @@
+name: "Cadence"
+description: "Render a changelog / announcement video from a GitHub release — no LLM, no external services."
+branding:
+  icon: "film"
+  color: "purple"
+
+inputs:
+  repo:
+    description: "owner/name to read the release from (defaults to the current repo)"
+    required: false
+    default: "${{ github.repository }}"
+  tag:
+    description: "release tag (defaults to the release that triggered the workflow)"
+    required: false
+    default: "${{ github.event.release.tag_name }}"
+  template:
+    description: "changelog-reel | feature-launch | milestone"
+    required: false
+    default: "changelog-reel"
+  format:
+    description: "16x9 | 1x1 | 9x16"
+    required: false
+    default: "16x9"
+  install:
+    description: "real install command shown in the closer, e.g. 'npm i your-pkg'"
+    required: false
+    default: ""
+  background:
+    description: "gradient:#a,#b | solid:#hex | image:file.png"
+    required: false
+    default: ""
+  theme-file:
+    description: "path to a theme JSON (from `cli theme ...`) for brand colors"
+    required: false
+    default: ""
+
+outputs:
+  video:
+    description: "Path to the rendered MP4 in the workspace"
+    value: ${{ steps.render.outputs.video }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v2
+    - name: Install engine deps
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: bun install --frozen-lockfile || bun install
+    - name: Render
+      id: render
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        args=(--release "${{ inputs.repo }}" --template "${{ inputs.template }}" --format "${{ inputs.format }}")
+        [ -n "${{ inputs.tag }}" ] && args+=(--tag "${{ inputs.tag }}")
+        [ -n "${{ inputs.install }}" ] && args+=(--install "${{ inputs.install }}")
+        [ -n "${{ inputs.background }}" ] && args+=(--background "${{ inputs.background }}")
+        [ -n "${{ inputs.theme-file }}" ] && args+=(--theme-file "${{ inputs.theme-file }}")
+        bun run cli create "${args[@]}"
+        mp4=$(ls -t out/*.mp4 | head -1)
+        cp "$mp4" "$GITHUB_WORKSPACE/cadence.mp4"
+        echo "video=$GITHUB_WORKSPACE/cadence.mp4" >> "$GITHUB_OUTPUT"
