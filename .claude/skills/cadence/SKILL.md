@@ -109,10 +109,11 @@ Exact fields per kind: `references/authoring.md`.
   consistent procedural default).
 
 ## Brand it (theme)
-A video reads its colors from a theme. To match a user's brand:
-- **From a URL/hex:** `cadence study --from-url https://acme.dev --name acme` (or `--accent "#10b981"`) → writes `themes/acme.json` (+ a `design.md`). Render with `cadence create <beats> --theme-file themes/acme.json`.
-- **From a screenshot:** if the user hands you an image (a wallpaper, a brand shot, a UI), read its palette yourself and write a `themes/<name>.json` matching the `ThemeConfig` shape — the dominant brand color becomes `signalBlue`. Copy a built-in theme JSON as the template (`cadence themes` lists them). Then render with `--theme-file`.
-- Or use a built-in named theme: `cadence create <beats> --theme <name>` (`cadence themes` to list).
+A video reads its colors, fonts, and code styling from a theme. To match a brand:
+- **Capture the project's brand in `<project>/.cadence/theme.json`** (a `ThemeConfig`). cadence **auto-discovers** it when run against that project (it walks up from the beats file), so no `--theme-file` is needed — and no brand-specific files land in the engine. Scaffold with `cadence study --accent "#10b981" --out <project>/.cadence/theme.json` (or `--from-url <url>`), then hand-tune. This is the preferred way to brand a video.
+- **Match the project's docs code snippets.** The theme styles the code window too — set `fonts.mono`, the `codeTheme` syntax colors + `codeBg` to the project's docs highlighter, and `codeChrome: "minimal"` for a chromeless, docs-style window (default `"window"` is the floating editor with traffic-light dots). Verify with `cadence storyboard <beats>` and compare to the real docs so on-screen code matches.
+- **From a screenshot / URL:** read the palette yourself and write the `ThemeConfig` — the dominant brand color becomes `signalBlue`; copy a built-in as a template (`cadence themes` lists them).
+- Or a built-in named theme: `cadence create <beats> --theme <name>`. Precedence: `--theme-file` > `--theme` > the project's `.cadence/theme.json` > default.
 
 ## Render
 ```bash
