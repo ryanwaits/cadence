@@ -1,28 +1,52 @@
 /**
- * Theme resolution shared by render / storyboard. Precedence:
- *   explicit --theme-file  >  --theme <name>  >  a project-local
- *   `.cadence/theme.json` (discovered near the beats file)  >  default.
+ * Project-local `.cadence/` resolution shared by render / storyboard / make.
  *
- * The project-local convention lets a repo capture its own brand (colors, mono
- * font, code syntax theme, code-window chrome) in `<project>/.cadence/theme.json`
- * — cadence picks it up automatically when run against that project, with no
- * brand-specific files living in the cadence engine itself.
+ * A repo captures its own cadence setup under `<project>/.cadence/`:
+ *   - `theme.json` — brand (colors, mono font, code syntax theme, code chrome)
+ * cadence discovers it automatically when run against the project, and writes
+ * **outputs alongside it** (`<project>/.cadence/out/`) so renders are anchored to
+ * the project, not the current directory. No project-specific files live in the
+ * cadence engine itself.
+ *
+ * Theme precedence:  --theme-file  >  --theme <name>  >  .cadence/theme.json  >  default.
+ * Output dir:        --out <dir>   >  <project>/.cadence/out               >  ./out.
  */
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { THEMES } from "../src/theme";
 
-/** Walk up from `start` (max 6 levels) for a `.cadence/theme.json`. */
-export function discoverProjectTheme(start: string): string | undefined {
+/** Walk up from `start` (max 6 levels) for a `.cadence` directory. */
+export function findCadenceDir(start: string): string | undefined {
   let dir = resolve(start);
   for (let i = 0; i < 6; i++) {
-    const p = join(dir, ".cadence", "theme.json");
+    const p = join(dir, ".cadence");
     if (existsSync(p)) return p;
     const parent = dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
   return undefined;
+}
+
+/** A project's `.cadence/theme.json`, if one exists near `start`. */
+export function discoverProjectTheme(start: string): string | undefined {
+  const cad = findCadenceDir(start);
+  if (!cad) return undefined;
+  const p = join(cad, "theme.json");
+  return existsSync(p) ? p : undefined;
+}
+
+/**
+ * Where renders are written. Precedence: an explicit `--out <dir>` > a project's
+ * `<project>/.cadence/out` (so outputs are anchored to the project regardless of
+ * cwd) > `./out`. `beatsFile` (when present) anchors discovery near the beats
+ * file; otherwise discovery starts from the current directory.
+ */
+export function resolveOutDir(opts: { outFlag?: string; beatsFile?: string }): string {
+  if (opts.outFlag) return resolve(opts.outFlag);
+  const start = opts.beatsFile ? dirname(resolve(opts.beatsFile)) : process.cwd();
+  const cad = findCadenceDir(start);
+  return cad ? join(cad, "out") : "out";
 }
 
 /**

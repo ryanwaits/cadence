@@ -47,7 +47,8 @@ utilities:
   templates  list available templates
   themes     list available themes
 
-flags shared by create/render/redesign: --format 16x9|1x1|9x16, --theme <name>, --theme-file <path>, --frame <n>
+flags shared by create/render/redesign: --format 16x9|1x1|9x16, --theme <name>, --theme-file <path>, --frame <n>, --out <dir>
+outputs: written to <project>/.cadence/out when run against a repo with a .cadence/ dir, else ./out (override with --out)
 preview before rendering: cadence storyboard <beats>  ·  cadence create … --dry-run  (plan + one still per beat, no MP4)`;
 
 if (!sub || sub === "help" || sub === "--help") {

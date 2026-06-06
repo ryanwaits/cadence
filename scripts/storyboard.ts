@@ -18,7 +18,7 @@ import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboa
 import { auditBeats, ICON, rankFindings } from "./_audit";
 import { beatTimings, FPS, loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
-import { resolveTheme } from "./_theme";
+import { resolveOutDir, resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -78,8 +78,9 @@ const env: NodeJS.ProcessEnv = { ...process.env };
 if (theme) env.REMOTION_VIDEO_THEME = theme;
 if (themeFile) env.REMOTION_VIDEO_THEME_JSON = readFileSync(themeFile, "utf8");
 
-mkdirSync("out", { recursive: true });
-const tmp = join("out", `.sb-${name}`);
+const outDir = resolveOutDir({ outFlag: getFlag("--out"), beatsFile: file });
+mkdirSync(outDir, { recursive: true });
+const tmp = join(outDir, `.sb-${name}`);
 mkdirSync(tmp, { recursive: true });
 const propsPath = join(tmp, "props.json");
 writeFileSync(propsPath, JSON.stringify(parsed));
@@ -110,7 +111,7 @@ const sheetProps: StoryboardProps = { format: fmt, name, cells };
 const sheetPropsPath = join(tmp, "sheet.json");
 writeFileSync(sheetPropsPath, JSON.stringify(sheetProps));
 
-const outPng = join("out", `${name}.storyboard.png`);
+const outPng = join(outDir, `${name}.storyboard.png`);
 const sheet = spawnSync(bin, ["still", entry, "Storyboard", outPng, `--props=${sheetPropsPath}`], {
   stdio: ["ignore", "ignore", "inherit"],
   env,

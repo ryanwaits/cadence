@@ -12,7 +12,7 @@ import { basename, join, resolve } from "node:path";
 import { type Format } from "../src/schema/beats";
 import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
-import { resolveTheme } from "./_theme";
+import { resolveOutDir, resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -39,16 +39,17 @@ const env: NodeJS.ProcessEnv = { ...process.env };
 if (theme) env.REMOTION_VIDEO_THEME = theme;
 if (themeFile) env.REMOTION_VIDEO_THEME_JSON = readFileSync(resolve(themeFile), "utf8");
 
-mkdirSync("out", { recursive: true });
+const outDir = resolveOutDir({ outFlag: getFlag("--out"), beatsFile: file });
+mkdirSync(outDir, { recursive: true });
 const name = basename(file).replace(/\.beats\.(ts|js|json)$/, "").replace(/\.(ts|js|json)$/, "");
-const propsPath = join("out", `.props-${name}-${parsed.format}.json`);
+const propsPath = join(outDir, `.props-${name}-${parsed.format}.json`);
 writeFileSync(propsPath, JSON.stringify(parsed));
 
 const bin = binPath("remotion");
 const common = [pkgFile("src/index.ts"), "Changelog"];
 const suffix = theme && theme !== "default" ? `-${theme}` : "";
 const res = frame
-  ? spawnSync(bin, ["still", ...common, join("out", `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`], { stdio: "inherit", env })
-  : spawnSync(bin, ["render", ...common, join("out", `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg"], { stdio: "inherit", env });
+  ? spawnSync(bin, ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`], { stdio: "inherit", env })
+  : spawnSync(bin, ["render", ...common, join(outDir, `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg"], { stdio: "inherit", env });
 
 process.exit(res.status ?? 0);

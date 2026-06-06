@@ -13,6 +13,7 @@ import { manifestFromChangelogText, manifestFromReleaseBody } from "../src/adapt
 import type { BackgroundSpec } from "../src/templates";
 import { TEMPLATES } from "../src/templates";
 import { binPath, pkgFile } from "./_pkg";
+import { resolveOutDir } from "./_theme";
 
 const args = process.argv.slice(2);
 const flag = (n: string) => {
@@ -68,18 +69,21 @@ const beats = template(manifest, {
 console.error(`· ${manifest.product} ${manifest.version}: ${manifest.features.length} features${manifest.dropped ? ` (+${manifest.dropped} dropped)` : ""} → ${templateName}`);
 
 // 3. Write beats JSON, then render — or, with --dry-run, storyboard it (preview
-// sheet + plan, no MP4).
-mkdirSync("out", { recursive: true });
-const jsonPath = join("out", `make-${manifest.product}.beats.json`);
+// sheet + plan, no MP4). Outputs go to the project's .cadence/out (or --out).
+const outDir = resolveOutDir({ outFlag: flag("--out") });
+mkdirSync(outDir, { recursive: true });
+const jsonPath = join(outDir, `make-${manifest.product}.beats.json`);
 writeFileSync(jsonPath, JSON.stringify(beats));
+// Pin the child to the same out dir so beats + renders colocate.
+const outArgs = ["--out", outDir];
 
 if (args.includes("--dry-run")) {
   // repo → storyboard. --frame is meaningless here; --theme-file is supported.
   const passthru = ["--format", "--theme", "--theme-file"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
-  const res = spawnSync(binPath("tsx"), [pkgFile("scripts/storyboard.ts"), jsonPath, ...passthru], { stdio: "inherit" });
+  const res = spawnSync(binPath("tsx"), [pkgFile("scripts/storyboard.ts"), jsonPath, ...passthru, ...outArgs], { stdio: "inherit" });
   process.exit(res.status ?? 0);
 }
 
 const passthru = ["--format", "--theme", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
-const res = spawnSync(binPath("tsx"), [pkgFile("scripts/render.ts"), jsonPath, ...passthru], { stdio: "inherit" });
+const res = spawnSync(binPath("tsx"), [pkgFile("scripts/render.ts"), jsonPath, ...passthru, ...outArgs], { stdio: "inherit" });
 process.exit(res.status ?? 0);
