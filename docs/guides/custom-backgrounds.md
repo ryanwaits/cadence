@@ -37,6 +37,18 @@ dir at render so both your art and any built-in assets resolve:
 
 Then `cadence storyboard <beats>` / `cadence create <beats>` as usual.
 
+## Match your brand
+
+`--brand` tints the art toward your project's `.cadence/theme.json` palette (its
+accent + paper tone), so backdrops sit in the same color family as the video:
+
+```bash
+cadence art --prompt "a calm braided river delta at dawn" --name flow --brand
+```
+
+It appends a last, explicit palette nudge (so it wins over the base style). For
+full color control, set `style` in a `--pack`/`--style-file`.
+
 ## Reusable subject packs
 
 A pack is a JSON of named subjects (plus optional `style`/`negatives`):

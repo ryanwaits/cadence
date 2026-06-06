@@ -115,7 +115,7 @@ A video reads its colors, fonts, and code styling from a theme. To match a brand
 - **From a screenshot / URL:** read the palette yourself and write the `ThemeConfig` — the dominant brand color becomes `signalBlue`; copy a built-in as a template (`cadence themes` lists them).
 - Or a built-in named theme: `cadence create <beats> --theme <name>`. Precedence: `--theme-file` > `--theme` > the project's `.cadence/theme.json` > default.
 
-**Custom painted backgrounds** (optional, needs `OPENAI_API_KEY`): `cadence art --prompt "<scene>" --name <slug>` generates a backdrop into `<project>/.cadence/backgrounds/_candidates/`; `cadence art --promote <slug>` moves the keeper to `.cadence/backgrounds/`; then reference it in a beat as `background: { src: "backgrounds/<file>.png" }` (cadence stages it at render). Reusable subject sets: `--pack <file.json>`. Default backdrop stays procedural — only reach for this when the user wants painted art. See `docs/guides/custom-backgrounds.md`.
+**Custom painted backgrounds** (optional, needs `OPENAI_API_KEY`): `cadence art --prompt "<scene>" --name <slug>` generates a backdrop into `<project>/.cadence/backgrounds/_candidates/`; `cadence art --promote <slug>` moves the keeper to `.cadence/backgrounds/`; then reference it in a beat as `background: { src: "backgrounds/<file>.png" }` (cadence stages it at render). Reusable subject sets: `--pack <file.json>`; `--brand` tints art toward the project's theme palette. Default backdrop stays procedural — only reach for this when the user wants painted art. See `docs/guides/custom-backgrounds.md`.
 
 ## Render
 ```bash
