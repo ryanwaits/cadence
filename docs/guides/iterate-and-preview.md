@@ -41,6 +41,14 @@ Storyboard honors `--theme <name>`, `--theme-file <path>`, and `--format
 16x9|1x1|9x16`, so you preview in the exact look you'll ship. (No `--frame` — it
 picks each beat's representative frame for you.)
 
+The sheet lands in `<project>/.cadence/out` when you're inside a repo that has a
+`.cadence/` dir, otherwise `./out` (override either with `--out <dir>`). If that
+project carries a `.cadence/theme.json`, storyboard auto-discovers it and previews
+in your brand with no flag — see
+**[Per-Project Setup](project-setup.md)**. For custom
+backdrops (painted art, gradients, brand images), see
+**[Custom Backgrounds](custom-backgrounds.md)**.
+
 ### Straight from a repo
 
 You don't need a beats file first — `--dry-run` takes a repo or release all the
@@ -90,5 +98,5 @@ These are the per-detail instruments the loop above leans on:
 - **`bun run dev`** (Remotion Studio) — a live timeline with hot reload, for
   developing the engine's components and motion (not authoring a one-off video).
 
-Renders and storyboards land in `out/`. Everything here runs locally and free —
-no API key.
+Renders and storyboards land in `<project>/.cadence/out` (or `./out` outside a
+project). Everything here runs locally and free — no API key.

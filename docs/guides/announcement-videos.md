@@ -84,13 +84,18 @@ cadence create --release owner/name --template feature-launch --install "npm i y
 - `--headline "…"` overrides the opener headline (default: `"<version> is out."`).
 - `--template feature-launch` selects the launch arc (vs `changelog-reel` or
   `milestone`).
+- `--dry-run` skips the MP4 and storyboards the generated arc instead (plan +
+  one still per beat) — preview the layout before committing to a render.
 
 The template emits feature beats from the real release titles only — no
 fabricated code. To add honest code + panels per feature, hand-author the beats
 file (or ask the agent), as in the worked example below.
 
 **Choosing a format for the channel:** `16x9` for a site or README, `1x1` for a
-feed, `9x16` for a reel or shorts. Set it with `--format`. See
+feed, `9x16` for a reel or shorts. Set it with `--format`. Brand colors are
+auto-discovered from the project's `.cadence/theme.json` when you run against a
+repo that has one — no flag needed (see [project setup](project-setup.md));
+otherwise pass `--theme <name>` or `--theme-file <path>`. See
 [branding & formats](branding-and-formats.md) for the full matrix and theming.
 
 ## The honesty rule still applies
@@ -147,12 +152,18 @@ A four-beat arc — opener, two feature beats, install closer. Author it as
 }
 ```
 
-Preview a still first (fast), then render the full MP4:
+Preview the whole arc before rendering. `cadence storyboard` prints the
+beat-by-beat plan and a one-still-per-beat contact sheet (no MP4) so you can read
+the pacing of the opener → features → closer at a glance:
 
 ```bash
-cadence create launch.beats.json --frame 150    # one still, ~5s
-cadence create launch.beats.json                 # full 16x9 MP4 → out/
+cadence storyboard launch.beats.json             # plan + contact sheet PNG
+cadence create launch.beats.json --frame 150     # or one exact still, ~5s
+cadence create launch.beats.json                 # full 16x9 MP4 → .cadence/out (or ./out)
 ```
+
+Iterate on the storyboard until the arc lands, then render. The full
+[iterate & preview](iterate-and-preview.md) workflow goes deeper.
 
 A vertical cut for social — same file, one flag:
 
@@ -171,4 +182,5 @@ In-repo, swap `cadence` for `bun run cli`; with no global install, use
   renders it as a gold uppercase label.
 - **One background for continuity.** Pick a single backdrop (or omit `background`
   on every beat for the procedural default) so the arc feels like one piece. See
-  [branding & formats](branding-and-formats.md).
+  [branding & formats](branding-and-formats.md). For a painted backdrop, generate
+  one with `cadence art --prompt "…"` — see [custom backgrounds](custom-backgrounds.md).

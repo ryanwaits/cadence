@@ -6,8 +6,9 @@ the new `<feature>`") puts the *result* of the change on screen — a query resu
 a signed receipt, a resumable cursor. Both render locally and free, no key.
 
 This guide covers both, plus the **panel picker** — the single decision that makes
-a showcase land. For install/themes see the [README](../../README.md); for the
-full beat vocabulary see [recipes](../recipes.md) and [gallery](../gallery.md).
+a showcase land. For install see [install](install.md); for theming see
+[branding & formats](branding-and-formats.md); for the full beat vocabulary see
+[recipes](../recipes.md) and [gallery](../gallery.md).
 
 > CLI shorthand: `cadence …` assumes the global install (`npm i -g @waits/cadence`).
 > No install? Use `npx @waits/cadence …`. Inside this repo, use `bun run cli …`.
@@ -41,14 +42,17 @@ If you omit the `--stat-*` flags, the template falls back to an honest default
 drawn from the release manifest (the feature count this version) — but for a real
 milestone you almost always want to supply the number yourself.
 
-**Preview, then render:**
+**Preview, then render.** Before a full render, `--dry-run` storyboards the
+generated arc instead of an MP4 — it prints the beat-by-beat plan and a
+one-still-per-beat contact sheet (no MP4) so you can read the milestone arc at a
+glance:
 
 ```bash
-# preview the stat beat (the count-up settles by ~frame 60)
+# storyboard the arc (plan + contact sheet PNG, no MP4)
 cadence create --release owner/name --template milestone \
-  --stat-value "1,000,000" --stat-label "downloads" --frame 60
+  --stat-value "1,000,000" --stat-label "downloads" --dry-run
 
-# full 16:9 MP4 → out/
+# full 16:9 MP4 → <project>/.cadence/out (or ./out)
 cadence create --release owner/name --template milestone \
   --stat-value "1,000,000" --stat-label "downloads" --stat-sub "since v1.0" \
   --install "npm i your-pkg"
@@ -58,14 +62,22 @@ cadence create --release owner/name --template milestone \
   --stat-value "1,000,000" --stat-label "downloads" --format 9x16
 ```
 
+Iterate on the storyboard until the number lands, then render — the full
+[iterate & preview](iterate-and-preview.md) workflow goes deeper.
+
 > The repo-driven path (`--release`) passes through `--format`, `--theme`, and
-> `--frame`. To brand with a derived theme file, author beats by hand (below) and
-> render with `--theme-file`, or use a built-in named `--theme`.
+> `--frame`; with `--dry-run` it passes `--format` and `--theme`/`--theme-file`.
+> Brand colors are auto-discovered from the project's `.cadence/theme.json` when
+> you run against a repo that has one (see [project setup](project-setup.md)) — no
+> flag needed; otherwise use a built-in named `--theme` or a derived
+> `--theme-file`.
 
 ### Hand-authored milestone
 
 When you want exact control — your own headline, a specific background, more than
-one beat between opener and closer — author a `stat` beat directly. The panel fields:
+one beat between opener and closer — author a `stat` beat directly. For a painted
+backdrop, generate one with `cadence art --prompt "…"` (see
+[custom backgrounds](custom-backgrounds.md)). The panel fields:
 
 ```jsonc
 {
@@ -88,10 +100,11 @@ full launch arc that uses it):
 }
 ```
 
-Render and preview it like any beats file:
+Preview and render it like any beats file:
 
 ```bash
-cadence create milestone.beats.json --frame 60      # still
+cadence storyboard milestone.beats.json             # plan + contact sheet PNG, no MP4
+cadence create milestone.beats.json --frame 60      # one exact still
 cadence create milestone.beats.json --theme cobalt  # full MP4
 ```
 
@@ -146,11 +159,15 @@ that breaks a showcase's credibility.
 panel; preview late in the beat):
 
 ```bash
+cadence storyboard showcase.beats.json                # plan + contact sheet PNG, no MP4
 cadence create showcase.beats.json --frame 180        # still, code typed + panel run
-cadence create showcase.beats.json                    # full 16:9 MP4 → out/
+cadence create showcase.beats.json                    # full 16:9 MP4 → .cadence/out (or ./out)
 cadence create showcase.beats.json --format 9x16      # vertical reel
 cadence audit showcase.beats.json                     # pacing / legibility check
 ```
+
+Iterate on the storyboard before committing to a render — see
+[iterate & preview](iterate-and-preview.md).
 
 `src/content/streams-launch.beats.ts` is a full multi-panel showcase (a signed
 `proof`, a `stream-resume` cursor, a `fork`/reorg) — a good reference for stringing
@@ -231,6 +248,7 @@ Notes:
 - **Showcase** ("look what the new feature does") → `headline` + `code` + a panel
   chosen from the picker to **show the result** the feature produces.
 
-Both: preview a still with `--frame` first, then render the full MP4. For brand
-colors, see the theming notes in the [README](../../README.md) and the
-[gallery](../gallery.md).
+Both: storyboard the plan + contact sheet first (or a single still with
+`--frame`), then render the full MP4. Brand colors are auto-discovered from the
+project's `.cadence/theme.json` (see [project setup](project-setup.md)); for the
+full theming matrix see [branding & formats](branding-and-formats.md).

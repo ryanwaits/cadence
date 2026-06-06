@@ -40,8 +40,9 @@ renders. The rendered MP4 path is exposed as the `video` output.
 
 ## Where the video lands
 
-The action does **not** upload anywhere — it only sets `outputs.video` to the
-MP4 path in the workspace. Add a step to keep it.
+The action does **not** upload anywhere — it renders, copies the MP4 to
+`cadence.mp4` at the workspace root, and sets `outputs.video` to that path. Add a
+step to keep it.
 
 Attach it to the release (permanent):
 
@@ -72,8 +73,17 @@ real inputs:
 | `repo`       | `owner/name` to read the release from                   | defaults to the current repo     |
 | `tag`        | Release tag to render                                   | defaults to the triggering release |
 
-For brand colors, generate a theme once with `cadence study --from-url` and
-commit it, then point `theme-file` at it.
+### Branding CI renders
+
+Locally, a repo's `.cadence/theme.json` is auto-discovered and brands every
+render with no flag (see
+**[Per-Project Setup](project-setup.md)**). The same file brands CI: commit
+`.cadence/theme.json` and point `theme-file` at it (`theme-file:
+.cadence/theme.json`) so the runner renders in the identical brand. You can also
+generate a standalone theme once with `cadence study --from-url`, commit it
+(e.g. `themes/yourbrand.json`), and pass that — either way the CI render matches
+what you saw locally. See the full input reference in
+**[github-action.md](../github-action.md)**.
 
 ## Local-first equivalence
 

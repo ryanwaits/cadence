@@ -1,14 +1,15 @@
-# Branding, Themes, Backgrounds & Formats
+# Branding, Themes & Formats
 
 Cadence renders a video from its **theme** — colors and fonts come from there, not
 from a baked-in brand. That's the anti-"AI look" principle: most AI video reaches
 for the same neon-on-black template, so every clip looks the same. Cadence refuses
-a baked-in brand. You pick a built-in theme, or derive one from your own URL, color,
-or screenshot, and the whole video takes on *your* palette.
+a baked-in brand. You point it at *your* color, URL, or docs, and the whole video
+takes on your palette — down to the code window.
 
-This guide covers the four style knobs you control: **themes**, **brand extraction**,
-**backgrounds**, and **formats** — plus how to re-skin a finished video without
-re-authoring it.
+The preferred way to brand is a **project-local theme**: a `<project>/.cadence/theme.json`
+that cadence **auto-discovers** when run against the project — no flags. This guide
+covers that, plus the built-in themes, brand extraction, code styling that matches
+your docs, backgrounds, formats, and re-skinning a finished video.
 
 > New here? Start with **[Installation & Quickstart](install.md)**. Throughout, `cadence …`
 > means either the global binary (`npm i -g @waits/cadence`) or `npx @waits/cadence …`
@@ -18,22 +19,64 @@ re-authoring it.
 
 ---
 
-## 1. Themes
+## 1. Brand a project: `.cadence/theme.json`
+
+A repo carries its brand in `<project>/.cadence/theme.json` — a complete `ThemeConfig`.
+When you run cadence against that project (or point it at a beats file inside it),
+cadence walks up from where it's working, finds `.cadence/`, and uses that theme
+**automatically** — logging `· using project theme …` so it's never a silent surprise.
+No `--theme-file` needed.
+
+Scaffold one with `cadence study`, writing straight into the project:
+
+```bash
+# from a brand color
+cadence study --accent "#10b981" --out my-project/.cadence/theme.json
+
+# or guess the accent from a live site
+cadence study --from-url https://acme.dev --out my-project/.cadence/theme.json
+```
+
+Then hand-tune the JSON (colors, fonts, code styling — §3) and storyboard to check
+it:
+
+```bash
+cd my-project
+cadence storyboard src/changelog.beats.ts
+#  · using project theme .../my-project/.cadence/theme.json
+```
+
+### Theme precedence
+
+Flags always win, so you can override per-run:
+
+```
+--theme-file <path>  >  --theme <name>  >  .cadence/theme.json  >  default
+```
+
+`--theme-file <path>` points at any `ThemeConfig` JSON; `--theme <name>` selects a
+built-in (§2). Both work on `create` / `render` / `redesign`. With a `.cadence/theme.json`
+in place you stop passing either.
+
+> The `.cadence/` directory holds more than the theme — generated art and renders
+> live there too. See **[Per-Project Setup](project-setup.md)** for the full layout
+> and what to track in git.
+
+---
+
+## 2. Built-in themes
+
+When you don't need an exact brand match, a built-in theme is the fastest way to make
+a video that doesn't look generic. Apply one with `--theme <name>`:
+
+```bash
+cadence create my.beats.json --theme cobalt
+cadence themes                                  # list them
+```
 
 A theme is a complete look: a single pointing **accent** color, ink/paper neutrals,
 a derived code-syntax palette, a procedural backdrop tint, and a font trio
-(display / body / mono). Apply one with `--theme <name>` on any `create` / `render` /
-`redesign`:
-
-```bash
-cadence create <beats> --theme cobalt
-```
-
-List them any time:
-
-```bash
-cadence themes
-```
+(display / body / mono).
 
 ### The 18 built-ins
 
@@ -41,8 +84,8 @@ Two are hand-authored (`default`, `slate`); the other 16 are each minted from on
 accent color with matching fonts. Exact names (from the `THEMES` registry):
 
 | theme | accent | character |
-|------------|-----------|-----------------------------|
-| `default` | indigo | the neutral house theme |
+|-------------|-----------|-----------------------------|
+| `default` | `#2563eb` | the neutral house theme, Sora / Public Sans |
 | `slate` | cool gray | quiet, technical |
 | `cobalt` | `#2f5fff` | bright blue, Manrope |
 | `emerald` | `#10b981` | green, Space Grotesk |
@@ -61,16 +104,52 @@ accent color with matching fonts. Exact names (from the `THEMES` registry):
 | `graphite` | `#475569` | neutral gray, Geist |
 | `mono` | `#111111` | near-black + blue marker, Geist |
 
-Pick a built-in when you don't need an exact brand match — it's the fastest way to
-make a video that doesn't look generic. For an exact match, derive your own.
+For an exact match, derive your own (§4) — ideally straight into `.cadence/theme.json`.
 
 ---
 
-## 2. Brand from a URL, a color, or a screenshot
+## 3. Match your docs' code styling
+
+A theme controls the **code window**, not just headlines. Three fields make the
+video's code read the way your project's docs already show it — tune them in
+`theme.json`:
+
+| field | what it controls |
+|-------------------|--------------------------------------------------------|
+| `fonts.mono` | the code font — set the same family your docs use |
+| `codeTheme` | the syntax-highlight palette (`fg`, `kw`, `nw`, `str`, `num`, `fn`, `punct`, `comment`) — nudge toward your docs' highlighter |
+| `codeBg` | the code window background color |
+| `codeChrome` | `"window"` (default) is a floating editor with traffic-light dots + a filename tab; `"minimal"` is **chromeless** — just the code surface, like a docs snippet component |
+
+If your docs render code as a flat, chromeless block, set `codeChrome: "minimal"` and
+match `fonts.mono` + `codeTheme` to your highlighter:
+
+```json
+{
+  "fonts": { "mono": "JetBrains Mono, SFMono-Regular, Menlo, monospace" },
+  "codeBg": "#0d1117",
+  "codeTheme": { "fg": "#c9d1d9", "kw": "#ff7b72", "str": "#a5d6ff", "fn": "#d2a8ff", "comment": "#8b949e" },
+  "codeChrome": "minimal"
+}
+```
+
+Verify the result without rendering a full MP4:
+
+```bash
+cadence storyboard src/changelog.beats.ts   # one still per beat — see the code window
+```
+
+Copy a built-in theme JSON as a template if you want the full `ThemeConfig` shape in
+front of you (`cadence themes` lists them; the `codeTheme` palette is auto-derived
+from the accent, so you only override what you want to pin).
+
+---
+
+## 4. Derive a theme from a URL, a color, or a screenshot
 
 `cadence study` turns one accent into a full theme. Give it a hex directly, or a URL
-to guess one from, and it writes `themes/<name>.json` (a complete `ThemeConfig`) plus
-a human-readable `themes/<name>.design.md` companion.
+to guess one from, and it writes a complete `ThemeConfig` JSON plus a human-readable
+`*.design.md` companion.
 
 ### Flags
 
@@ -81,7 +160,7 @@ a human-readable `themes/<name>.design.md` companion.
 | `--ink <hex>` | override the text/neutral color |
 | `--paper <hex>` | override the page background |
 | `--gold <hex>` | override the version/NEW marker color |
-| `--name <name>` | theme name + output filename (default `brand`) |
+| `--name <name>` | theme name + default output filename (default `brand`) |
 | `--out <path>` | output path (default `themes/<name>.json`) |
 
 One of `--accent` or `--from-url` is required. The accent drives everything: links,
@@ -91,40 +170,43 @@ procedural backdrop tint. Give one color, get a complete theme.
 ### Worked example
 
 ```bash
-# 1. Extract a theme from a brand URL
-cadence study --from-url https://acme.dev --name acme
-# → writes themes/acme.json  +  themes/acme.design.md
-#   prints: extracted accent #… from https://acme.dev
+# write the theme straight into a project's .cadence/ so it's auto-discovered
+cadence study --from-url https://acme.dev --out acme/.cadence/theme.json
+#   prints: · extracted accent #… from https://acme.dev
 
-# 2. Render any beats file with it
-cadence create my.beats.json --theme-file themes/acme.json
+# from then on, no theme flag — cadence finds it
+cadence create acme/src/changelog.beats.ts
 ```
 
-Or skip the URL and pass the color straight in:
+Or pass the color straight in, with neutral overrides:
 
 ```bash
-cadence study --accent "#10b981" --paper "#f6f7f9" --name acme
+cadence study --accent "#10b981" --paper "#f6f7f9" --out acme/.cadence/theme.json
+```
+
+When you write to the default `themes/<name>.json` location instead, render it with
+`--theme-file`:
+
+```bash
+cadence study --from-url https://acme.dev --name acme   # → themes/acme.json + themes/acme.design.md
 cadence create my.beats.json --theme-file themes/acme.json --format 9x16
 ```
 
-The generated `acme.design.md` lists the resolved palette (accent, ink, paper,
-marker, gold, status colors) and fonts — a portable summary to drop into a brand doc.
+The generated `*.design.md` lists the resolved palette (accent, ink, paper, marker,
+gold, status colors) and fonts — a portable summary to drop into a brand doc.
 
 ### From a screenshot
 
 `cadence study` extracts from a hex or URL only. To build a theme from an **image**
 (a wallpaper, a brand shot, a UI screenshot), hand the picture to your agent (the
-cadence skill). It reads the dominant palette and writes a `themes/<name>.json` that
-matches the `ThemeConfig` shape — the dominant brand color becomes the accent
-(`signalBlue`), copying a built-in theme JSON as the template. Then render the same way:
-
-```bash
-cadence create my.beats.json --theme-file themes/acme.json
-```
+cadence skill). It reads the dominant palette and writes a `ThemeConfig` JSON — the
+dominant brand color becomes the accent (`signalBlue`), copying a built-in theme JSON
+as the template. Save it to the project's `.cadence/theme.json` (or render with
+`--theme-file`).
 
 ---
 
-## 3. Backgrounds
+## 5. Backgrounds
 
 Every beat can carry one background. The default — and the most on-brand, key-free
 look — is **procedural**: a soft field of theme-colored gradient arcs, no asset and no
@@ -142,7 +224,7 @@ everywhere for the consistent procedural default).
 | `shapes` | procedural, theme-colored gradient arcs (the default look) |
 | `gradient:#hex1,#hex2` | a two-stop gradient, e.g. `gradient:#312e81,#0b1120` |
 | `solid:#hex` | a flat solid color, e.g. `solid:#0b1120` |
-| `image:filename` | a static image from `backgrounds/` (the painterly pack lives here) |
+| `image:filename` | a static image staged from `backgrounds/` (the painterly pack lives here) |
 
 ```bash
 cadence create my.beats.json --background "gradient:#312e81,#0b1120"
@@ -156,30 +238,17 @@ object: `shapes`, `gradient: [from, to]`, `solid`, or `src` (an image), with an
 optional `angle` and `treatment` (`kenburns` | `static`). Omit the object for the
 default.
 
-### Optional: the painterly landscape pack
+### Generated painterly backdrops
 
-Instead of stock gradients, an optional pack renders 19th-century-style landscape
-paintings ("Hill Country Sublime") as backgrounds. **This is the only part of the
-toolchain that calls an external API** — it needs `OPENAI_API_KEY`.
-
-```bash
-cadence art --landmark pennybacker --level heightened   # needs OPENAI_API_KEY
-cadence art --all --level heightened --format 16x9      # every landmark
-```
-
-- **`--landmark`** — one of: `pennybacker`, `utTower`, `capitol`, `congress`,
-  `mountBonnell`, `enchantedRock`, `hamiltonPool`, `bartonSprings` (default
-  `pennybacker`).
-- **`--level`** — the fantasy dial: `grounded`, `heightened` (default), or `mythic`.
-- **`--format`** / **`--quality`** — image size / render quality.
-
-Generated images land in `public/backgrounds/_candidates/`; move a winner into
-`public/backgrounds/` and reference it with `image:<file>`. Full details, the art
-system, and how to pick winners: **[ART-DIRECTION.md](../../ART-DIRECTION.md)**.
+`cadence art` paints landscape-style backdrops from a freeform prompt and stages them
+in `<project>/.cadence/backgrounds/`. **This is the only part of the toolchain that
+calls an external API** — it needs `OPENAI_API_KEY`. Reference a promoted image with
+`image:<file>`. Full details — prompts, levels, promoting candidates, the cost guard —
+in **[Custom Backgrounds](custom-backgrounds.md)**.
 
 ---
 
-## 4. Formats
+## 6. Formats
 
 `--format` sets the aspect ratio and pixel dimensions. Default is `16x9`.
 
@@ -201,11 +270,11 @@ puts code left and output right; vertical formats restack.
 
 ---
 
-## 5. Re-skin without re-authoring
+## 7. Re-skin without re-authoring
 
 Already have a beats file you like? `cadence redesign` re-skins it — new theme,
 background, and motion fingerprint — while preserving all content (headlines,
-eyebrows, code, panels). It writes a new beats JSON to `out/` and renders it.
+eyebrows, code, panels). It writes a new beats JSON and renders it.
 
 ```bash
 cadence redesign my.beats.json --theme slate --background "gradient:#312e81,#0b1120"
@@ -213,13 +282,16 @@ cadence redesign my.beats.json --enter rise --exit dissolve --background shapes
 ```
 
 | flag | does |
-|---------------------|------------------------------------------------|
+|-----------------------|------------------------------------------------|
 | `--theme <name>` | swap to a built-in theme |
 | `--theme-file <path>` | swap to a derived/extracted theme |
-| `--background <dsl>` | swap the background (same DSL as section 3) |
+| `--background <dsl>` | swap the background (same DSL as §5) |
 | `--enter <preset>` | set the headline enter transition |
 | `--exit <preset>` | set the headline exit transition |
 | `--format` / `--frame` | re-format / preview a single still |
+
+With no `--theme`/`--theme-file`, redesign honors the same `.cadence/theme.json`
+auto-discovery as everything else.
 
 The `--enter` / `--exit` values come from the motion lexicon:
 
@@ -233,13 +305,23 @@ ease-out only, no bounce, so every video moves the same considered way.)
 
 ## Where this fits
 
-- Colors and fonts always come from the **theme** — `--theme <name>` or
-  `--theme-file <path>` — never a hardcoded brand.
+- The brand lives in **`<project>/.cadence/theme.json`** — auto-discovered, no flags.
+  `--theme-file` > `--theme` > `.cadence/theme.json` > `default` when you need to
+  override.
+- A theme styles the **code window** too — `fonts.mono`, `codeTheme`, `codeBg`, and
+  `codeChrome: "minimal"` match a docs-style snippet. Check it with `cadence storyboard`.
 - The **default backdrop** is procedural and key-free; the painterly pack is opt-in
   and is the only API-key step.
 - One theme + one background + one format = a coherent, on-brand video that doesn't
   read as AI-generated.
 
-See also: **[Installation & Quickstart](install.md)**, **[recipes](../recipes.md)**
-(the brand-from-URL recipe), and the **[gallery](../gallery.md)** for the same engine
-across themes, formats, and arcs.
+See also: **[Per-Project Setup](project-setup.md)** (the `.cadence/` overview),
+**[Custom Backgrounds](custom-backgrounds.md)** (generated backdrops),
+**[Installation & Quickstart](install.md)**, and the **[gallery](../gallery.md)** for
+the same engine across themes, formats, and arcs.
+
+---
+
+Index entry:
+
+- [Branding, Themes & Formats](branding-and-formats.md) — brand a repo with an auto-discovered `.cadence/theme.json`, match your docs' code styling, and ship 16:9 / 1:1 / 9:16 — without the AI look.

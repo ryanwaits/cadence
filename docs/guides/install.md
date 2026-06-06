@@ -57,9 +57,31 @@ cadence themes      # list the 18 built-in themes
 cadence --help      # the full verb list and shared flags
 ```
 
-`cadence --help` prints the commands (`create`, `study`, `audit`, `redesign`,
-`guide`) and the flags shared by `create`/`render`/`redesign`:
-`--format 16x9|1x1|9x16`, `--theme <name>`, `--theme-file <path>`, `--frame <n>`.
+`cadence --help` prints the commands (`create`, `storyboard`, `study`, `audit`,
+`redesign`, `guide`, plus the `render`/`changes`/`art`/`templates`/`themes`
+utilities) and the flags shared by `create`/`render`/`redesign`/`storyboard`:
+`--format 16x9|1x1|9x16`, `--theme <name>`, `--theme-file <path>`, `--frame <n>`,
+`--out <dir>`.
+
+---
+
+## Per-project setup (`.cadence/`)
+
+Cadence anchors its work to the target repo, not your current directory. A repo
+can carry its own cadence config under `<project>/.cadence/`:
+
+- **`<project>/.cadence/theme.json`** — your brand (colors, mono font, code
+  syntax + chrome). Cadence auto-discovers it when run against the project, so
+  every render takes on *your* palette without a `--theme-file` flag.
+- **`<project>/.cadence/out`** — where finished MP4s, stills, and the generated
+  beats land (instead of `./out`). Override with `--out <dir>`.
+- **`<project>/.cadence/backgrounds/`** — where generated art lands when you run
+  `cadence art` against the project.
+
+No project-specific files live in the cadence engine itself. Full walkthrough of
+the convention: **[project-setup.md](project-setup.md)**. For the brand / theme
+detail see **[branding-and-formats.md](branding-and-formats.md)**; for the
+generated-art workflow see **[custom-backgrounds.md](custom-backgrounds.md)**.
 
 ---
 
@@ -78,13 +100,24 @@ What happens:
 2. It applies a template (default: `changelog-reel`) to build the beats.
 3. It renders to an MP4.
 
-The finished video lands in **`out/`**, alongside the generated
-`out/make-<product>.beats.json` it rendered from.
+The finished video lands in the project's **`.cadence/out`** (or `./out` if the
+repo has no `.cadence/` dir), alongside the generated `make-<product>.beats.json`
+it rendered from.
 
-### Preview a still first
+### Preview before you render
 
-A full render takes a moment. To check the look fast, ask for a single frame with
-`--frame <n>` — it writes a PNG to `out/` instead of an MP4:
+A full render takes a moment. Preview first — get the whole plan plus one still
+per beat (no MP4) so you can check the features, pacing, theme, and backgrounds
+cheaply. Pass `--dry-run` to `create`, or run `storyboard` directly on a beats
+file:
+
+```bash
+cadence create --release owner/name --install "npm i your-pkg" --dry-run
+cadence storyboard .cadence/out/make-your-pkg.beats.json   # same preview, on a beats file
+```
+
+Each writes a `<name>.storyboard.png` contact sheet. To check a single frame at
+full fidelity instead, use `--frame <n>` — it writes one PNG rather than the MP4:
 
 ```bash
 cadence create --release owner/name --install "npm i your-pkg" --frame 150
@@ -102,11 +135,35 @@ cadence create --release owner/name --install "npm i your-pkg" --frame 150
 | `--theme <name>` | One of the 18 built-ins (`cadence themes`) |
 | `--theme-file <path>` | A custom theme JSON (e.g. from `cadence study`) |
 | `--frame <n>` | Render a single still PNG instead of the MP4 |
+| `--dry-run` | Preview only — plan + one still per beat, no MP4 |
+| `--out <dir>` | Override the output dir (default: `.cadence/out` or `./out`) |
 | `--headline "…"` | Override the opening headline |
 | `--stat-value` / `--stat-label` / `--stat-sub` | Inject a headline stat |
 
 You can also hand `create` a beats file directly — `cadence create my.beats.json
---format 9x16` — and it renders that instead of the repo flow.
+--format 9x16` — and it renders that instead of the repo flow (add `--dry-run` to
+storyboard it rather than render).
+
+---
+
+## The command surface
+
+| Command | What it does |
+| --- | --- |
+| `cadence create` | A repo OR a beats file → a video (the main entry point) |
+| `cadence storyboard <beats>` | A beats file → a preview sheet (plan + one still per beat, no MP4) |
+| `cadence study` | A brand color / URL / screenshot → a theme JSON |
+| `cadence audit <beats>` | Check a beats file for issues |
+| `cadence redesign <beats>` | Re-skin a beats file with a new look |
+| `cadence guide` | Interactive walkthrough — start here |
+| `cadence render <beats>` | A beats file → an MP4 (`create` delegates here for beats files) |
+| `cadence changes` | A repo → an `UpdateManifest` (JSON) |
+| `cadence art` | Generate painterly backgrounds (optional, needs `OPENAI_API_KEY`) |
+| `cadence templates` / `cadence themes` | List the built-in templates / themes |
+
+Shared by `create` / `render` / `redesign` / `storyboard`:
+`--format 16x9｜1x1｜9x16`, `--theme <name>`, `--theme-file <path>`, `--frame <n>`,
+`--out <dir>`.
 
 ---
 
@@ -120,7 +177,15 @@ The skill works the same across editors that share the standard skill layout —
 
 ## Optional: painterly backgrounds (the only API-key part)
 
-The default backdrop is procedural and needs no key. An optional pack swaps in
-landscape-painting backdrops via `cadence art` — and is the **only** part of the
-toolchain that calls an external API, requiring `OPENAI_API_KEY`. See
-[ART-DIRECTION.md](../../ART-DIRECTION.md).
+The default backdrop is procedural and needs no key. To swap in a painted
+backdrop, `cadence art` generates one from any prompt:
+
+```bash
+cadence art --prompt "misty redwood coastline at dawn" --name redwood
+```
+
+Art lands in the project's `.cadence/backgrounds/` (under `_candidates/` until you
+`--promote` it). This is the **only** part of the toolchain that calls an external
+API, requiring `OPENAI_API_KEY`. Full workflow — prompts, branding, promoting,
+referencing the result in a beat — in
+[custom-backgrounds.md](custom-backgrounds.md).

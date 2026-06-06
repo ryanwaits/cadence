@@ -126,13 +126,15 @@ Say `acme-labs/acme-sdk` just shipped `v2.3.0`. The fast, deterministic path:
 cadence create --release acme-labs/acme-sdk --install "npm i @acme/sdk"
 ```
 
-Cadence prints what it found and writes the beats to `out/`:
+Cadence prints what it found and writes the beats next to the project's
+`.cadence/` dir (`<project>/.cadence/out/`), falling back to `./out` when there
+isn't one:
 
 ```
 · acme-sdk v2.3.0: 3 features (+2 dropped) → changelog-reel
 ```
 
-It produced `out/make-acme-sdk.beats.json` — roughly:
+It produced `make-acme-sdk.beats.json` in that out dir — roughly:
 
 ```json
 {
@@ -176,27 +178,44 @@ You can edit that JSON by hand — tighten a headline, drop a row, swap the
 For an agent-authored version with honest code per feature, ask your agent for "a
 changelog video for acme-sdk v2.3.0" and it will write the beats for you.
 
-### Preview a still, then render
+### Preview before you render
 
-Check a frame before committing to a full render — a still takes a few seconds:
-
-```bash
-cadence create out/make-acme-sdk.beats.json --frame 150
-# → out/make-acme-sdk-16x9-f150.png
-```
-
-`--frame <n>` is the frame index into the timeline. Beats run back-to-back at 30fps,
-so pick a frame inside the beat you want to inspect (the opener above ends at frame
-150; the table beat runs through ~372). Iterate until it parses and looks right,
-then drop `--frame` for the MP4:
+Before spending a full render, get a cheap read on the whole reel. `cadence
+storyboard` prints the beat-by-beat plan (pacing, panel per beat) and renders a
+single contact sheet — one still per beat — into the out dir, no MP4:
 
 ```bash
-cadence create out/make-acme-sdk.beats.json
-# → out/make-acme-sdk-16x9.mp4
+cadence storyboard make-acme-sdk.beats.json
+# → make-acme-sdk.storyboard.png  (plan on stdout + one still per beat)
 ```
 
-Add `--format 9x16` for a vertical reel or `--format 1x1` for a feed square; set
-`--theme <name>` or `--theme-file <path>` to match a brand. Formats and theming are
+The repo-driven path can do the same in one shot with `--dry-run`:
+
+```bash
+cadence create --release acme-labs/acme-sdk --install "npm i @acme/sdk" --dry-run
+```
+
+Iterate on the plan and the stills until they read right; the full
+[iterate & preview](iterate-and-preview.md) workflow goes deeper. To inspect one
+exact frame, `--frame <n>` indexes into the timeline (30fps, beats back-to-back —
+the opener above ends at frame 150, the table beat runs through ~372):
+
+```bash
+cadence create make-acme-sdk.beats.json --frame 150
+# → make-acme-sdk-16x9-f150.png
+```
+
+When it looks right, drop the preview flags for the MP4:
+
+```bash
+cadence create make-acme-sdk.beats.json
+# → make-acme-sdk-16x9.mp4
+```
+
+Add `--format 9x16` for a vertical reel or `--format 1x1` for a feed square. Brand
+colors are auto-discovered from the project's `.cadence/theme.json` when you run
+against a repo that has one — no flag needed (see [project setup](project-setup.md));
+otherwise pass `--theme <name>` or `--theme-file <path>`. Formats and theming are
 covered in [branding and formats](branding-and-formats.md).
 
 ---
@@ -207,7 +226,7 @@ covered in [branding and formats](branding-and-formats.md).
 ranked findings, no auto-fix:
 
 ```bash
-cadence audit out/make-acme-sdk.beats.json
+cadence audit make-acme-sdk.beats.json
 ```
 
 It flags pacing and legibility problems before you spend a render on them:

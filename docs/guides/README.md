@@ -5,6 +5,7 @@ Quickstart**, then jump to the video you want to make.
 
 ### Getting started
 - [Installation & Quickstart](install.md) — from zero to a rendered video, via the skill or the CLI.
+- [Per-Project Setup (.cadence/)](project-setup.md) — capture a repo's brand, backgrounds, and output dir so cadence just works against it.
 
 ### Make a video
 - [Changelog Videos](changelog-videos.md) — turn a release into an honest "what's new" reel.
