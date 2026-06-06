@@ -7,9 +7,10 @@
  *   bun run render src/content/streams.beats.ts [--format 16x9|1x1|9x16] [--frame N]
  */
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { type Format } from "../src/schema/beats";
+import { stagePublicDir } from "./_assets";
 import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
 import { resolveOutDir, resolveTheme } from "./_theme";
@@ -48,8 +49,12 @@ writeFileSync(propsPath, JSON.stringify(parsed));
 const bin = binPath("remotion");
 const common = [pkgFile("src/index.ts"), "Changelog"];
 const suffix = theme && theme !== "default" ? `-${theme}` : "";
+// Stage a merged public dir when the project supplies its own backgrounds.
+const staged = stagePublicDir({ beatsFile: file, outDir });
+const pub = staged ? [`--public-dir=${staged}`] : [];
 const res = frame
-  ? spawnSync(bin, ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`], { stdio: "inherit", env })
-  : spawnSync(bin, ["render", ...common, join(outDir, `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg"], { stdio: "inherit", env });
+  ? spawnSync(bin, ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`, ...pub], { stdio: "inherit", env })
+  : spawnSync(bin, ["render", ...common, join(outDir, `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg", ...pub], { stdio: "inherit", env });
+if (staged) rmSync(staged, { recursive: true, force: true });
 
 process.exit(res.status ?? 0);

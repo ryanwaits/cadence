@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } 
 import { basename, join } from "node:path";
 import { type Beat, type Format } from "../src/schema/beats";
 import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboard";
+import { stagePublicDir } from "./_assets";
 import { auditBeats, ICON, rankFindings } from "./_audit";
 import { beatTimings, FPS, loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
@@ -87,6 +88,9 @@ writeFileSync(propsPath, JSON.stringify(parsed));
 
 const bin = binPath("remotion");
 const entry = pkgFile("src/index.ts");
+// Stage a merged public dir so project backgrounds resolve in the per-beat stills.
+const staged = stagePublicDir({ beatsFile: file, outDir });
+const pub = staged ? [`--public-dir=${staged}`] : [];
 const TRANSPARENT_PX =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==";
 
@@ -95,7 +99,7 @@ const cells: StoryboardCell[] = parsed.beats.map((b, i) => {
   const out = join(tmp, `beat-${i}.png`);
   const res = spawnSync(
     bin,
-    ["still", entry, "Changelog", out, `--props=${propsPath}`, `--frame=${timings[i].mid}`, "--scale=0.33"],
+    ["still", entry, "Changelog", out, `--props=${propsPath}`, `--frame=${timings[i].mid}`, "--scale=0.33", ...pub],
     { stdio: ["ignore", "ignore", "inherit"], env },
   );
   let img = TRANSPARENT_PX;
@@ -117,6 +121,7 @@ const sheet = spawnSync(bin, ["still", entry, "Storyboard", outPng, `--props=${s
   env,
 });
 rmSync(tmp, { recursive: true, force: true });
+if (staged) rmSync(staged, { recursive: true, force: true });
 
 if (sheet.status !== 0) {
   console.error("\n✗ storyboard sheet render failed");
