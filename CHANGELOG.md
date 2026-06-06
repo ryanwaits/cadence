@@ -1,5 +1,13 @@
 # @waits/cadence
 
+## 0.6.1
+
+### Patch Changes
+
+- 74988f9: `cadence study --out <path>` now creates the output path's directory instead of
+  always creating a `themes/` dir — so writing a theme into a project's `.cadence/`
+  no longer leaves an empty `themes/` behind.
+
 ## 0.6.0
 
 ### Minor Changes
