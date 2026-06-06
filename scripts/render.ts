@@ -9,9 +9,9 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
-import { changelogSchema, type Format } from "../src/schema/beats";
+import { type Format } from "../src/schema/beats";
 import { THEMES } from "../src/theme";
+import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
 
 const args = process.argv.slice(2);
@@ -29,10 +29,7 @@ if (!file) {
 }
 
 // Accept either a `.beats.ts` module or a plain `.json` beats file.
-const raw = file.endsWith(".json")
-  ? JSON.parse(readFileSync(resolve(file), "utf8"))
-  : (await import(pathToFileURL(resolve(file)).href)).default;
-const parsed = changelogSchema.parse(raw);
+const parsed = await loadBeats(file);
 
 const fmt = getFlag("--format") as Format | undefined;
 if (fmt) parsed.format = fmt;
