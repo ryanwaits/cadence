@@ -3,7 +3,6 @@ import { COLORS, EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
-import { Background } from "./Background";
 import { Headline } from "./Headline";
 import { CodeWindow, codeTypingDoneFrame } from "./CodeWindow";
 import { Panel } from "./panels";
@@ -32,9 +31,10 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   // Sequential: the output panel waits for the code to finish "running".
   const panelStart = beat.code ? codeTypingDoneFrame(beat.code.tokens ?? [], beat.code.motion) + OUTPUT_GAP : 0;
 
+  // Background is a continuous layer in Changelog (so same-bg beats don't
+  // re-fade); this scene renders only the content that transitions per beat.
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.ink }}>
-      <Background bg={beat.background} />
+    <AbsoluteFill>
       <Headline eyebrow={beat.eyebrow} headline={beat.headline} motion={beat.headlineMotion} format={format} light={light} />
 
       <div
