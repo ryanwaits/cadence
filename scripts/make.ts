@@ -67,10 +67,19 @@ const beats = template(manifest, {
 
 console.error(`· ${manifest.product} ${manifest.version}: ${manifest.features.length} features${manifest.dropped ? ` (+${manifest.dropped} dropped)` : ""} → ${templateName}`);
 
-// 3. Write beats JSON + render
+// 3. Write beats JSON, then render — or, with --dry-run, storyboard it (preview
+// sheet + plan, no MP4).
 mkdirSync("out", { recursive: true });
 const jsonPath = join("out", `make-${manifest.product}.beats.json`);
 writeFileSync(jsonPath, JSON.stringify(beats));
+
+if (args.includes("--dry-run")) {
+  // repo → storyboard. --frame is meaningless here; --theme-file is supported.
+  const passthru = ["--format", "--theme", "--theme-file"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
+  const res = spawnSync(binPath("tsx"), [pkgFile("scripts/storyboard.ts"), jsonPath, ...passthru], { stdio: "inherit" });
+  process.exit(res.status ?? 0);
+}
+
 const passthru = ["--format", "--theme", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
 const res = spawnSync(binPath("tsx"), [pkgFile("scripts/render.ts"), jsonPath, ...passthru], { stdio: "inherit" });
 process.exit(res.status ?? 0);

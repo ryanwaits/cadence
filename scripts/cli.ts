@@ -22,6 +22,7 @@ const sub = rawSub ? (ALIAS[rawSub] ?? rawSub) : rawSub;
 const SCRIPTS: Record<string, string> = {
   guide: "scripts/guide.ts", // interactive walkthrough
   render: "scripts/render.ts", // a beats file → a video (create delegates here)
+  storyboard: "scripts/storyboard.ts", // a beats file → a preview sheet (no MP4)
   study: "scripts/theme.ts", // brand color / URL / screenshot → a theme
   audit: "scripts/audit.ts", // check a beats file for issues
   redesign: "scripts/redesign.ts", // re-skin a beats file
@@ -33,6 +34,7 @@ const HELP = `cadence — turn a repo / release into a changelog or announcement
 
 commands:
   create     a repo OR a beats file → a video     cadence create --release owner/name --install "npm i pkg"
+  storyboard a beats file → a preview sheet         cadence storyboard x.beats.ts   (or: cadence create … --dry-run)
   study      a brand color / URL → a theme         cadence study --from-url https://acme.dev --name acme
   audit      check a beats file for issues          cadence audit src/content/x.beats.ts
   redesign   re-skin a beats file (new look)        cadence redesign x.beats.ts --theme slate
@@ -45,7 +47,8 @@ utilities:
   templates  list available templates
   themes     list available themes
 
-flags shared by create/render/redesign: --format 16x9|1x1|9x16, --theme <name>, --theme-file <path>, --frame <n>`;
+flags shared by create/render/redesign: --format 16x9|1x1|9x16, --theme <name>, --theme-file <path>, --frame <n>
+preview before rendering: cadence storyboard <beats>  ·  cadence create … --dry-run  (plan + one still per beat, no MP4)`;
 
 if (!sub || sub === "help" || sub === "--help") {
   console.log(HELP);
@@ -65,7 +68,11 @@ if (sub === "themes") {
 function resolveScript(verb: string, args: string[]): string | undefined {
   if (verb === "create") {
     const beatsFile = args.find((a) => !a.startsWith("-") && /\.(beats\.)?(ts|js|json)$/.test(a));
-    return beatsFile ? "scripts/render.ts" : "scripts/make.ts";
+    const dryRun = args.includes("--dry-run");
+    // beats-file flow: --dry-run → storyboard (preview sheet), else render (MP4).
+    if (beatsFile) return dryRun ? "scripts/storyboard.ts" : "scripts/render.ts";
+    // repo flow: make.ts handles --dry-run itself (generates beats → storyboard).
+    return "scripts/make.ts";
   }
   return SCRIPTS[verb];
 }

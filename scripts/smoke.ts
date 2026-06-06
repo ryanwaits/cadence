@@ -6,6 +6,7 @@
  *   bun run check:render
  */
 import { spawnSync } from "node:child_process";
+import { existsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
 type Case = { file: string; frame: number; theme?: string; format?: string; note: string };
@@ -36,8 +37,25 @@ for (const c of CASES) {
   }
 }
 
+let total = CASES.length;
+
+// Storyboard: the dry-run preview path (plan + one still per beat → a sheet).
+// The only automated guard for the data-URI contact-sheet render.
+total++;
+process.stdout.write("· storyboard sheet (clarinet-3.18) … ");
+const sbOut = resolve("out/clarinet-3.18.storyboard.png");
+rmSync(sbOut, { force: true });
+const sb = spawnSync(bin, ["scripts/storyboard.ts", "src/content/clarinet-3.18.beats.ts"], { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8" });
+if (sb.status === 0 && existsSync(sbOut)) {
+  console.log("ok");
+} else {
+  failed++;
+  console.log("FAIL");
+  console.error((sb.stderr || "").split("\n").slice(-6).join("\n"));
+}
+
 if (failed) {
-  console.error(`\n✗ ${failed}/${CASES.length} render cases failed`);
+  console.error(`\n✗ ${failed}/${total} cases failed`);
   process.exit(1);
 }
-console.log(`\n✓ ${CASES.length} render cases ok`);
+console.log(`\n✓ ${total} cases ok`);
