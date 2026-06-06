@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { join } from "node:path";
 import { composePrompt, LANDMARKS, type FantasyLevel } from "../prompts/art/compose";
 import type { Format } from "../src/schema/beats";
-import { findCadenceDir } from "./_theme";
+import { discoverProjectTheme, findCadenceDir } from "./_theme";
 
 const SIZE: Record<Format, string> = { "16x9": "1536x1024", "1x1": "1024x1024", "9x16": "1024x1536" };
 
@@ -79,6 +79,19 @@ const styleFile = flag("--style-file");
 const style = styleFile ? readFileSync(styleFile, "utf8") : pack.style;
 const negatives = pack.negatives;
 
+// --brand: tint generated art toward the project's theme palette (accent + paper).
+let brand: { accent?: string; paper?: string } | undefined;
+if (has("--brand")) {
+  const tf = discoverProjectTheme(process.cwd());
+  if (tf) {
+    const colors = (JSON.parse(readFileSync(tf, "utf8")).colors ?? {}) as Record<string, string>;
+    brand = { accent: colors.signalBlue, paper: colors.paper };
+    console.error(`· --brand: ${tf} (accent ${brand.accent ?? "—"})`);
+  } else {
+    console.error("· --brand: no .cadence/theme.json found — generating unbranded");
+  }
+}
+
 // A job = one image to generate. Freeform `--prompt` (needs `--name`) wins;
 // otherwise pull subjects from the pack via --landmark/--all.
 type Job = { subject: string; slug: string; label: string };
@@ -117,7 +130,7 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 async function generate(job: Job) {
-  const prompt = composePrompt({ subject: job.subject, level, format, style, negatives });
+  const prompt = composePrompt({ subject: job.subject, level, format, style, negatives, brand });
   const fname = `${job.slug}-${level}-${format}.png`;
   process.stdout.write(`· ${fname} … `);
   const res = await fetch("https://api.openai.com/v1/images/generations", {
