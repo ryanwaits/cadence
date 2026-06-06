@@ -1,5 +1,13 @@
 # @waits/cadence
 
+## 0.6.0
+
+### Minor Changes
+
+- `cadence art --brand` tints generated backgrounds toward the project's
+  `.cadence/theme.json` palette (accent + paper), so painted backdrops match the
+  rest of the video's brand.
+
 ## 0.5.0
 
 ### Minor Changes
