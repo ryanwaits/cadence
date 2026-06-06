@@ -14,12 +14,17 @@ This works for **any** project — a TS SDK, a Rust/Go CLI, a library — not a
 specific product.
 
 ## The engine
-Everything runs through one CLI, invoked with `npx cadence …` (it renders locally
-on the user's machine — free, no hosted service, no key needed for a render). If
-the project already depends on the engine you can use `bun run cli …` instead.
+Everything runs through one CLI. Install it once for a persistent `cadence`
+binary (`npm i -g @waits/cadence`), or invoke it without installing as
+`npx @waits/cadence …` — either way it renders locally on the user's machine
+(free, no hosted service, no key needed for a render). The examples below write
+`cadence …` as shorthand for either form. If the project already depends on the
+engine you can use `bun run cli …` instead.
 
 ```
-cadence create <repo|beats.json>   # the build verb (repo → video, or a beats file → video)
+cadence create <repo|beats.json>    # the build verb (repo → video, or a beats file → video)
+cadence storyboard <beats.json>     # preview: plan + one still per beat → a sheet (no MP4)
+cadence create … --dry-run          # same preview, straight from a repo (no MP4)
 cadence audit <beats.json>          # heuristic checks on a beats file (ranked, no auto-fix)
 cadence study --from-url <url>      # a brand URL/color → a theme JSON
 cadence themes                      # list built-in themes
@@ -48,9 +53,16 @@ cadence themes                      # list built-in themes
    `references/authoring.md` for every field). Everything is JSON-serializable; don't
    author `tokens` (shiki fills them) or usually `motion` (defaults are right). Omit
    `background` entirely to get the default procedural, theme-colored backdrop.
-5. **Render.** Preview a still first (`cadence create <slug>.beats.json --frame 150`,
-   ~5s), fix until it parses + looks right, then render the MP4 (and social formats if
-   asked). Run `cadence audit <slug>.beats.json` to catch pacing/legibility issues.
+5. **Storyboard — preview the whole arc before the MP4.** Run `cadence storyboard
+   <slug>.beats.json` (or `cadence create … --dry-run` straight from a repo): it
+   prints the beat-by-beat plan + pacing notes and renders a contact sheet
+   (`out/<slug>.storyboard.png`), one still per beat, no MP4. Show it to the user and
+   **iterate** — re-skin with `cadence redesign … --theme/--background`, fix content by
+   editing the beats — re-running storyboard until the arc + look are right. This is
+   the design loop; don't jump to a full render.
+6. **Render.** Once the storyboard looks right, render the MP4 (and social formats if
+   asked) with the locked `--theme`/`--format`. (`cadence create <slug>.beats.json
+   --frame 150` still gives a fast single-frame check of one moment.)
 
 > Authoring in TypeScript (with types) also works when you're inside the engine repo:
 > a `<slug>.beats.ts` that `export default`s a `ChangelogInput`. JSON is the portable
@@ -104,11 +116,13 @@ A video reads its colors from a theme. To match a user's brand:
 
 ## Render
 ```bash
+cadence storyboard <slug>.beats.json             # preview: plan + one still per beat (no MP4)
 cadence create <slug>.beats.json                 # 16:9 mp4 → out/
 cadence create <slug>.beats.json --format 9x16   # vertical
 cadence create <slug>.beats.json --frame 150     # one still (fast preview)
 cadence create <slug>.beats.json --theme slate   # a built-in theme
 ```
+Storyboard takes `--theme`/`--theme-file`/`--format` (not `--frame`).
 
 ## Reference
 - `references/authoring.md` — full vocabulary: beat fields, panel kinds, motion, formats, backgrounds, sequencing, typography.

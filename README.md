@@ -21,15 +21,21 @@ no generic AI-video look, no hosted service. Free and open source.
 npx skills add ryanwaits/cadence   # adds the skill to Claude Code / Cursor / Codex
 ```
 
-Then just ask your agent. Or drive the CLI directly:
+Then just ask your agent. Or drive the CLI directly — install the `cadence`
+binary globally, or run it with `npx` (no install):
 
 ```bash
-npx cadence create --release owner/name --install "npm i your-pkg"   # a repo → a video
-npx cadence create my.beats.json --format 9x16                       # a beats file → a video
-npx cadence themes                                                   # list built-in themes
+npm i -g @waits/cadence                                              # a persistent `cadence` binary
+cadence create --release owner/name --install "npm i your-pkg"       # a repo → a video
+cadence create my.beats.json --format 9x16                           # a beats file → a video
+cadence themes                                                       # list built-in themes
+
+npx @waits/cadence create --release owner/name --install "npm i …"   # …or run without installing
 ```
 
 A render runs entirely on your machine (or your own GitHub Actions) — free, no API key.
+
+→ **New here? Start with the [guides](docs/guides/)** — install, changelog, announcement, milestone, branding, and CI walkthroughs.
 
 ## Why it doesn't look AI-generated
 
@@ -60,6 +66,7 @@ milestones. The agent (via the skill) writes the beats; you tweak and render.
 Panels visualize what a change *produces* — pick by result:
 `feed · data-table · status · stat · proof · stream-resume · fork · upload-progress · diagram`.
 
+- **[docs/guides/](docs/guides/)** — task-oriented walkthroughs (install, changelog, announcement, milestone, branding, iterate, CI).
 - **[docs/recipes.md](docs/recipes.md)** — worked examples (changelog, announcement, showcase, brand-from-URL, CI).
 - **[docs/gallery.md](docs/gallery.md)** — the same engine, visibly different videos.
 - **[WALKTHROUGH.md](WALKTHROUGH.md)** — architecture + how to adjust each part.
