@@ -1,5 +1,18 @@
 # @waits/cadence
 
+## 0.5.0
+
+### Minor Changes
+
+- Generative custom backgrounds. `cadence art --prompt "<scene>" --name x` paints a
+  backdrop from any prompt (the Texas landmark set becomes the bundled default
+  pack); `--pack <file.json>` supplies reusable subject sets and `--style-file`
+  overrides the look. Generated art is project-local — it lands in
+  `<project>/.cadence/backgrounds/`, `cadence art --promote <name>` moves a keeper to
+  `backgrounds/`, and renders stage a merged public dir so project art and built-in
+  assets both resolve. Batches print a cost estimate and require `--yes`; the default
+  `--quality` is now `medium`.
+
 ## 0.4.0
 
 ### Minor Changes
