@@ -125,6 +125,10 @@ cadence create <slug>.beats.json --theme slate   # a built-in theme
 ```
 Storyboard takes `--theme`/`--theme-file`/`--format` (not `--frame`).
 
+Outputs land in `<project>/.cadence/out` when run against a repo that has a
+`.cadence/` dir (anchored to the project, not the cwd), else `./out`. Override
+with `--out <dir>`.
+
 ## Reference
 - `references/authoring.md` — full vocabulary: beat fields, panel kinds, motion, formats, backgrounds, sequencing, typography.
 - Worked example beats files ship inside the engine package (under its `src/content/`) if you want to see complete videos.
