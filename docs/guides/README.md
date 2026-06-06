@@ -13,6 +13,7 @@ Quickstart**, then jump to the video you want to make.
 
 ### Make it yours
 - [Branding, Themes & Formats](branding-and-formats.md) — your colors, your backdrop, every aspect ratio.
+- [Custom Backgrounds](custom-backgrounds.md) — generate painted backdrops from a prompt (project-local), promote, and use them.
 - [Iterate & Preview](iterate-and-preview.md) — storyboard a mock (plan + one still per beat), re-skin, and iterate before you render.
 
 ### Automate

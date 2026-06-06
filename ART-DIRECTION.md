@@ -1,5 +1,11 @@
 # Hill Country Sublime
 
+> This is cadence's **bundled default art pack** — one fully-realized example.
+> `cadence art` is general: generate any backdrop from a freeform `--prompt`, or
+> supply your own `--pack <file.json>` of subjects + style. See
+> **[docs/guides/custom-backgrounds.md](docs/guides/custom-backgrounds.md)**. The
+> rest of this doc is the design lineage behind the default pack.
+
 The house painting style for Secondlayer launch art. One genuine point of view:
 **Austin and the Texas Hill Country, painted in the 19th-century Luminist
 tradition of the Hudson River School — then exaggerated into sublime fantasy.**

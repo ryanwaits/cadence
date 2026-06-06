@@ -104,13 +104,19 @@ Layout: `src/schema` (the beats contract), `src/components` (scene + panels),
 `src/motion` (the lexicon), `src/theme` (themes + derivation), `src/templates`
 (the no-LLM repo→beats path), `prompts/art` (the optional painterly pack).
 
-## Optional: painterly backgrounds
+## Optional: generated backgrounds
 
-The default backdrop is procedural and needs no key. For the optional
-"Hill Country Sublime" landscape pack (see **[ART-DIRECTION.md](ART-DIRECTION.md)**):
+The default backdrop is procedural and needs no key. For custom painted
+backdrops, `cadence art` generates them from a freeform prompt — landing in your
+project's `.cadence/backgrounds/`, ready to reference as `image:<file>`:
 
 ```bash
-cadence art --landmark pennybacker --level heightened   # needs OPENAI_API_KEY
+cadence art --prompt "misty redwood coastline at dawn" --name redwood   # needs OPENAI_API_KEY
+cadence art --promote redwood                                           # candidate → backgrounds/
 ```
 
-This is the only part of the toolchain that calls an external API.
+Reusable subject sets go in a `--pack <file.json>`; the bundled "Hill Country
+Sublime" landscape pack is the default (`cadence art --all`). This is the only
+part of the toolchain that calls an external API. See
+**[docs/guides/custom-backgrounds.md](docs/guides/custom-backgrounds.md)** and
+**[ART-DIRECTION.md](ART-DIRECTION.md)**.
