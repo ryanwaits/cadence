@@ -1,5 +1,16 @@
 # @waits/cadence
 
+## 0.4.0
+
+### Minor Changes
+
+- Project-local `.cadence/` support. cadence now auto-discovers a
+  `<project>/.cadence/theme.json` (brand + code styling) when run against a repo —
+  no `--theme-file` needed — and writes outputs to `<project>/.cadence/out`
+  (anchored to the project, not the cwd; override with `--out <dir>`). Themes gain
+  `codeChrome: "minimal"` for a chromeless, docs-style code window so a video's code
+  snippets can match a project's documentation.
+
 ## 0.3.0
 
 ### Minor Changes
