@@ -12,7 +12,7 @@
  * the palette and writes a themes/<name>.json. See the cadence skill.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { deriveTheme } from "../src/theme/derive";
 
 const args = process.argv.slice(2);
@@ -61,8 +61,8 @@ if (!accent) {
 const name = flag("--name") ?? "brand";
 const theme = deriveTheme({ name, accent, ink: flag("--ink"), paper: flag("--paper"), gold: flag("--gold") });
 
-mkdirSync("themes", { recursive: true });
 const out = flag("--out") ?? join("themes", `${name}.json`);
+mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(theme, null, 2));
 
 // Portable design summary — a human-readable companion to the JSON.
