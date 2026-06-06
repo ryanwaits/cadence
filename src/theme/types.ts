@@ -62,6 +62,12 @@ export type ThemeConfig = {
   caretBg: string;
   /** Syntax colors. */
   codeTheme: CodeTheme;
+  /**
+   * Code window chrome. `"window"` (default) is a floating editor with traffic-
+   * light dots + a filename tab; `"minimal"` is chromeless (just the code surface)
+   * to match a docs-style snippet component.
+   */
+  codeChrome?: "window" | "minimal";
   /** Light [from, to] gradient for the procedural default backdrop (Background "shapes"). */
   backdrop?: [string, string];
 };

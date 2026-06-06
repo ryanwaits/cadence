@@ -1,5 +1,5 @@
 import { useCurrentFrame } from "remotion";
-import { CARET_BG, COLORS, FLOAT_SHADOW } from "../brand/tokens";
+import { CARET_BG, CODE_CHROME, COLORS, FLOAT_SHADOW } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { useMotion, type MotionSpec } from "../motion/useMotion";
 import { CODE_BG, type CodeLine } from "../code/highlight";
@@ -24,6 +24,7 @@ export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec) =>
 export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = { enter: "settle", delay: 12 }, fontSize = 22 }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
+  const minimal = CODE_CHROME === "minimal";
 
   const typeStart = typeStartFor(motion);
   const total = totalChars(tokens);
@@ -81,7 +82,7 @@ export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = { enter
     <div
       style={{
         width: "100%",
-        borderRadius: 20,
+        borderRadius: minimal ? 12 : 20,
         background: `${CODE_BG}f7`,
         boxShadow: FLOAT_SHADOW,
         backdropFilter: "blur(6px)",
@@ -90,11 +91,13 @@ export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = { enter
         ...style,
       }}
     >
-      <div style={{ height: 54, display: "flex", alignItems: "center", padding: "0 22px", gap: 9 }}>
-        <Dot color="#f6645f" /><Dot color="#f7bd45" /><Dot color="#2fc94e" />
-        <span style={{ flex: 1, textAlign: "center", color: "rgba(0,0,0,0.34)", fontSize: 15, fontFamily: FONTS.mono, marginRight: 60 }}>{filename}</span>
-      </div>
-      <div style={{ padding: "26px 40px 42px", fontFamily: FONTS.mono, fontSize, lineHeight: `${lineHeight}px`, color: COLORS.ink }}>
+      {!minimal && (
+        <div style={{ height: 54, display: "flex", alignItems: "center", padding: "0 22px", gap: 9 }}>
+          <Dot color="#f6645f" /><Dot color="#f7bd45" /><Dot color="#2fc94e" />
+          <span style={{ flex: 1, textAlign: "center", color: "rgba(0,0,0,0.34)", fontSize: 15, fontFamily: FONTS.mono, marginRight: 60 }}>{filename}</span>
+        </div>
+      )}
+      <div style={{ padding: minimal ? "30px 34px" : "26px 40px 42px", fontFamily: FONTS.mono, fontSize, lineHeight: `${lineHeight}px`, color: COLORS.ink }}>
         {lines}
       </div>
     </div>

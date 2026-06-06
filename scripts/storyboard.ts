@@ -15,10 +15,10 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } 
 import { basename, join } from "node:path";
 import { type Beat, type Format } from "../src/schema/beats";
 import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboard";
-import { THEMES } from "../src/theme";
 import { auditBeats, ICON, rankFindings } from "./_audit";
 import { beatTimings, FPS, loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
+import { resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -34,12 +34,7 @@ if (!file) {
   process.exit(1);
 }
 
-const theme = getFlag("--theme");
-const themeFile = getFlag("--theme-file");
-if (theme && !themeFile && !THEMES[theme]) {
-  console.error(`unknown --theme "${theme}". have: ${Object.keys(THEMES).join(", ")}`);
-  process.exit(1);
-}
+const { theme, themeFile } = resolveTheme({ theme: getFlag("--theme"), themeFile: getFlag("--theme-file"), beatsFile: file });
 
 /** Short label for a beat's backdrop (omitted background = the procedural default). */
 const bgTag = (b: Beat): string => {

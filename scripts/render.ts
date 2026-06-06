@@ -10,9 +10,9 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { type Format } from "../src/schema/beats";
-import { THEMES } from "../src/theme";
 import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
+import { resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -34,12 +34,7 @@ const parsed = await loadBeats(file);
 const fmt = getFlag("--format") as Format | undefined;
 if (fmt) parsed.format = fmt;
 const frame = getFlag("--frame");
-const theme = getFlag("--theme");
-const themeFile = getFlag("--theme-file");
-if (theme && !themeFile && !THEMES[theme]) {
-  console.error(`unknown --theme "${theme}". have: ${Object.keys(THEMES).join(", ")}`);
-  process.exit(1);
-}
+const { theme, themeFile } = resolveTheme({ theme: getFlag("--theme"), themeFile: getFlag("--theme-file"), beatsFile: file });
 const env: NodeJS.ProcessEnv = { ...process.env };
 if (theme) env.REMOTION_VIDEO_THEME = theme;
 if (themeFile) env.REMOTION_VIDEO_THEME_JSON = readFileSync(resolve(themeFile), "utf8");

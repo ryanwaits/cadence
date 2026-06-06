@@ -9,6 +9,9 @@ export const COLORS = activeTheme.colors;
 
 export const CARET_BG = activeTheme.caretBg;
 
+/** Code window chrome — `"window"` (floating editor) or `"minimal"` (docs-style). */
+export const CODE_CHROME = activeTheme.codeChrome ?? "window";
+
 /** Light [from, to] gradient for the procedural default backdrop ("shapes"). */
 export const BACKDROP: [string, string] = activeTheme.backdrop ?? ["#e6edff", "#f8faff"];
 
