@@ -8,6 +8,7 @@ still to check.
 ## Contents
 - [The beats file](#the-beats-file)
 - [Beat fields](#beat-fields)
+- [Composition (components + placement)](#composition)
 - [Panel kinds (exact fields + examples)](#panel-kinds)
 - [Motion vocabulary](#motion-vocabulary)
 - [Formats](#formats)
@@ -22,11 +23,16 @@ A `<slug>.beats.json` is a `ChangelogInput` — render it with `cadence create <
 ```json
 {
   "format": "16x9",
+  "template": "field-notebook",
   "beats": [ /* 3-6 beats */ ]
 }
 ```
 
-`format` is `"16x9" | "1x1" | "9x16"`. Everything is plain JSON-serializable data:
+`format` is `"16x9" | "1x1" | "9x16"`. `template` (optional) is the stylistic layer —
+one look per video — `"field-notebook" | "terminal" | "instructional"` (list:
+`cadence templates`); it binds a default theme that `--theme` overrides at render.
+`theme` is NOT a doc field — it's resolved from `--theme` / the project's
+`.cadence/theme.json` at render time. Everything is plain JSON-serializable data:
 no functions, no JSX. Motion, panel kind, and background are string keys the engine
 resolves at render time. (Inside the engine repo you can instead author a
 `<slug>.beats.ts` that `export default`s a typed `ChangelogInput` — the field shapes
@@ -48,8 +54,15 @@ below are identical; this reference uses TS snippets to show the types.)
   note: "Streams",             // optional handwritten flourish under the headline (marker color)
   code: { /* see below */ },   // optional
   panel: { /* see below */ },  // optional
+  components: [ /* see Composition */ ], // optional; explicit placement (replaces the legacy fields above)
 }
 ```
+
+A beat needs **either** the legacy fields above **or** a `components` array — both are
+valid (the legacy fields desugar into `components` automatically). `headline` is only
+required on the legacy path; a `components` beat carries its title as a `Title`
+component instead. Use `components` when you need to move/resize/reorder a piece (see
+[Composition](#composition)).
 
 **Handwritten flourish (`note`).** A beat-level `note` renders under the headline
 in the handwriting font (the theme's `fonts.note`, marker color) — e.g. a logo
@@ -71,6 +84,68 @@ code: {
   // do NOT add `tokens` — shiki tokenizes at render time
 }
 ```
+
+## Composition
+
+A beat can carry an explicit `components: ComponentInstance[]` instead of the legacy
+fields — independently placeable pieces. The renderer runs *only* on `components`; the
+legacy fields desugar into this exact model, so both shapes are valid and you can
+hand-author `components` only where you need the placement control.
+
+**Component shape** — a discriminated union on `type`:
+
+```ts
+type ComponentInstance =
+  | { type: "title";   placement: Placement; text: string; motion?: Motion }
+  | { type: "eyebrow"; placement: Placement; text: string }
+  | { type: "note";    placement: Placement; text: string }
+  | { type: "caption"; placement: Placement; text: string; variant?: "footer" | "subhead" } // default "footer"
+  | { type: "badge";   placement: Placement; text: string }
+  | { type: "code";    placement: Placement; code: Code }    // same `code` shape as the legacy field
+  | { type: "panel";   placement: Placement; panel: Panel }; // same `panel` shape (panel.kind stays inside)
+```
+
+The schema is `.strict()` — an unknown `type` or extra prop fails `cadence edit` (that
+means it's a code change, not data). `code`/`panel` reuse the exact `Code`/`Panel`
+shapes documented elsewhere in this file; `panel.kind` stays *inside* the `panel` prop.
+
+**Placement** — every field optional; an omitted field falls to the template's default
+for that component type:
+
+```ts
+type Placement = {
+  region?: "header" | "lead" | "trailing" | "footer"; // CLOSED set
+  align?:  "start" | "center" | "end";
+  size?:   "auto" | "sm" | "md" | "lg" | "fill";       // per-format pixel tiers, owned by the template
+  order?:  number;                                      // integer; intra-region sort
+};
+```
+
+- **regions** (closed — a new one needs a PR): `header` (the eyebrow row), `lead` (the
+  main column: title/note + code), `trailing` (the second seat in the row band — the
+  panel, at 16:9; stacks below `lead` in the vertical/square formats), `footer` (the
+  bottom bar: caption/badge).
+- **size**: `fill` for code, `md` for a panel, `auto` for text; `sm`/`lg` map to
+  template tiers.
+- **order**: text components reserve 0–2 (eyebrow 0 in `header`; title 0, caption 1,
+  note 2 in `lead`), code uses 10 so it never sorts above the note within `lead`.
+
+**Desugar mapping** (what each legacy field becomes — handy when converting a beat):
+
+| legacy field | condition | → type | region | align | size | order |
+|---|---|---|---|---|---|---|
+| `eyebrow` | present | `eyebrow` | `header` | center | auto | 0 |
+| `headline` | always | `title` | `lead` | center | auto | 0 |
+| `caption` | `hero` | `caption` `variant:"subhead"` | `lead` | center | auto | 1 |
+| `note` | present | `note` | `lead` | center | auto | 2 |
+| `caption` | not `hero` | `caption` `variant:"footer"` | `footer` | center | auto | 1 |
+| `badge` | present | `badge` | `footer` | center | auto | 0 |
+| `code` | present | `code` | `lead` | start | `fill` | 10 |
+| `panel` | present | `panel` | `trailing` | start | `md` | 0 |
+
+`hero`/`layout` stay beat-level routing flags (they pick the centered hero layout +
+suppress the footer); they are not components. The code↔panel reveal timing is computed
+by the renderer per beat — you don't set it.
 
 ## Panel kinds
 

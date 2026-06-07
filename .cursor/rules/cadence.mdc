@@ -7,11 +7,31 @@ alwaysApply: false
 
 Turn a software update into a rendered video. **A video is a list of "beats"** (a
 small JSON data file); the `cadence` engine owns motion, fonts, layout, the
-typewriter, code highlighting, and the backdrops. Your job: read the **target
-repo**, figure out what changed, write honest beats, and render.
+typewriter, code highlighting, and the backdrops. Your job: pick a **kind** ×
+**template**, read the **target repo**, figure out what changed, compose honest
+beats, and render.
 
 This works for **any** project — a TS SDK, a Rust/Go CLI, a library — not a
 specific product.
+
+## Three axes: kind × template × theme
+Cadence has three orthogonal choices. One sentence:
+**theme = what color/font; template = how big/heavy/spaced/animated; kind = what beats in what order.**
+
+- **`kind`** = the structural arc — *which* beats, in *what* order. Members:
+  `launch`, `changelog`, `milestone`, `announcement`, `showcase` (the old
+  `feature-launch` / `changelog-reel` still work as aliases). List: `cadence kinds`.
+- **`template`** = the stylistic layer — *how it looks* (type scale, weight,
+  spacing, surfaces, motion personality, default backgrounds), and it **binds a
+  default theme**. Members: `field-notebook` (default — the warm paper look),
+  `terminal` (dark monospace IDE; binds the `midnight` theme), `instructional`
+  (light airy editorial). List: `cadence templates`.
+- **`theme`** = color/font tokens only. A template names a default theme;
+  `--theme <name>` at render always overrides. NOT a beats-file field — it's
+  resolved from the project's `.cadence/theme.json` / `--theme` at render time.
+  List: `cadence themes`.
+
+You pick a kind × template, compose the beats data, then render with a theme.
 
 ## The engine
 Everything runs through one CLI. Install it once for a persistent `cadence`
@@ -22,15 +42,22 @@ binary (`npm i -g @waits/cadence`), or invoke it without installing as
 engine you can use `bun run cli …` instead.
 
 ```
-cadence create <repo|beats.json>    # the build verb (repo → video, or a beats file → video)
+cadence new <kind> [--release o/n|--changelog <p>|--repo <p>] [--template <s>] …  # kind → a durable beats file (no render)
+cadence edit <beats.json>           # deterministic validate + normalize gate (re-run after each edit)
+cadence fork <beats.json> [--template|--format|--headline|--name|--out]  # restyle/retarget an existing video
 cadence storyboard <beats.json>     # preview: plan + one still per beat → a sheet (no MP4)
+cadence create <repo|beats.json>    # the build verb (repo → video, or a beats file → video)
 cadence create … --dry-run          # same preview, straight from a repo (no MP4)
 cadence audit <beats.json>          # heuristic checks on a beats file (ranked, no auto-fix)
 cadence study --from-url <url>      # a brand URL/color → a theme JSON
-cadence themes                      # list built-in themes
+cadence kinds | templates | themes  # list each axis (arcs · looks · tokens)
 ```
 
 ## Workflow
+
+The loop is: **pick a kind × template → `cadence new` (scaffold the beats file) →
+compose/edit the JSON yourself → `cadence edit` (validate gate, re-run after each
+edit) → `cadence storyboard` → `cadence create`.**
 
 1. **Identify the target.** A local path or a GitHub repo (`owner/name`). You don't
    need the engine's source — you drive it through the CLI.
@@ -40,51 +67,138 @@ cadence themes                      # list built-in themes
    - a `CHANGELOG.md` — **but verify it's current**; many repos leave it stale
      (e.g. changesets with `changelog:false`), so cross-check against tags.
    Pick the 1–4 most demo-worthy changes; each becomes a beat.
-3. **Write honest code (the moat).** Never invent API. Climb the **honesty ladder**
-   and stop at the first rung that gives real symbols:
+3. **Scaffold with `cadence new <kind>`.** Pick the kind (the arc) and template (the
+   look), then scaffold a **durable** `.cadence/<slug>.beats.json` you own — *no
+   render*:
+   ```bash
+   cadence new launch --release owner/name --install "npm i pkg" --template terminal
+   cadence new changelog --changelog ./CHANGELOG.md --format 9x16
+   cadence new announcement            # no source ⇒ honest placeholder beats to fill in
+   ```
+   Flags: `--release o/n | --changelog <p> | --repo <p>` (the source), `--install
+   "<cmd>"`, `--template <style>`, `--theme <name>` (render-time hint, not stored),
+   `--format`, `--headline "<h>"`, `--name <slug>`, `--out <dir>`. With no source it
+   writes honest placeholders; you fill the real code (next step). It prints the path
+   and `→ cadence storyboard <file>`.
+4. **Write honest code, then compose the beats (the moat).** Never invent API. Climb
+   the **honesty ladder** and stop at the first rung that gives real symbols:
    1. **Types** — the package's `.d.ts` / exported types (truest source).
    2. **Examples** — `examples/`, tests, doc snippets.
    3. **README** — documented usage / CLI commands / install line.
    4. **Install-only** — if you can't verify a call, fall back to just the install
       command + prose; do **not** show a fabricated snippet.
    Capture the real install (`npm i …`, `brew install …`, `cargo add …`) and the
-   real class/command names exactly (casing matters — e.g. `SecondLayer`, not `Secondlayer`).
-4. **Write `<slug>.beats.json`** — a `ChangelogInput` as JSON (see
-   `references/authoring.md` for every field). Everything is JSON-serializable; don't
+   real class/command names exactly (casing matters — e.g. `SecondLayer`, not
+   `Secondlayer`). Then **edit `<slug>.beats.json` freely** — it's a `ChangelogInput`
+   (see `references/authoring.md` for every field). You reason over the beats and
+   their `components` + `placement` directly; everything is JSON-serializable. Don't
    author `tokens` (shiki fills them) or usually `motion` (defaults are right). Omit
-   `background` entirely to get the default procedural, theme-colored backdrop.
-5. **Storyboard — preview the whole arc before the MP4.** Run `cadence storyboard
-   <slug>.beats.json` (or `cadence create … --dry-run` straight from a repo): it
-   prints the beat-by-beat plan + pacing notes and renders a contact sheet
-   (`out/<slug>.storyboard.png`), one still per beat, no MP4. Show it to the user and
-   **iterate** — re-skin with `cadence redesign … --theme/--background`, fix content by
-   editing the beats — re-running storyboard until the arc + look are right. This is
-   the design loop; don't jump to a full render.
-6. **Render.** Once the storyboard looks right, render the MP4 (and social formats if
-   asked) with the locked `--theme`/`--format`. (`cadence create <slug>.beats.json
-   --frame 150` still gives a fast single-frame check of one moment.)
+   `background` to get the default procedural, theme-colored backdrop.
+5. **Run the `cadence edit` gate after every edit.** `cadence edit <slug>.beats.json`
+   is a **deterministic validate + normalize** step (no LLM in the binary — the
+   optional NL string is just *your* note). It parses the schema, desugars every beat,
+   and runs soft audits. On a schema error it prints the **issue path + message and
+   exits non-zero** — that means *fix and re-run* (a tight self-correction loop). On
+   success it prints a 1-line summary + `→ cadence storyboard`. Run `cadence edit
+   --explain` to dump the allowed component types / regions / panel kinds before you
+   write an edit — if the gate rejects an unknown type/region/kind, that edit needs an
+   engine PR (see Data vs. code, below).
+6. **Storyboard — preview the whole arc before the MP4.** Run `cadence storyboard
+   <slug>.beats.json [--template <style>]` (or `cadence create … --dry-run` straight
+   from a repo): it prints the beat-by-beat plan + pacing notes and renders a contact
+   sheet (`out/<slug>.storyboard.png`), one still per beat, no MP4. Show it to the user
+   and **iterate** — restyle by changing `template`/`--theme`, fix content by editing
+   the beats (re-run `cadence edit` each time) — until the arc + look are right. This
+   is the design loop; don't jump to a full render.
+7. **Render.** Once the storyboard looks right, render the MP4 (and social formats if
+   asked) with the locked `--template`/`--theme`/`--format`. (`cadence create
+   <slug>.beats.json --frame 150` still gives a fast single-frame check of one moment.)
+
+> To **restyle or retarget an existing video**, use `cadence fork <file>
+> [--template|--format|--headline|--name|--out]` — same arc, new look/format/opener,
+> as a pure data rewrite (no render). Changing the *kind* needs a source, so re-run
+> `cadence new <kind>` instead; `--theme` applies at render, not as a doc field.
 
 > Authoring in TypeScript (with types) also works when you're inside the engine repo:
 > a `<slug>.beats.ts` that `export default`s a `ChangelogInput`. JSON is the portable
 > form and is what to use everywhere else.
 
-## Interpreting the request (natural language → beats)
+## Interpreting the request (natural language → kind + format)
 
-- **announcement / launch / teaser** → install opener (`$ npm i …` + feature pills) → 1-3 code+panel feature beats → hero closer (package + tagline). This is the `feature-launch` default; pass `flow:"title-open"` for the classic title-open/install-close instead.
-- **changelog / what's new / new in X** → feature beats; eyebrow `"new in <project> <version>"`.
-- **milestone / N downloads / now stable** → a `stat` beat centerpiece.
-- **showcase / highlight <feature>** → feature beats with the panel that shows the result.
+Map the ask to a **kind** (the `cadence new <kind>` arc), then a format:
+
+- **launch** ("launch / announce the release") → install opener (`$ npm i …` + feature pills) → 1-3 code+panel feature beats → hero closer (package + tagline). The cinematic per-feature arc.
+- **changelog / what's new / new in X** → opener → numbered data-table of the real features → install closer; eyebrow `"new in <project> <version>"`.
+- **milestone / N downloads / now stable** → opener → one big `stat` centerpiece → install closer.
+- **announcement / teaser** → punchy 3-beat: title opener → one consolidated highlight → hero close. Tighter than `launch`.
+- **showcase / highlight ONE <feature>** → title opener → one centerpiece beat that lingers on the lead feature → hero close.
 - **format:** "vertical/reel/shorts" → `9x16`; "square/feed" → `1x1`; else `16x9`.
+- **look:** dark IDE/terminal vibe → `--template terminal`; light tutorial/editorial → `--template instructional`; else the default `field-notebook`.
 
-Keep it tight: 3-6 beats. Pick what's visual.
+`cadence kinds` lists each arc with a "when to use". Keep it tight: 3-6 beats; pick what's visual.
 
-## Beat shapes
-- **Install opener** — `layout:"center"` + a `bash` install `code` block + `badge` (e.g. `"v1.7"`) + `caption` (terse feature pills, `"sync · folders · read-only"`). The default open for a launch reel (the `feature-launch` template emits this).
+## Beat shapes (legacy, still valid)
+These shorthand fields are the quickest way to author a beat and **still work** —
+the engine desugars them into the composition model automatically. Use them for the
+common shapes; reach for explicit `components` (below) when you need to move/resize/
+reorder a piece.
+- **Install opener** — `layout:"center"` + a `bash` install `code` block + `badge` (e.g. `"v1.7"`) + `caption` (terse feature pills, `"sync · folders · read-only"`). The default open for a `launch` reel.
 - **Opener (title)** — `headline` + `eyebrow` only (classic title card).
 - **Feature** — `headline` + `code` + `panel` (code left, render/result right at 16:9). Default to pairing code with a panel — show the *result*, not just a title.
 - **Stat / milestone** — a `stat` panel (one big number).
 - **Hero closer** — `hero: true` + `layout:"center"` + `headline` (package name) + `caption` (one-line pitch). A big centered title to close on (package + tagline). Add `note` for a handwritten flourish under the headline (marker color, theme's `fonts.note`) — e.g. a logo lockup `{ headline: "Secondlayer", note: "Streams" }`.
 - **Install / CTA closer** — `layout:"center"` + a `bash`/install `code` block + `badge` + `caption` (when you'd rather end on the install).
+
+## Composition — moving, resizing, reordering pieces
+A beat can instead carry an explicit **`components` list** — independently placeable
+pieces. This is how you say "put the note on the headline line", "code left, panel
+right", "center the title", or reorder things. **Both shapes are valid**; legacy beats
+desugar into this exact model, so you can hand-author `components` only where you need
+the control and leave the rest as shorthand.
+
+A component is `{ type, placement, …props }`:
+
+- **types:** `Title` · `Eyebrow` · `Note` · `Caption` · `Badge` · `Code` · `Panel`
+  (text components take `text`; `Code` takes `code:{…}`; `Panel` takes `panel:{…}` —
+  same shapes as the legacy fields). `Caption` also takes `variant:"footer"|"subhead"`.
+- **`placement: { region, align, size, order }`** — all optional (omitted ⇒ the
+  template's default for that type):
+  - **`region`** — a CLOSED set: `header | lead | trailing | footer`. `header` =
+    eyebrow row; `lead` = the main column (title/note + code); `trailing` = the
+    second seat in the row band (the panel at 16:9); `footer` = the bottom bar
+    (caption/badge).
+  - **`align`** — `start | center | end`.
+  - **`size`** — `auto | sm | md | lg | fill` (per-format pixel tiers owned by the
+    template; `fill` for code, `md` for a panel).
+  - **`order`** — intra-region sort (text reserves 0–2, code 10).
+
+**Split code + panel feature beat** (code left, result panel right):
+```json
+{
+  "id": "events", "durationInFrames": 235,
+  "components": [
+    { "type": "eyebrow", "text": "new in streams", "placement": { "region": "header" } },
+    { "type": "title", "text": "Stream every event.", "placement": { "region": "lead" } },
+    { "type": "code", "placement": { "region": "lead", "align": "start", "size": "fill" },
+      "code": { "filename": "events.ts", "lang": "ts", "source": "const { events } = await sl.index.events({ limit: 50 });" } },
+    { "type": "panel", "placement": { "region": "trailing", "size": "md" },
+      "panel": { "kind": "feed", "title": "index.events", "subtitle": "ft_transfer", "rows": [{ "badge": "sBTC", "label": "SP2J6…WVEF", "value": "1,200.00" }] } }
+  ]
+}
+```
+
+**Centered hero + note closer** (big title over a handwritten flourish):
+```json
+{
+  "id": "close", "durationInFrames": 160, "layout": "center", "hero": true,
+  "components": [
+    { "type": "title", "text": "Secondlayer", "placement": { "region": "lead", "align": "center" } },
+    { "type": "note", "text": "Streams", "placement": { "region": "lead", "align": "center", "order": 2 } }
+  ]
+}
+```
+
+`references/authoring.md` has the exact component/placement schema.
 
 ## Panel picker (`panel.kind`) — choose by what the change produces
 | kind | shows | use for |
@@ -102,6 +216,28 @@ Keep it tight: 3-6 beats. Pick what's visual.
 
 Exact fields per kind: `references/authoring.md`.
 
+## Data vs. code — what you compose vs. what needs a PR
+The schema *is* the boundary, and `cadence edit`'s parse step is the enforcer:
+**if `cadence edit` accepts it, it's data you compose in JSON; if it rejects an
+unknown type/region/kind, it needs an engine PR.**
+
+**Pure data (compose it yourself):**
+- text — headline / eyebrow / caption / note / a `Title`/`Note` `text`
+- placement — move a component `region`↔`region`, re-`align`, pick a `size` tier, set `order`
+- swap a `panel.kind` or its rows/columns
+- reorder beats, retime `durationInFrames`, drop a beat
+- `layout: split↔center`, swap `theme` / `template` / `format`, set a per-video `background`
+- pick a different motion **preset** from the named vocabulary
+
+**Needs an engine PR (stop and report — don't fake it):**
+- a **new component type** (e.g. `Quote`, `Avatar`)
+- a **new region** (the set is closed) or free x/y positioning
+- a **new panel kind** (a new `panels/*.tsx` + union member)
+- a **new motion preset / easing curve** (the vocabulary lives in code)
+- a **new template** (a styling + layout + motion bundle)
+
+Run `cadence edit --explain` to see the current allowed types / regions / panel kinds.
+
 ## Rules that matter
 - **Honest code only** (the ladder above) — it's the product's whole credibility.
 - **Sequencing is automatic** — the engine types the code, then runs the panel. Just
@@ -116,19 +252,22 @@ A video reads its colors, fonts, and code styling from a theme. To match a brand
 - **Capture the project's brand in `<project>/.cadence/theme.json`** (a `ThemeConfig`). cadence **auto-discovers** it when run against that project (it walks up from the beats file), so no `--theme-file` is needed — and no brand-specific files land in the engine. Scaffold with `cadence study --accent "#10b981" --out <project>/.cadence/theme.json` (or `--from-url <url>`), then hand-tune. This is the preferred way to brand a video.
 - **Match the project's docs code snippets.** The theme styles the code window too — set `fonts.mono`, the `codeTheme` syntax colors + `codeBg` to the project's docs highlighter, and `codeChrome: "minimal"` for a chromeless, docs-style window (default `"window"` is the floating editor with traffic-light dots). Verify with `cadence storyboard <beats>` and compare to the real docs so on-screen code matches.
 - **From a screenshot / URL:** read the palette yourself and write the `ThemeConfig` — the dominant brand color becomes `signalBlue`; copy a built-in as a template (`cadence themes` lists them).
-- Or a built-in named theme: `cadence create <beats> --theme <name>`. Precedence: `--theme-file` > `--theme` > the project's `.cadence/theme.json` > default.
+- Or a built-in named theme: `cadence create <beats> --theme <name>`. Precedence: `--theme-file` > `--theme` > the project's `.cadence/theme.json` > the template's bound theme > default. (Each `template` binds a default theme — `terminal` → `midnight`, `field-notebook`/`instructional` → `default` — so picking a template also picks its palette unless you override.)
 
 **Custom painted backgrounds** (optional, needs `OPENAI_API_KEY`): `cadence art --prompt "<scene>" --name <slug>` generates a backdrop into `<project>/.cadence/backgrounds/_candidates/`; `cadence art --promote <slug>` moves the keeper to `.cadence/backgrounds/`; then reference it in a beat as `background: { src: "backgrounds/<file>.png" }` (cadence stages it at render). Reusable subject sets: `--pack <file.json>`; `--brand` tints art toward the project's theme palette. The bundled default pack is the Austin "Hill Country Sublime" landmarks — reuse one without any key/generation by referencing it directly (`background: { src: "backgrounds/pennybacker.png" }`; also `capitol, congress, mount-bonnell, enchanted-rock, hamilton-pool, barton-springs, ut-tower`), or regenerate a branded variant with `cadence art --landmark <camelKey> --brand` (keys: `pennybacker, utTower, capitol, congress, mountBonnell, enchantedRock, hamiltonPool, bartonSprings`). Default backdrop stays procedural — only reach for this when the user wants painted art. See `docs/guides/custom-backgrounds.md`.
 
 ## Render
 ```bash
-cadence storyboard <slug>.beats.json             # preview: plan + one still per beat (no MP4)
-cadence create <slug>.beats.json                 # 16:9 mp4 → out/
-cadence create <slug>.beats.json --format 9x16   # vertical
-cadence create <slug>.beats.json --frame 150     # one still (fast preview)
-cadence create <slug>.beats.json --theme slate   # a built-in theme
+cadence storyboard <slug>.beats.json                 # preview: plan + one still per beat (no MP4)
+cadence create <slug>.beats.json                     # 16:9 mp4 → out/
+cadence create <slug>.beats.json --format 9x16       # vertical
+cadence create <slug>.beats.json --frame 150         # one still (fast preview)
+cadence create <slug>.beats.json --template terminal # restyle (look) — binds the midnight theme
+cadence create <slug>.beats.json --theme slate       # a built-in theme (overrides the template's bound theme)
 ```
-Storyboard takes `--theme`/`--theme-file`/`--format` (not `--frame`).
+Storyboard takes `--template`/`--theme`/`--theme-file`/`--format` (not `--frame`).
+A `template` set in the beats file is the default; `--template` at render overrides it,
+and `--theme` always wins over the template's bound theme.
 
 Outputs land in `<project>/.cadence/out` when run against a repo that has a
 `.cadence/` dir (anchored to the project, not the cwd), else `./out`. Override
