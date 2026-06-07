@@ -13,9 +13,16 @@ const H = {
   "9x16": { top: "8%", size: 52, eyebrow: 14, track: 0.16, max: "86%" },
 } as const;
 
-const HEADLINE_SHADOW = "0 1px 2px rgba(30,41,59,0.24), 0 6px 34px rgba(30,41,59,0.42)";
+// Layered dark "scrim glow": tight 0-offset halos hug the glyphs so white text
+// reads over BRIGHT painterly skies (where a single soft drop-shadow washes out),
+// plus offset blurs for depth. Tinted near-black (#020617), never pure black.
+const HEADLINE_SHADOW =
+  "0 0 1px rgba(2,6,23,0.65), 0 0 4px rgba(2,6,23,0.55), 0 0 16px rgba(2,6,23,0.48), 0 2px 8px rgba(2,6,23,0.55), 0 10px 44px rgba(2,6,23,0.45)";
 // On a light backdrop, a soft white halo lifts the dark headline off the field.
 const HEADLINE_SHADOW_LIGHT = "0 1px 2px rgba(255,255,255,0.6)";
+// Smaller text needs tighter halos (a large blur smears glyphs at 15-23px).
+const EYEBROW_SHADOW = "0 0 1px rgba(2,6,23,0.70), 0 0 7px rgba(2,6,23,0.55), 0 1px 3px rgba(2,6,23,0.50)";
+const SUBHEAD_SHADOW = "0 0 2px rgba(2,6,23,0.55), 0 0 11px rgba(2,6,23,0.45), 0 2px 8px rgba(2,6,23,0.48)";
 
 export const Headline: React.FC<{
   eyebrow?: string;
@@ -57,7 +64,7 @@ export const Headline: React.FC<{
             color: COLORS.gold,
             opacity: eyebrowIn,
             marginBottom: 16,
-            textShadow: light ? "none" : "0 1px 10px rgba(20,24,33,0.35)",
+            textShadow: light ? "none" : EYEBROW_SHADOW,
           }}
         >
           {eyebrow}
@@ -87,7 +94,7 @@ export const Headline: React.FC<{
             marginTop: 22,
             color: light ? COLORS.textMuted : COLORS.titleWhite,
             opacity: (light ? 1 : 0.9) * subheadIn,
-            textShadow: light ? "none" : "0 1px 14px rgba(30,41,59,0.5)",
+            textShadow: light ? "none" : SUBHEAD_SHADOW,
             maxWidth: m.max,
             textWrap: "balance",
           }}

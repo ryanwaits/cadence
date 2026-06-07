@@ -112,7 +112,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
                 fontSize: isWide ? 21 : 18,
                 color: light ? COLORS.textMuted : COLORS.titleWhite,
                 opacity: light ? 1 : 0.86,
-                textShadow: light ? "none" : "0 1px 14px rgba(30,41,59,0.5)",
+                textShadow: light ? "none" : "0 0 2px rgba(2,6,23,0.55), 0 0 11px rgba(2,6,23,0.45), 0 2px 8px rgba(2,6,23,0.48)",
               }}
             >
               {beat.caption}
