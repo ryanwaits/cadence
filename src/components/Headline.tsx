@@ -38,7 +38,10 @@ export const Headline: React.FC<{
     easing: EASE.smooth,
   });
   const subheadIn = interpolate(frame, [18, 34], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
-  const noteIn = interpolate(frame, [24, 42], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
+  // The handwritten note "writes in": a left-to-right clip-path wipe (the writing
+  // direction) over a slightly longer window than a plain fade, so a short word
+  // reads as being drawn. A quick opacity ramp softens the leading ink edge.
+  const noteWrite = interpolate(frame, [24, 50], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
   const placement: React.CSSProperties =
     place === "center"
@@ -105,7 +108,10 @@ export const Headline: React.FC<{
             lineHeight: HEAD.headlineLineHeight,
             marginTop: 14,
             color: resolveRole(HEAD.noteColor),
-            opacity: noteIn,
+            // Reveal left→right (writing motion); the opacity ramp keeps the
+            // leading edge from popping. inset clips from the right toward 0.
+            clipPath: `inset(-0.15em ${(1 - noteWrite) * 100}% -0.15em 0)`,
+            opacity: Math.min(1, noteWrite * 5),
             textShadow: light ? "none" : SUBHEAD_SHADOW,
           }}
         >
