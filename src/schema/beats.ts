@@ -139,7 +139,9 @@ export const beatSchema = z
       .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes")
       .optional(),
     eyebrow: z.string().optional(),
-    headline: z.string(),
+    /** ⚠ Relaxed from required → optional. A beat now needs EITHER a legacy
+     * `headline` OR an explicit `components` array (enforced by `.refine` below). */
+    headline: z.string().optional(),
     headlineMotion: motionSchema.optional(),
     /** Optional sub-line pinned bottom-center — e.g. an install closer's tagline. */
     caption: z.string().optional(),
@@ -155,12 +157,32 @@ export const beatSchema = z
     note: z.string().optional(),
     code: codeSchema.optional(),
     panel: panelSchema.optional(),
+    /** NEW, additive composition layer. When present the renderer runs only on
+     * these; legacy fields desugar into the same shape (see `desugar.ts`).
+     *
+     * Resolved lazily via `require` so the import stays strictly one-directional
+     * at module-eval time (composition.ts → beats.ts). composition.ts dereferences
+     * `codeSchema`/`panelSchema`/`motionSchema` at its top level, so it must only
+     * be evaluated AFTER this file finishes defining them — the `z.lazy` callback
+     * runs on first `.parse`, well after that point. */
+    components: z
+      .array(
+        // biome-ignore lint/suspicious/noExplicitAny: lazy ref breaks the import cycle.
+        z.lazy(() => (require("./composition") as typeof import("./composition")).componentSchema as any)
+      )
+      .optional(),
   })
-  .strict();
+  .strict()
+  // Presence, not truthiness: a legacy install opener carries `headline: ""`
+  // (terminal-only card) and must stay valid.
+  .refine((b) => b.components !== undefined || b.headline !== undefined, "beat needs `components` or a legacy `headline`");
 
 export const changelogSchema = z
   .object({
     format: formatSchema.default("16x9"),
+    /** Optional stylistic layer — one look per video, mirrors `format`. `theme`
+     * is NOT a doc field (env/`.cadence/theme.json`-resolved). */
+    template: z.string().optional(),
     beats: z.array(beatSchema).min(1),
     /** Reserved — silent render for now. */
     audio: z.object({ music: z.string().optional(), vo: z.string().optional() }).optional(),
@@ -172,6 +194,8 @@ export type Format = z.infer<typeof formatSchema>;
 export type CodeSpec = z.infer<typeof codeSchema>;
 export type PanelSpec = z.infer<typeof panelSchema>;
 export type Beat = z.infer<typeof beatSchema>;
+/** Re-exported for downstream consumers that work off the beat contract. */
+export type { ComponentInstance } from "./composition";
 export type ChangelogVideo = z.infer<typeof changelogSchema>;
 /** Authoring type (defaults optional) — used by `content/*.beats.ts`. */
 export type ChangelogInput = z.input<typeof changelogSchema>;

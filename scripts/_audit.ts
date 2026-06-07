@@ -26,9 +26,10 @@ export function auditBeats(beats: Beat[]): Finding[] {
     else if (b.durationInFrames > 360) add("warn", `beat ${i + 1} "${b.headline}" is ${s}s — likely too long`);
   });
 
-  // 3. Headline length — short + declarative.
+  // 3. Headline length — short + declarative. (`headline` is now optional — a
+  // composition-only beat may carry its title in a `title` component instead.)
   beats.forEach((b, i) => {
-    if (b.headline.length > 48)
+    if (b.headline && b.headline.length > 48)
       add("warn", `beat ${i + 1} headline is ${b.headline.length} chars — shorten ("${b.headline.slice(0, 40)}…")`);
   });
 

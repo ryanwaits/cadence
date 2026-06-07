@@ -108,7 +108,7 @@ const cells: StoryboardCell[] = parsed.beats.map((b, i) => {
   } else {
     console.warn(`  ! beat ${i + 1} still failed — placeholder used`);
   }
-  return { img, headline: b.headline, panel: b.panel?.kind ?? "—", seconds: `${(b.durationInFrames / FPS).toFixed(1)}s` };
+  return { img, headline: b.headline ?? "", panel: b.panel?.kind ?? "—", seconds: `${(b.durationInFrames / FPS).toFixed(1)}s` };
 });
 
 const sheetProps: StoryboardProps = { format: fmt, name, cells };

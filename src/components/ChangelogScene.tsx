@@ -38,7 +38,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
     <AbsoluteFill>
       <Headline
         eyebrow={beat.eyebrow}
-        headline={beat.headline}
+        headline={beat.headline ?? ""}
         subhead={beat.hero ? beat.caption : undefined}
         note={beat.note}
         place={beat.hero ? "center" : "top"}
