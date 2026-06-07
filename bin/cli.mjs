@@ -12,10 +12,21 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const tsx =
-  [join(root, "node_modules/.bin/tsx"), resolve(root, "../.bin/tsx")].find(existsSync) ?? "tsx";
+const tsxCandidates = [
+  join(root, "node_modules/.bin/tsx"),
+  resolve(root, "../.bin/tsx"),
+  resolve(root, "../../.bin/tsx"),
+];
+const tsx = tsxCandidates.find(existsSync) ?? "tsx";
 
 const res = spawnSync(tsx, [join(root, "scripts/cli.ts"), ...process.argv.slice(2)], {
   stdio: "inherit",
 });
-process.exit(res.status ?? 0);
+// Don't swallow a failed launch: spawnSync sets `error` (and leaves `status`
+// null) when the runner can't be found/executed. `?? 0` there would exit 0 and
+// look like a silent no-op, so surface it and exit non-zero.
+if (res.error) {
+  console.error(`cadence: could not launch the CLI runner (${tsx}): ${res.error.message}`);
+  process.exit(1);
+}
+process.exit(res.status ?? 1);

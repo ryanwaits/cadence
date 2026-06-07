@@ -15,14 +15,22 @@ export const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const pkgFile = (rel: string) => join(PKG_ROOT, rel);
 
 /**
- * Resolve a dependency's CLI bin, robust to install layout: package-local
- * `.bin` first (dev + nested installs), then the hoisted top-level `.bin`
- * (our package living under `node_modules/<pkg>`), else assume it's on PATH.
+ * Resolve a dependency's CLI bin under `root`, robust to install layout:
+ * package-local `.bin` first (dev + nested installs), then the hoisted
+ * top-level `.bin`. The hoist sits one level above an unscoped package
+ * (`node_modules/<pkg>`) but TWO levels above a scoped one
+ * (`node_modules/@scope/<pkg>`), so both depths are checked; else assume PATH.
  */
+export function resolveBin(root: string, name: string): string {
+  const candidates = [
+    join(root, "node_modules", ".bin", name),
+    resolve(root, "..", ".bin", name),
+    resolve(root, "..", "..", ".bin", name),
+  ];
+  return candidates.find(existsSync) ?? name;
+}
+
+/** Resolve a dependency's CLI bin relative to the engine package root. */
 export function binPath(name: string): string {
-  const local = join(PKG_ROOT, "node_modules", ".bin", name);
-  if (existsSync(local)) return local;
-  const hoisted = resolve(PKG_ROOT, "..", ".bin", name);
-  if (existsSync(hoisted)) return hoisted;
-  return name;
+  return resolveBin(PKG_ROOT, name);
 }
