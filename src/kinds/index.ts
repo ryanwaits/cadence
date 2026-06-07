@@ -1,6 +1,8 @@
+import { announcement } from "./announcement";
 import { changelogReel } from "./changelog";
 import { featureLaunch } from "./launch";
 import { milestone } from "./milestone";
+import { showcase } from "./showcase";
 import type { Kind, KindMeta } from "./types";
 
 /** A registry entry: the structural arc + its listing metadata. */
@@ -38,6 +40,28 @@ const milestoneEntry: KindEntry = {
   },
 };
 
+const announcementEntry: KindEntry = {
+  fn: announcement,
+  meta: {
+    name: "announcement",
+    description:
+      "Punchy 3-beat teaser — title opener (leads with the top feature) → one consolidated highlight of the top features → hero close. Tighter than launch, semantic-only.",
+    whenToUse: "Teasing a release in a few seconds, when you want one short, high-energy beat rather than a per-feature walkthrough.",
+    format: "16x9",
+  },
+};
+
+const showcaseEntry: KindEntry = {
+  fn: showcase,
+  meta: {
+    name: "showcase",
+    description:
+      "Single-feature spotlight — title opener → one centerpiece beat that lingers on the lead feature → hero close. A slower, focused arc; the skill path can later add honest code here.",
+    whenToUse: "Highlighting ONE feature in depth, rather than marching through several like launch does.",
+    format: "16x9",
+  },
+};
+
 /**
  * Off-the-shelf kinds (structural arcs). A manifest + a kind name → beats.
  * Back-compat alias keys (`feature-launch`, `changelog-reel`) resolve to the
@@ -47,6 +71,8 @@ export const KINDS: Record<string, KindEntry> = {
   launch,
   changelog,
   milestone: milestoneEntry,
+  announcement: announcementEntry,
+  showcase: showcaseEntry,
   // back-compat aliases (pre-rename names)
   "feature-launch": launch,
   "changelog-reel": changelog,
