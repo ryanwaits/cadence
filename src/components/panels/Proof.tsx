@@ -16,8 +16,8 @@ const formatSig = (hex: string) => {
 };
 
 /** ed25519 signature as the hero — an honest cryptographic receipt, not a sticker. */
-export const ProofPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const ProofPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const sig = formatSig(spec.signature);
 
   const eventIn = interpolate(frame, [22, 38], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });

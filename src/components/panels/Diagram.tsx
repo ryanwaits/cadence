@@ -16,8 +16,8 @@ const NODE_FILL = { default: COLORS.chrome, data: COLORS.signalBlueSoft, api: CO
 const NODE_STROKE = { default: COLORS.hairline, data: COLORS.signalBlueBorder, api: COLORS.signalBlue } as const;
 const NODE_TEXT = { default: COLORS.ink, data: COLORS.signalBlue, api: COLORS.paper } as const;
 
-export const DiagramPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const DiagramPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const n = spec.nodes.length;
   const gap = (W - NW * n) / (n + 1);
   const cy = H / 2;

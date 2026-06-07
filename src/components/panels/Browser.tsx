@@ -11,8 +11,8 @@ const ROW_START = 24;
 
 /** A Finder-style listing: folder rows (amber glyph + chevron) and file rows
  * (paper glyph + right-aligned size), grouped into optional labeled sections. */
-export const BrowserPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const BrowserPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   // Flat row index across sections so the reveal staggers top-to-bottom.
   let row = 0;
   return (

@@ -11,9 +11,9 @@ const ROW_START = 26;
 const ROW_STAGGER = 11;
 const ROW_DUR = 16;
 
-export const FeedPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
-  const pulse = 0.5 + 0.5 * Math.sin(frame / 6);
+export const FeedPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
+  const pulse = 0.5 + 0.5 * Math.sin(useCurrentFrame() / 6);
   return (
     <PanelCard motion={spec.motion}>
       <PanelHeader>

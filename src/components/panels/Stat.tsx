@@ -9,8 +9,8 @@ type Spec = Extract<PanelSpec, { kind: "stat" }>;
 
 /** A big headline number — the core announcement primitive. Counts up when the
  * value is purely numeric ("10,000,000"); otherwise reveals as-is ("live"). */
-export const StatPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const StatPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const clean = spec.value.replace(/[, ]/g, "");
   const isNumeric = /^\d+(\.\d+)?$/.test(clean);
   const p = interpolate(frame, [18, 52], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });

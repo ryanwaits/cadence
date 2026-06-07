@@ -1,4 +1,4 @@
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { COLORS, EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { isLightBackdrop } from "../brand/tone";
@@ -23,7 +23,8 @@ const LAYOUT = {
 export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat, format }) => {
   const frame = useCurrentFrame();
   const isWide = format === "16x9";
-  const stack = !isWide || beat.layout === "center";
+  const centered = beat.layout === "center";
+  const stack = !isWide || centered;
   const L = LAYOUT[format];
   const light = isLightBackdrop(beat.background);
   const captionIn = interpolate(frame, [40, 58], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
@@ -48,10 +49,12 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
       <div
         style={{
           position: "absolute",
-          top: L.top,
+          // Center beats (install / hero) center their content in the full frame;
+          // split beats sit in the lower band beneath the headline.
+          top: centered ? 0 : L.top,
           left: 0,
           right: 0,
-          bottom: "6%",
+          bottom: centered ? 0 : "6%",
           display: "flex",
           flexDirection: stack ? "column" : L.dir,
           alignItems: stack ? "center" : "flex-start",
@@ -67,9 +70,9 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
         )}
         {beat.panel && (
           <div style={{ flex: "0 0 auto", width: stack ? "100%" : L.panelW, maxWidth: stack ? L.itemMax : 620 }}>
-            <Sequence from={panelStart} layout="none">
-              <Panel spec={beat.panel} />
-            </Sequence>
+            {/* Both cards mount immediately so the result panel is present while the
+                code types; `reveal` holds the panel's *content* until the code is done. */}
+            <Panel spec={beat.panel} reveal={panelStart} />
           </div>
         )}
       </div>
@@ -112,7 +115,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
                 fontSize: isWide ? 21 : 18,
                 color: light ? COLORS.textMuted : COLORS.titleWhite,
                 opacity: light ? 1 : 0.86,
-                textShadow: light ? "none" : "0 0 2px rgba(2,6,23,0.55), 0 0 11px rgba(2,6,23,0.45), 0 2px 8px rgba(2,6,23,0.48)",
+                textShadow: light ? "none" : "0 0 2px rgba(30,41,59,0.28), 0 0 11px rgba(30,41,59,0.22), 0 2px 8px rgba(30,41,59,0.24)",
               }}
             >
               {beat.caption}

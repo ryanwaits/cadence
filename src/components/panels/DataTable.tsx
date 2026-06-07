@@ -9,8 +9,8 @@ type Spec = Extract<PanelSpec, { kind: "data-table" }>;
 
 const ROW_START = 24;
 
-export const DataTablePanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const DataTablePanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   return (
     <PanelCard motion={spec.motion}>
       <div style={{ padding: "22px 26px" }}>

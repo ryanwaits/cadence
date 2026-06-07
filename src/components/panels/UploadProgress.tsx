@@ -6,8 +6,8 @@ import { PanelCard, PanelHeader } from "./PanelCard";
 
 type Spec = Extract<PanelSpec, { kind: "upload-progress" }>;
 
-export const UploadProgressPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const UploadProgressPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const { fps } = useVideoConfig();
   // upload climbs from ~frame 40 to ~frame 130
   const pct = interpolate(frame, [40, 40 + fps * 3], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });

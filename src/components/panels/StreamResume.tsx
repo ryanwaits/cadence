@@ -11,8 +11,8 @@ const ROW_START = 40;
 const ROW_STAGGER = 12;
 
 /** The cursor is the hero: a precise resume point, items flowing past it. */
-export const StreamResumePanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const StreamResumePanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const chipIn = interpolate(frame, [18, 34], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
   return (

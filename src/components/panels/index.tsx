@@ -16,29 +16,34 @@ const assertNever = (x: never): never => {
   throw new Error(`Unhandled panel kind: ${JSON.stringify(x)}`);
 };
 
-/** Resolve a PanelSpec (by its `kind`) to the right panel component. */
-export const Panel: React.FC<{ spec: PanelSpec }> = ({ spec }) => {
+/**
+ * Resolve a PanelSpec (by its `kind`) to the right panel component. `reveal` is a
+ * frame offset that holds the panel's *content* animations (rows, counters, draws)
+ * until the paired code window has finished typing — the card/header still mount
+ * immediately, so both components are on screen together.
+ */
+export const Panel: React.FC<{ spec: PanelSpec; reveal?: number }> = ({ spec, reveal = 0 }) => {
   switch (spec.kind) {
     case "feed":
-      return <FeedPanel spec={spec} />;
+      return <FeedPanel spec={spec} reveal={reveal} />;
     case "upload-progress":
-      return <UploadProgressPanel spec={spec} />;
+      return <UploadProgressPanel spec={spec} reveal={reveal} />;
     case "data-table":
-      return <DataTablePanel spec={spec} />;
+      return <DataTablePanel spec={spec} reveal={reveal} />;
     case "status":
-      return <StatusPanel spec={spec} />;
+      return <StatusPanel spec={spec} reveal={reveal} />;
     case "stat":
-      return <StatPanel spec={spec} />;
+      return <StatPanel spec={spec} reveal={reveal} />;
     case "proof":
-      return <ProofPanel spec={spec} />;
+      return <ProofPanel spec={spec} reveal={reveal} />;
     case "stream-resume":
-      return <StreamResumePanel spec={spec} />;
+      return <StreamResumePanel spec={spec} reveal={reveal} />;
     case "fork":
-      return <ForkPanel spec={spec} />;
+      return <ForkPanel spec={spec} reveal={reveal} />;
     case "diagram":
-      return <DiagramPanel spec={spec} />;
+      return <DiagramPanel spec={spec} reveal={reveal} />;
     case "browser":
-      return <BrowserPanel spec={spec} />;
+      return <BrowserPanel spec={spec} reveal={reveal} />;
     default:
       return assertNever(spec);
   }

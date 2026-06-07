@@ -34,8 +34,8 @@ const Chip: React.FC<{ block: Block; style?: React.CSSProperties }> = ({ block, 
 };
 
 /** An honest fork: the canonical chain forks, the orphan is archived, the new tip lights up. */
-export const ForkPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const ForkPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   const canonical = spec.blocks.filter((b) => b.state === "canonical");
   const orphan = spec.blocks.find((b) => b.state === "orphaned");
   const newTip = spec.blocks.find((b) => b.state === "new");

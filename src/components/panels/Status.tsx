@@ -14,8 +14,8 @@ const STATE_COLOR: Record<Spec["services"][number]["state"], string> = {
   idle: COLORS.textMuted as string,
 };
 
-export const StatusPanel: React.FC<{ spec: Spec }> = ({ spec }) => {
-  const frame = useCurrentFrame();
+export const StatusPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
+  const frame = useCurrentFrame() - reveal;
   return (
     <PanelCard motion={spec.motion}>
       <PanelHeader>
