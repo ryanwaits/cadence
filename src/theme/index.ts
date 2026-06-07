@@ -1,6 +1,7 @@
 import type { ThemeConfig } from "./types";
 import { defaultTheme } from "./default";
 import { slateTheme } from "./slate";
+import { midnightTheme } from "./midnight";
 import { LIBRARY } from "./library";
 
 export type { ThemeConfig, ThemeColors } from "./types";
@@ -9,6 +10,7 @@ export type { ThemeConfig, ThemeColors } from "./types";
 export const THEMES: Record<string, ThemeConfig> = {
   default: defaultTheme,
   slate: slateTheme,
+  midnight: midnightTheme,
   ...LIBRARY,
 };
 
