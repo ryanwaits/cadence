@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { type Beat, type Format } from "../src/schema/beats";
+import { TEMPLATES } from "../src/templates/registry";
 import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboard";
 import { stagePublicDir } from "./_assets";
 import { auditBeats, ICON, rankFindings } from "./_audit";
@@ -50,6 +51,11 @@ const bgTag = (b: Beat): string => {
 const parsed = await loadBeats(file);
 const fmt = (getFlag("--format") as Format | undefined) ?? parsed.format;
 parsed.format = fmt;
+
+// Template (stylistic layer): `--template` wins; else the doc's `template` field.
+const templateName = getFlag("--template") ?? parsed.template;
+if (templateName) parsed.template = templateName;
+
 const themeLabel = themeFile ? `custom (${basename(themeFile)})` : (theme ?? "default");
 const { timings, totalFrames } = beatTimings(parsed.beats);
 const name = basename(file).replace(/\.beats\.(ts|js|json)$/, "").replace(/\.(ts|js|json)$/, "");
@@ -76,6 +82,12 @@ if (findings.length) {
 
 // --- 2. The sheet (one still per beat → a single PNG) ---
 const env: NodeJS.ProcessEnv = { ...process.env };
+if (templateName) env.REMOTION_VIDEO_TEMPLATE = templateName;
+// Seed the theme from the template's bound theme when none was given — an
+// explicit `--theme`/`--theme-file` (or an auto-discovered project theme) wins.
+if (templateName && !theme && !themeFile && TEMPLATES[templateName]) {
+  env.REMOTION_VIDEO_THEME = TEMPLATES[templateName].theme;
+}
 if (theme) env.REMOTION_VIDEO_THEME = theme;
 if (themeFile) env.REMOTION_VIDEO_THEME_JSON = readFileSync(themeFile, "utf8");
 

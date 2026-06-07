@@ -10,6 +10,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { type Format } from "../src/schema/beats";
+import { TEMPLATES } from "../src/templates/registry";
 import { stagePublicDir } from "./_assets";
 import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
@@ -35,8 +36,21 @@ const parsed = await loadBeats(file);
 const fmt = getFlag("--format") as Format | undefined;
 if (fmt) parsed.format = fmt;
 const frame = getFlag("--frame");
-const { theme, themeFile } = resolveTheme({ theme: getFlag("--theme"), themeFile: getFlag("--theme-file"), beatsFile: file });
+
+// Template (stylistic layer): `--template` wins; else the doc's `template` field.
+const templateName = getFlag("--template") ?? parsed.template;
+if (templateName) parsed.template = templateName;
+
+const rawTheme = getFlag("--theme");
+const rawThemeFile = getFlag("--theme-file");
+const { theme, themeFile } = resolveTheme({ theme: rawTheme, themeFile: rawThemeFile, beatsFile: file });
 const env: NodeJS.ProcessEnv = { ...process.env };
+if (templateName) env.REMOTION_VIDEO_TEMPLATE = templateName;
+// Seed the theme from the template's bound theme when none was given — an
+// explicit `--theme`/`--theme-file` (or an auto-discovered project theme) wins.
+if (templateName && !theme && !themeFile && TEMPLATES[templateName]) {
+  env.REMOTION_VIDEO_THEME = TEMPLATES[templateName].theme;
+}
 if (theme) env.REMOTION_VIDEO_THEME = theme;
 if (themeFile) env.REMOTION_VIDEO_THEME_JSON = readFileSync(resolve(themeFile), "utf8");
 
