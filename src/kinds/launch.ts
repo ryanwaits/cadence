@@ -1,6 +1,6 @@
 import type { ChangelogInput } from "../schema/beats";
 import { clip, cta, DEFAULT_BG, heroClose, installOpener, opener } from "./parts";
-import type { Template } from "./types";
+import type { Kind } from "./types";
 
 /**
  * "Feature launch" — cinematic, one feature gets one beat (honest: just the real
@@ -8,7 +8,7 @@ import type { Template } from "./types";
  * closes on a hero title; `opts.flow: "title-open"` keeps the classic title
  * opener + install closer.
  */
-export const featureLaunch: Template = (m, opts = {}) => {
+export const featureLaunch: Kind = (m, opts = {}) => {
   const bg = opts.background ?? DEFAULT_BG;
   const installOpen = (opts.flow ?? "install-open") === "install-open";
 

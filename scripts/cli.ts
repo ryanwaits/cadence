@@ -8,7 +8,7 @@
  *   cadence redesign src/content/x.beats.ts --theme slate
  */
 import { spawnSync } from "node:child_process";
-import { TEMPLATES } from "../src/templates";
+import { type KindEntry, KINDS } from "../src/kinds";
 import { THEMES } from "../src/theme";
 import { binPath, pkgFile } from "./_pkg";
 
@@ -56,7 +56,14 @@ if (!sub || sub === "help" || sub === "--help") {
   process.exit(0);
 }
 if (sub === "templates") {
-  console.log("templates:\n" + Object.keys(TEMPLATES).map((t) => `  ${t}`).join("\n"));
+  // List the canonical kind names (the structural arcs), skipping back-compat
+  // alias keys that point at an entry already shown. The CLI's kind/template
+  // listing is reworked in a later stage; this keeps it behavior-equivalent.
+  const seen = new Set<KindEntry>();
+  const names = Object.entries(KINDS)
+    .filter(([, entry]) => !seen.has(entry) && (seen.add(entry), true))
+    .map(([name]) => name);
+  console.log("templates:\n" + names.map((t) => `  ${t}`).join("\n"));
   process.exit(0);
 }
 if (sub === "themes") {

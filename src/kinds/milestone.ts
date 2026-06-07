@@ -1,12 +1,12 @@
 import type { ChangelogInput } from "../schema/beats";
 import { cta, DEFAULT_BG, opener } from "./parts";
-import type { Template } from "./types";
+import type { Kind } from "./types";
 
 /**
  * "Milestone" — opener → one big number → install. Uses `opts.stat` when given;
  * otherwise an honest default drawn from the manifest (feature count this release).
  */
-export const milestone: Template = (m, opts = {}) => {
+export const milestone: Kind = (m, opts = {}) => {
   const bg = opts.background ?? DEFAULT_BG;
   const stat = opts.stat ?? { value: String(m.features.length), label: "new features", sub: `in ${m.version}` };
   const beats: ChangelogInput["beats"] = [

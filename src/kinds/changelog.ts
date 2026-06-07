@@ -1,13 +1,13 @@
 import type { ChangelogInput } from "../schema/beats";
 import { clip, cta, DEFAULT_BG, opener, type TBeat } from "./parts";
-import type { Template } from "./types";
+import type { Kind } from "./types";
 
 /**
  * "The classic" — opener → a numbered changelog (data-table of the real
  * features) → install closer. Deterministic and honest: no invented code, just
  * the feature titles the adapter parsed and the real install command.
  */
-export const changelogReel: Template = (m, opts = {}) => {
+export const changelogReel: Kind = (m, opts = {}) => {
   const bg = opts.background ?? DEFAULT_BG;
   const beats: ChangelogInput["beats"] = [opener(m, bg, opts.headline)];
 

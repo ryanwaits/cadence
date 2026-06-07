@@ -7,7 +7,17 @@
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { resolve } from "node:path";
-import { TEMPLATES } from "../src/templates";
+import { KINDS } from "../src/kinds";
+
+/** Canonical kind names (dedupe the back-compat alias keys that point at the same entry). */
+const kindNames = (() => {
+  const seen = new Set<unknown>();
+  const names: string[] = [];
+  for (const [k, v] of Object.entries(KINDS)) {
+    if (!seen.has(v)) { seen.add(v); names.push(k); }
+  }
+  return names;
+})();
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
@@ -52,10 +62,10 @@ We'll walk it one stage at a time. Press enter to accept the [defaults].
 
   // ── 2. Template ──────────────────────────────────────────────────────────
   rule();
-  say("STEP 2 — the arc.  (templates: src/templates/)");
-  say("A template maps the manifest to beats, deterministically and honestly");
-  say("(no fabricated code). Available: " + Object.keys(TEMPLATES).join(", ") + ".\n");
-  const template = await ask("template", "changelog-reel");
+  say("STEP 2 — the arc.  (kinds: src/kinds/)");
+  say("A kind maps the manifest to beats, deterministically and honestly");
+  say("(no fabricated code). Available: " + kindNames.join(", ") + ".\n");
+  const template = await ask("kind", "changelog");
   const install = await ask("real install line for the closer (e.g. 'brew install clarinet')");
 
   // ── 3. Look ──────────────────────────────────────────────────────────────
@@ -97,7 +107,7 @@ Understand it      WALKTHROUGH.md (architecture + how to adjust each part)
 Honest code        the 'cadence' skill reads a repo's types to add real
                    code snippets (the LLM path, vs the deterministic templates here)
 Add a panel        src/components/panels/  → register in panels/index.tsx + schema
-Add a template     src/templates/          → register in templates/index.ts
+Add a kind         src/kinds/              → register in kinds/index.ts
 Brand colors       cli study --from-url <site> --name <n>  → --theme-file themes/<n>.json
 Ship on release    docs/github-action.md   (auto-render on every release, free)
 

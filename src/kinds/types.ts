@@ -12,7 +12,15 @@ export type BackgroundSpec = {
   shapes?: boolean;
 };
 
-export type TemplateOpts = {
+/** Listing metadata for a kind (structural arc): what it is + when to reach for it. */
+export type KindMeta = {
+  name: string;
+  description: string;
+  whenToUse: string;
+  format: Format;
+};
+
+export type KindOpts = {
   format?: Format;
   /** Resolved background (style pack): image / gradient / solid. */
   background?: BackgroundSpec;
@@ -31,9 +39,9 @@ export type TemplateOpts = {
 };
 
 /**
- * A Template turns a parsed UpdateManifest into beats — deterministically, with
+ * A Kind turns a parsed UpdateManifest into beats — deterministically, with
  * no LLM and no fabricated code (it only shows what the manifest actually knows:
  * feature titles + the real install command). The brain/skill path adds honest
- * code on top; templates are the no-LLM path the GitHub Action uses.
+ * code on top; kinds are the no-LLM structural arcs the GitHub Action uses.
  */
-export type Template = (manifest: UpdateManifest, opts?: TemplateOpts) => ChangelogInput;
+export type Kind = (manifest: UpdateManifest, opts?: KindOpts) => ChangelogInput;

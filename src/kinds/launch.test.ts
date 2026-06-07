@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { UpdateManifest } from "../adapters/types";
-import { featureLaunch } from "./feature-launch";
+import { featureLaunch } from "./launch";
 
 const base: UpdateManifest = {
   product: "files-sdk",

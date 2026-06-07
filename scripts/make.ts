@@ -10,8 +10,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { manifestFromChangelogText, manifestFromReleaseBody } from "../src/adapters";
-import type { BackgroundSpec } from "../src/templates";
-import { TEMPLATES } from "../src/templates";
+import type { BackgroundSpec } from "../src/kinds";
+import { KINDS } from "../src/kinds";
 import { binPath, pkgFile } from "./_pkg";
 import { resolveOutDir } from "./_theme";
 
@@ -54,10 +54,11 @@ if (release) {
   process.exit(1);
 }
 
-// 2. Template → beats
+// 2. Kind (structural arc) → beats
 const templateName = flag("--template") ?? "changelog-reel";
-const template = TEMPLATES[templateName];
-if (!template) { console.error(`unknown template "${templateName}". have: ${Object.keys(TEMPLATES).join(", ")}`); process.exit(1); }
+const kindEntry = KINDS[templateName];
+if (!kindEntry) { console.error(`unknown template "${templateName}". have: ${Object.keys(KINDS).join(", ")}`); process.exit(1); }
+const template = kindEntry.fn;
 const statValue = flag("--stat-value");
 const beats = template(manifest, {
   format: flag("--format") as never,
