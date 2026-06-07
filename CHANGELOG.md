@@ -1,5 +1,11 @@
 # @waits/cadence
 
+## 0.7.1
+
+### Patch Changes
+
+- 57a9ca3: Strengthen headline/eyebrow/subhead legibility over image backgrounds with a layered dark scrim-glow text-shadow, so white text reads on bright painterly skies without switching to dark text.
+
 ## 0.7.0
 
 ### Minor Changes
