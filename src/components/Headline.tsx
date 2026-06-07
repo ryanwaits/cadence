@@ -1,29 +1,19 @@
 import { interpolate, useCurrentFrame } from "remotion";
-import { COLORS, EASE } from "../brand/tokens";
+import { EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
+import { STYLES, resolveRole } from "../templates/active";
 import { useMotion, type MotionSpec } from "../motion/useMotion";
 import type { Format } from "../schema/beats";
 
-// Per-format type scale. Eyebrow is a small tracked uppercase gold label (our
-// signature mono label = the reference's "NEW IN 1.7"); headline is a heavy,
-// tight Sora grotesk in warm near-white with a crisp-plus-soft shadow.
-const H = {
-  "16x9": { top: "13%", size: 72, eyebrow: 15, track: 0.18, max: "70%" },
-  "1x1": { top: "6%", size: 44, eyebrow: 13, track: 0.16, max: "86%" },
-  "9x16": { top: "8%", size: 52, eyebrow: 14, track: 0.16, max: "86%" },
-} as const;
-
-// Layered "scrim glow": tight 0-offset halos hug the glyphs so white text reads
-// over BRIGHT painterly skies (where a single soft drop-shadow washes out), plus
-// offset blurs for depth. Tinted slate (#1e293b) at ~half strength — present but
-// soft, not a heavy black outline.
-const HEADLINE_SHADOW =
-  "0 0 1px rgba(30,41,59,0.33), 0 0 4px rgba(30,41,59,0.28), 0 0 16px rgba(30,41,59,0.24), 0 2px 8px rgba(30,41,59,0.28), 0 10px 44px rgba(30,41,59,0.22)";
-// On a light backdrop, a soft white halo lifts the dark headline off the field.
-const HEADLINE_SHADOW_LIGHT = "0 1px 2px rgba(255,255,255,0.6)";
-// Smaller text needs tighter halos (a large blur smears glyphs at 15-23px).
-const EYEBROW_SHADOW = "0 0 1px rgba(30,41,59,0.35), 0 0 7px rgba(30,41,59,0.28), 0 1px 3px rgba(30,41,59,0.25)";
-const SUBHEAD_SHADOW = "0 0 2px rgba(30,41,59,0.28), 0 0 11px rgba(30,41,59,0.22), 0 2px 8px rgba(30,41,59,0.24)";
+// Type scale, weights, tracking, shadows, and color roles come from the active
+// template (`STYLES.headline`). Eyebrow is a small tracked uppercase label (our
+// signature mono label); headline is a heavy, tight grotesk in warm near-white
+// with a crisp-plus-soft shadow.
+const HEAD = STYLES.headline;
+const HEADLINE_SHADOW = HEAD.shadows.headline;
+const HEADLINE_SHADOW_LIGHT = HEAD.shadows.headlineLight;
+const EYEBROW_SHADOW = HEAD.shadows.eyebrow;
+const SUBHEAD_SHADOW = HEAD.shadows.subhead;
 
 export const Headline: React.FC<{
   eyebrow?: string;
@@ -40,7 +30,7 @@ export const Headline: React.FC<{
 }> = ({ eyebrow, headline, subhead, note, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
-  const m = H[format];
+  const m = HEAD.scale[format];
 
   const eyebrowIn = interpolate(frame, [14, 28], [0, 1], {
     extrapolateLeft: "clamp",
@@ -62,10 +52,10 @@ export const Headline: React.FC<{
           style={{
             fontFamily: FONTS.mono,
             fontSize: m.eyebrow,
-            fontWeight: 600,
+            fontWeight: HEAD.eyebrowWeight,
             letterSpacing: `${m.track}em`,
-            textTransform: "uppercase",
-            color: COLORS.gold,
+            textTransform: HEAD.eyebrowUppercase ? "uppercase" : "none",
+            color: resolveRole(HEAD.eyebrowColor),
             opacity: eyebrowIn,
             marginBottom: 16,
             textShadow: light ? "none" : EYEBROW_SHADOW,
@@ -78,10 +68,10 @@ export const Headline: React.FC<{
         style={{
           fontFamily: FONTS.display,
           fontSize: m.size,
-          fontWeight: 700,
-          letterSpacing: "-0.025em",
-          lineHeight: 1.0,
-          color: light ? COLORS.ink : COLORS.titleWhite,
+          fontWeight: HEAD.headlineWeight,
+          letterSpacing: HEAD.headlineTracking,
+          lineHeight: HEAD.headlineLineHeight,
+          color: light ? resolveRole(HEAD.headlineLightColor) : resolveRole(HEAD.headlineColor),
           textShadow: light ? HEADLINE_SHADOW_LIGHT : HEADLINE_SHADOW,
           maxWidth: m.max,
           textWrap: "balance",
@@ -93,10 +83,10 @@ export const Headline: React.FC<{
         <div
           style={{
             fontFamily: FONTS.body,
-            fontSize: Math.round(m.size * 0.32),
-            fontWeight: 500,
+            fontSize: Math.round(m.size * HEAD.subheadScale),
+            fontWeight: HEAD.subheadWeight,
             marginTop: 22,
-            color: light ? COLORS.textMuted : COLORS.titleWhite,
+            color: light ? resolveRole("textMuted") : resolveRole(HEAD.subheadColor),
             opacity: (light ? 1 : 0.9) * subheadIn,
             textShadow: light ? "none" : SUBHEAD_SHADOW,
             maxWidth: m.max,
@@ -110,11 +100,11 @@ export const Headline: React.FC<{
         <div
           style={{
             fontFamily: FONTS.note,
-            fontSize: Math.round(m.size * 0.5),
-            fontWeight: 500,
-            lineHeight: 1.0,
+            fontSize: Math.round(m.size * HEAD.noteScale),
+            fontWeight: HEAD.subheadWeight,
+            lineHeight: HEAD.headlineLineHeight,
             marginTop: 14,
-            color: COLORS.markerPink,
+            color: resolveRole(HEAD.noteColor),
             opacity: noteIn,
             textShadow: light ? "none" : SUBHEAD_SHADOW,
           }}

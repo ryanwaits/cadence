@@ -1,10 +1,24 @@
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { COLORS, EASE, RADIUS } from "../../brand/tokens";
-import { FONTS } from "../../brand/fonts";
 import type { PanelSpec } from "../../schema/beats";
+import { STYLES } from "../../templates/active";
 import { PanelCard, PanelHeader } from "./PanelCard";
 
 type Spec = Extract<PanelSpec, { kind: "upload-progress" }>;
+
+const S = STYLES.panel.byKind["upload-progress"] as {
+  titleSize: number;
+  titleWeight: number;
+  pill: { fontSize: number; fontWeight: number; color: string; background: string; padding: string; radiusRole: keyof typeof RADIUS };
+  body: { padding: string };
+  pctRow: { marginBottom: number };
+  pctSize: number;
+  pctWeight: number;
+  metaSize: number;
+  bar: { height: number; radiusRole: keyof typeof RADIUS; track: string };
+  btnRow: { gap: number; marginTop: number };
+  btn: { padding: string; radiusRole: keyof typeof RADIUS; fontSize: number; fontWeight: number; color: string; background: string; borderColor: string };
+};
 
 export const UploadProgressPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, reveal = 0 }) => {
   const frame = useCurrentFrame() - reveal;
@@ -17,18 +31,18 @@ export const UploadProgressPanel: React.FC<{ spec: Spec; reveal?: number }> = ({
   return (
     <PanelCard motion={spec.motion}>
       <PanelHeader>
-        <span style={{ color: COLORS.ink, fontSize: 19, fontWeight: 600 }}>↑ {spec.file}</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#c2410c", background: "rgba(194,65,12,0.10)", padding: "5px 11px", borderRadius: RADIUS.full }}>● Uploading…</span>
+        <span style={{ color: COLORS.ink, fontSize: S.titleSize, fontWeight: S.titleWeight }}>↑ {spec.file}</span>
+        <span style={{ fontSize: S.pill.fontSize, fontWeight: S.pill.fontWeight, color: S.pill.color, background: S.pill.background, padding: S.pill.padding, borderRadius: RADIUS[S.pill.radiusRole] }}>● Uploading…</span>
       </PanelHeader>
-      <div style={{ padding: "26px" }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
-          <span style={{ fontSize: 40, fontWeight: 700, color: COLORS.ink, fontVariantNumeric: "tabular-nums" }}>{Math.round(pct)}%</span>
-          <span style={{ fontSize: 17, color: COLORS.textMuted }}>{sent} / {spec.sizeMB} MB · part {part}/{spec.parts}</span>
+      <div style={{ padding: S.body.padding }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: S.pctRow.marginBottom }}>
+          <span style={{ fontSize: S.pctSize, fontWeight: S.pctWeight, color: COLORS.ink, fontVariantNumeric: "tabular-nums" }}>{Math.round(pct)}%</span>
+          <span style={{ fontSize: S.metaSize, color: COLORS.textMuted }}>{sent} / {spec.sizeMB} MB · part {part}/{spec.parts}</span>
         </div>
-        <div style={{ height: 10, borderRadius: RADIUS.full, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: COLORS.signalBlue, borderRadius: RADIUS.full }} />
+        <div style={{ height: S.bar.height, borderRadius: RADIUS[S.bar.radiusRole], background: S.bar.track, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct}%`, background: COLORS.signalBlue, borderRadius: RADIUS[S.bar.radiusRole] }} />
         </div>
-        <div style={{ display: "flex", gap: 14, marginTop: 22 }}>
+        <div style={{ display: "flex", gap: S.btnRow.gap, marginTop: S.btnRow.marginTop }}>
           <Btn label="control.pause()" />
           <Btn label="control.resume()" ghost />
         </div>
@@ -38,5 +52,5 @@ export const UploadProgressPanel: React.FC<{ spec: Spec; reveal?: number }> = ({
 };
 
 const Btn: React.FC<{ label: string; ghost?: boolean }> = ({ label, ghost }) => (
-  <span style={{ flex: 1, textAlign: "center", padding: "12px", borderRadius: RADIUS.md, fontSize: 17, fontWeight: 600, color: ghost ? COLORS.textMuted : "#c2410c", background: ghost ? "transparent" : "rgba(194,65,12,0.10)", border: `1px solid ${ghost ? COLORS.hairline : "rgba(194,65,12,0.25)"}` }}>{label}</span>
+  <span style={{ flex: 1, textAlign: "center", padding: S.btn.padding, borderRadius: RADIUS[S.btn.radiusRole], fontSize: S.btn.fontSize, fontWeight: S.btn.fontWeight, color: ghost ? COLORS.textMuted : S.btn.color, background: ghost ? "transparent" : S.btn.background, border: `1px solid ${ghost ? COLORS.hairline : S.btn.borderColor}` }}>{label}</span>
 );

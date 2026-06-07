@@ -1,6 +1,7 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { COLORS, EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
+import { STYLES, resolveRole } from "../templates/active";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
 import { Headline } from "./Headline";
@@ -96,14 +97,14 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
             <span
               style={{
                 fontFamily: FONTS.mono,
-                fontSize: isWide ? 14 : 12,
+                fontSize: isWide ? STYLES.badge.size : 12,
                 fontWeight: 600,
-                letterSpacing: "0.08em",
+                letterSpacing: STYLES.badge.track,
                 textTransform: "uppercase",
-                color: COLORS.gold,
-                background: COLORS.goldSoft,
+                color: resolveRole(STYLES.badge.fgRole),
+                background: resolveRole(STYLES.badge.bgRole),
                 padding: "4px 10px",
-                borderRadius: 999,
+                borderRadius: STYLES.badge.radius,
               }}
             >
               {beat.badge}
@@ -113,10 +114,10 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
             <span
               style={{
                 fontFamily: FONTS.body,
-                fontSize: isWide ? 21 : 18,
-                color: light ? COLORS.textMuted : COLORS.titleWhite,
+                fontSize: isWide ? STYLES.caption.footerSize : STYLES.caption.subheadSize,
+                color: light ? resolveRole(STYLES.caption.colorRole) : resolveRole("titleWhite"),
                 opacity: light ? 1 : 0.86,
-                textShadow: light ? "none" : "0 0 2px rgba(30,41,59,0.28), 0 0 11px rgba(30,41,59,0.22), 0 2px 8px rgba(30,41,59,0.24)",
+                textShadow: light ? "none" : STYLES.headline.shadows.subhead,
               }}
             >
               {beat.caption}

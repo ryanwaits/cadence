@@ -1,16 +1,17 @@
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import type { CSSProperties } from "react";
 import { EASE } from "../brand/tokens";
+import { MOTION } from "../templates/active";
 import type { EnterPreset, ExitPreset } from "./names";
 import { enterStyle, exitStyle } from "./presets";
 
 /**
  * Shared default entrance for the two floating cards — the code window and the
  * result panel — so they animate in on the same frame. Both `CodeWindow` and
- * `PanelCard` default to this; change it here, not in two component defaults that
- * can drift apart. (Panel *content* reveal is timed separately via `reveal`.)
+ * `PanelCard` default to this; sourced from the active template's motion
+ * personality. (Panel *content* reveal is timed separately via `reveal`.)
  */
-export const CARD_ENTER: MotionSpec = { enter: "settle", delay: 12 };
+export const CARD_ENTER: MotionSpec = MOTION.cardEnter;
 
 /** Declarative motion for one element. Mirrored as zod in `src/schema/beats.ts`. */
 export type MotionSpec = {
@@ -35,7 +36,7 @@ export const useMotion = (spec: MotionSpec = {}, opts: { reduced?: boolean } = {
   const { fps, durationInFrames } = useVideoConfig();
   const reduced = opts.reduced ?? false;
 
-  const easing = EASE[spec.easing ?? "smooth"];
+  const easing = EASE[spec.easing ?? MOTION.defaultEasing];
   const delay = spec.delay ?? 0;
   const enterDur = spec.durationInFrames ?? Math.round(fps * 0.55);
 
@@ -44,7 +45,10 @@ export const useMotion = (spec: MotionSpec = {}, opts: { reduced?: boolean } = {
     extrapolateRight: "clamp",
     easing,
   });
-  const enterFrag = enterStyle(spec.enter ?? "rise", ep, { distance: spec.distance, reduced });
+  const enterFrag = enterStyle(spec.enter ?? MOTION.defaultEnter, ep, {
+    distance: spec.distance ?? MOTION.enterDistance,
+    reduced,
+  });
 
   let opacity = enterFrag.opacity;
   const transforms: string[] = [];

@@ -3,9 +3,27 @@ import { COLORS, EASE, RADIUS } from "../../brand/tokens";
 import { FONTS } from "../../brand/fonts";
 import { drawDashoffset, typewriterChars } from "../../motion/presets";
 import type { PanelSpec } from "../../schema/beats";
+import { STYLES } from "../../templates/active";
 import { PanelCard, PanelHeader } from "./PanelCard";
 
 type Spec = Extract<PanelSpec, { kind: "proof" }>;
+
+const S = STYLES.panel.byKind.proof as {
+  headerTitleSize: number;
+  headerTitleWeight: number;
+  headerPill: { fontSize: number; fontWeight: number; padding: string; radiusRole: keyof typeof RADIUS; tracking: string };
+  body: { padding: string };
+  eventLineSize: number;
+  cursorSize: number;
+  divider: { height: number; margin: string };
+  sigLabel: { fontSize: number; fontWeight: number; tracking: string };
+  sig: { minHeight: number; marginTop: number; fontSize: number; lineHeight: string; tracking: string };
+  keyLine: { marginTop: number; fontSize: number };
+  verifyRow: { gap: number; marginTop: number; height: number };
+  check: { box: number; circleR: number; circleStroke: number; circleOpacity: number; pathStroke: number; len: number };
+  verifiedSize: number;
+  verifiedWeight: number;
+};
 
 /** Group a hex signature into 4-char blocks; truncate the middle to a receipt line. */
 const formatSig = (hex: string) => {
@@ -25,38 +43,38 @@ export const ProofPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, re
   const checkP = interpolate(frame, [82, 98], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
   const verifiedIn = interpolate(frame, [92, 104], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
-  const CHECK_LEN = 26;
+  const CHECK_LEN = S.check.len;
 
   return (
     <PanelCard motion={spec.motion}>
       <PanelHeader>
-        <span style={{ color: COLORS.ink, fontSize: 18, fontWeight: 600 }}>streams.consume</span>
-        <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.signalBlue, background: COLORS.signalBlueSoft, padding: "4px 10px", borderRadius: RADIUS.full, letterSpacing: "0.02em" }}>verify: true</span>
+        <span style={{ color: COLORS.ink, fontSize: S.headerTitleSize, fontWeight: S.headerTitleWeight }}>streams.consume</span>
+        <span style={{ fontSize: S.headerPill.fontSize, fontWeight: S.headerPill.fontWeight, color: COLORS.signalBlue, background: COLORS.signalBlueSoft, padding: S.headerPill.padding, borderRadius: RADIUS[S.headerPill.radiusRole], letterSpacing: S.headerPill.tracking }}>verify: true</span>
       </PanelHeader>
 
-      <div style={{ padding: "22px 26px" }}>
+      <div style={{ padding: S.body.padding }}>
         {/* event line + its cursor */}
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", opacity: eventIn, transform: `translateY(${(1 - eventIn) * 8}px)` }}>
-          <span style={{ fontSize: 19, color: COLORS.ink }}>{spec.eventLine}</span>
-          <span style={{ fontSize: 16, color: COLORS.textMuted, fontVariantNumeric: "tabular-nums" }}>{spec.cursor}</span>
+          <span style={{ fontSize: S.eventLineSize, color: COLORS.ink }}>{spec.eventLine}</span>
+          <span style={{ fontSize: S.cursorSize, color: COLORS.textMuted, fontVariantNumeric: "tabular-nums" }}>{spec.cursor}</span>
         </div>
 
-        <div style={{ height: 1, background: COLORS.hairline, margin: "18px 0" }} />
+        <div style={{ height: S.divider.height, background: COLORS.hairline, margin: S.divider.margin }} />
 
         {/* the signature is the hero */}
-        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: COLORS.textMuted }}>signature · ed25519</div>
-        <div style={{ minHeight: 56, marginTop: 8, fontSize: 18, lineHeight: "28px", color: COLORS.ink, fontVariantNumeric: "tabular-nums", letterSpacing: "0.04em", whiteSpace: "pre-wrap" }}>
+        <div style={{ fontSize: S.sigLabel.fontSize, fontWeight: S.sigLabel.fontWeight, letterSpacing: S.sigLabel.tracking, textTransform: "uppercase", color: COLORS.textMuted }}>signature · ed25519</div>
+        <div style={{ minHeight: S.sig.minHeight, marginTop: S.sig.marginTop, fontSize: S.sig.fontSize, lineHeight: S.sig.lineHeight, color: COLORS.ink, fontVariantNumeric: "tabular-nums", letterSpacing: S.sig.tracking, whiteSpace: "pre-wrap" }}>
           {sig.slice(0, typewriterChars(sigReveal, sig.length))}
         </div>
-        <div style={{ marginTop: 6, fontSize: 15, color: COLORS.textMuted }}>key {spec.keyId}</div>
+        <div style={{ marginTop: S.keyLine.marginTop, fontSize: S.keyLine.fontSize, color: COLORS.textMuted }}>key {spec.keyId}</div>
 
         {/* verification resolves with a drawn check (reserved height, no shift) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 18, height: 26 }}>
-          <svg width={26} height={26} viewBox="0 0 26 26">
-            <circle cx={13} cy={13} r={11} fill="none" stroke={COLORS.signalBlue} strokeWidth={1.5} opacity={0.35} />
-            <path d="M8 13.5 L11.5 17 L18 9.5" fill="none" stroke={COLORS.signalBlue} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={CHECK_LEN} strokeDashoffset={drawDashoffset(checkP, CHECK_LEN)} />
+        <div style={{ display: "flex", alignItems: "center", gap: S.verifyRow.gap, marginTop: S.verifyRow.marginTop, height: S.verifyRow.height }}>
+          <svg width={S.check.box} height={S.check.box} viewBox="0 0 26 26">
+            <circle cx={13} cy={13} r={S.check.circleR} fill="none" stroke={COLORS.signalBlue} strokeWidth={S.check.circleStroke} opacity={S.check.circleOpacity} />
+            <path d="M8 13.5 L11.5 17 L18 9.5" fill="none" stroke={COLORS.signalBlue} strokeWidth={S.check.pathStroke} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={CHECK_LEN} strokeDashoffset={drawDashoffset(checkP, CHECK_LEN)} />
           </svg>
-          <span style={{ fontSize: 17, fontWeight: 600, color: COLORS.signalBlue, opacity: verifiedIn }}>verified</span>
+          <span style={{ fontSize: S.verifiedSize, fontWeight: S.verifiedWeight, color: COLORS.signalBlue, opacity: verifiedIn }}>verified</span>
         </div>
       </div>
     </PanelCard>

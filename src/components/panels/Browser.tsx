@@ -3,9 +3,20 @@ import { COLORS, EASE } from "../../brand/tokens";
 import { FONTS } from "../../brand/fonts";
 import { enterStyle, staggerDelay } from "../../motion/presets";
 import type { PanelSpec } from "../../schema/beats";
+import { STYLES } from "../../templates/active";
 import { PanelCard, PanelHeader } from "./PanelCard";
 
 type Spec = Extract<PanelSpec, { kind: "browser" }>;
+
+const S = STYLES.panel.byKind.browser as {
+  headerGap: number;
+  headerTitleSize: number;
+  headerTitleWeight: number;
+  headerMetaSize: number;
+  body: { padding: string };
+  sectionLabel: { fontSize: number; fontWeight: number; tracking: string; padding: string };
+  row: { gap: number; padding: string; fontSize: number; metaSize: number };
+};
 
 const ROW_START = 24;
 
@@ -18,17 +29,17 @@ export const BrowserPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, 
   return (
     <PanelCard motion={spec.motion}>
       <PanelHeader>
-        <span style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 17, fontWeight: 600, color: COLORS.ink }}>
+        <span style={{ display: "flex", alignItems: "center", gap: S.headerGap, fontSize: S.headerTitleSize, fontWeight: S.headerTitleWeight, color: COLORS.ink }}>
           <FolderGlyph />
           {spec.title}
         </span>
-        {spec.meta && <span style={{ fontFamily: FONTS.mono, fontSize: 13, color: COLORS.textMuted }}>{spec.meta}</span>}
+        {spec.meta && <span style={{ fontFamily: FONTS.mono, fontSize: S.headerMetaSize, color: COLORS.textMuted }}>{spec.meta}</span>}
       </PanelHeader>
-      <div style={{ padding: "6px 0 14px" }}>
+      <div style={{ padding: S.body.padding }}>
         {spec.sections.map((section, si) => (
           <div key={si}>
             {section.label && (
-              <div style={{ fontFamily: FONTS.mono, fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: COLORS.textMuted, padding: "14px 26px 6px" }}>
+              <div style={{ fontFamily: FONTS.mono, fontSize: S.sectionLabel.fontSize, fontWeight: S.sectionLabel.fontWeight, textTransform: "uppercase", letterSpacing: S.sectionLabel.tracking, color: COLORS.textMuted, padding: S.sectionLabel.padding }}>
                 {section.label}
               </div>
             )}
@@ -36,10 +47,10 @@ export const BrowserPanel: React.FC<{ spec: Spec; reveal?: number }> = ({ spec, 
               const start = ROW_START + staggerDelay(row++, 7);
               const p = interpolate(frame, [start, start + 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
               return (
-                <div key={ri} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 26px", fontFamily: FONTS.mono, fontSize: 18, color: COLORS.ink, ...enterStyle("stagger", p) }}>
+                <div key={ri} style={{ display: "flex", alignItems: "center", gap: S.row.gap, padding: S.row.padding, fontFamily: FONTS.mono, fontSize: S.row.fontSize, color: COLORS.ink, ...enterStyle("stagger", p) }}>
                   {r.type === "folder" ? <FolderGlyph /> : <FileGlyph />}
                   <span style={{ flex: 1 }}>{r.name}</span>
-                  {r.meta && <span style={{ color: COLORS.textMuted, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{r.meta}</span>}
+                  {r.meta && <span style={{ color: COLORS.textMuted, fontSize: S.row.metaSize, fontVariantNumeric: "tabular-nums" }}>{r.meta}</span>}
                   {r.type === "folder" && !r.meta && <Chevron />}
                 </div>
               );
