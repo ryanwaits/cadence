@@ -1,5 +1,11 @@
 # @waits/cadence
 
+## 0.7.3
+
+### Patch Changes
+
+- 8f64e8f: Align the result panel card's entrance with the code window so both cards animate in on the same frame. They previously used different default entrance delays (code window 12, panel card 30), so the panel slid in ~18 frames late. Both now default to a shared `CARD_ENTER` spec. The panel's _content_ reveal (rows running as the code finishes typing) is unchanged.
+
 ## 0.7.2
 
 ### Patch Changes
