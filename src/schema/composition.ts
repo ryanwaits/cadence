@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { codeSchema, motionSchema, panelSchema } from "./beats";
+import { codeSchema, motionSchema, panelSchema } from "./primitives";
 
 /**
  * COMPOSITION SCHEMA (spec §2).
@@ -7,11 +7,10 @@ import { codeSchema, motionSchema, panelSchema } from "./beats";
  * A beat may carry an optional `components: ComponentInstance[]`. The renderer
  * runs *only* on `components`; legacy beat fields desugar into this array
  * (see `desugar.ts`). `code`/`panel` instances REUSE `codeSchema`/`panelSchema`
- * from `beats.ts` verbatim — never re-shaped — so the render stays byte-identical.
+ * from `./primitives` verbatim — never re-shaped — so the render stays byte-identical.
  *
- * Import direction is one-way: `composition.ts` → `beats.ts`. `beats.ts` imports
- * `componentSchema` back, but only references it lazily inside `z.array(...)`,
- * which keeps the cycle from biting at module-eval time (see note in beats.ts).
+ * Import direction is one-way and acyclic: `beats.ts → composition.ts → primitives.ts`
+ * (and `beats.ts → primitives.ts`). No `require`/lazy hack needed.
  */
 
 export const regionSchema = z.enum(["header", "lead", "trailing", "footer"]);

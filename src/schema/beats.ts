@@ -1,5 +1,15 @@
 import { z } from "zod";
-import { ENTER_PRESETS, EXIT_PRESETS } from "../motion/names";
+import { componentSchema } from "./composition";
+import {
+  codeSchema,
+  formatSchema,
+  motionSchema,
+  panelSchema,
+  type CodeSpec,
+  type Format,
+  type MotionSpecData,
+  type PanelSpec,
+} from "./primitives";
 
 /**
  * The data contract for a changelog video. Authored as a `.ts` module (for types
@@ -7,117 +17,14 @@ import { ENTER_PRESETS, EXIT_PRESETS } from "../motion/names";
  * string key resolved at render time via registries. `scripts/render.ts` parses
  * a beats module with this schema, serializes to JSON, and feeds it as Remotion
  * input props.
+ *
+ * The leaf schemas (motion/code/panel/format) live in `./primitives` so `beats.ts`
+ * and `./composition` can both import them without a cycle. They're re-exported
+ * below, so existing `from "../schema/beats"` imports keep resolving.
  */
 
-const enterEnum = z.enum(ENTER_PRESETS);
-const exitEnum = z.enum(EXIT_PRESETS);
-
-export const motionSchema = z
-  .object({
-    enter: enterEnum.optional(),
-    exit: exitEnum.optional(),
-    easing: z.enum(["smooth", "snappy"]).optional(),
-    delay: z.number().optional(),
-    durationInFrames: z.number().optional(),
-    distance: z.number().optional(),
-  })
-  .strict();
-
-export const formatSchema = z.enum(["16x9", "1x1", "9x16"]);
-
-const codeTokenSchema = z.object({ content: z.string(), color: z.string() });
-
-export const codeSchema = z
-  .object({
-    filename: z.string(),
-    lang: z.enum(["ts", "tsx", "bash", "json"]),
-    source: z.string(),
-    theme: z.literal("light").default("light"),
-    motion: motionSchema.optional(),
-    /** Filled by calculateMetadata via shiki — do not author by hand. */
-    tokens: z.array(z.array(codeTokenSchema)).optional(),
-  })
-  .strict();
-
-export const panelSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("feed"),
-    title: z.string().default("feed"),
-    subtitle: z.string().optional(),
-    status: z.string().default("live…"),
-    rows: z.array(z.object({ badge: z.string(), label: z.string(), value: z.string() })),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("upload-progress"),
-    file: z.string(),
-    sizeMB: z.number(),
-    parts: z.number(),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("data-table"),
-    title: z.string().optional(),
-    columns: z.array(z.string()),
-    rows: z.array(z.array(z.string())),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("status"),
-    title: z.string().default("status"),
-    services: z.array(z.object({ name: z.string(), state: z.enum(["ok", "syncing", "error", "idle"]), detail: z.string().optional() })),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("proof"),
-    eventLine: z.string(),
-    cursor: z.string(),
-    signature: z.string(),
-    keyId: z.string(),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("stream-resume"),
-    fromCursor: z.string(),
-    rows: z.array(z.object({ cursor: z.string(), label: z.string() })),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("fork"),
-    blocks: z.array(z.object({ height: z.number(), hash: z.string(), state: z.enum(["canonical", "orphaned", "new"]) })),
-    rewindTo: z.string(),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("stat"),
-    value: z.string(),
-    label: z.string(),
-    sub: z.string().optional(),
-    motion: motionSchema.optional(),
-  }),
-  z.object({
-    kind: z.literal("diagram"),
-    nodes: z.array(z.object({ id: z.string(), label: z.string(), type: z.enum(["default", "data", "api"]).default("default") })),
-    edges: z.array(z.object({ from: z.string(), to: z.string(), label: z.string().optional() })),
-    note: z.string().optional(),
-    motion: motionSchema.optional(),
-  }),
-  // A Finder-style file/folder browser — the "result" card paired beside a code
-  // window (e.g. a `list({ prefix, delimiter })` call rendering the folders +
-  // files it returns). Sectioned so a listing can split into "prefixes"/"items".
-  z.object({
-    kind: z.literal("browser"),
-    title: z.string(),
-    meta: z.string().optional(),
-    sections: z.array(
-      z.object({
-        label: z.string().optional(),
-        rows: z.array(z.object({ type: z.enum(["folder", "file"]), name: z.string(), meta: z.string().optional() })),
-      })
-    ),
-    motion: motionSchema.optional(),
-  }),
-]);
+export { codeSchema, formatSchema, motionSchema, panelSchema } from "./primitives";
+export type { CodeSpec, Format, MotionSpecData, PanelSpec } from "./primitives";
 
 export const beatSchema = z
   .object({
@@ -139,7 +46,7 @@ export const beatSchema = z
       .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes")
       .optional(),
     eyebrow: z.string().optional(),
-    /** ⚠ Relaxed from required → optional. A beat now needs EITHER a legacy
+    /** Relaxed from required → optional. A beat now needs EITHER a legacy
      * `headline` OR an explicit `components` array (enforced by `.refine` below). */
     headline: z.string().optional(),
     headlineMotion: motionSchema.optional(),
@@ -158,19 +65,8 @@ export const beatSchema = z
     code: codeSchema.optional(),
     panel: panelSchema.optional(),
     /** NEW, additive composition layer. When present the renderer runs only on
-     * these; legacy fields desugar into the same shape (see `desugar.ts`).
-     *
-     * Resolved lazily via `require` so the import stays strictly one-directional
-     * at module-eval time (composition.ts → beats.ts). composition.ts dereferences
-     * `codeSchema`/`panelSchema`/`motionSchema` at its top level, so it must only
-     * be evaluated AFTER this file finishes defining them — the `z.lazy` callback
-     * runs on first `.parse`, well after that point. */
-    components: z
-      .array(
-        // biome-ignore lint/suspicious/noExplicitAny: lazy ref breaks the import cycle.
-        z.lazy(() => (require("./composition") as typeof import("./composition")).componentSchema as any)
-      )
-      .optional(),
+     * these; legacy fields desugar into the same shape (see `desugar.ts`). */
+    components: z.array(componentSchema).optional(),
   })
   .strict()
   // Presence, not truthiness: a legacy install opener carries `headline: ""`
@@ -189,10 +85,6 @@ export const changelogSchema = z
   })
   .strict();
 
-export type MotionSpecData = z.infer<typeof motionSchema>;
-export type Format = z.infer<typeof formatSchema>;
-export type CodeSpec = z.infer<typeof codeSchema>;
-export type PanelSpec = z.infer<typeof panelSchema>;
 export type Beat = z.infer<typeof beatSchema>;
 /** Re-exported for downstream consumers that work off the beat contract. */
 export type { ComponentInstance } from "./composition";
