@@ -230,12 +230,30 @@ export const fieldNotebook: TemplateStyle = {
     radius: { sm: 3, md: 6, lg: 8, xl: 10, full: 999 },
   },
   layout: {
-    // Region geometry is extracted in Stage 1b; the legacy `LAYOUT` map still
-    // lives in ChangelogScene for now (spec §3, Stage 1a is styling-only).
+    // Band geometry (top/dir/gap/pad/bottom) extracted verbatim from the legacy
+    // `LAYOUT` map + container in ChangelogScene (Stage 1b). The lead/trailing
+    // band shares one geometry — `dir` is the row/column axis used only when the
+    // band reflows to a row (16x9 split). `footer.bottom` is the footer bar's
+    // offset (legacy `bottom: "7%"`).
     regions: {
-      "16x9": {},
-      "1x1": {},
-      "9x16": {},
+      "16x9": {
+        lead: { top: "30%", bottom: "6%", dir: "row", gap: 56, pad: "0 110px" },
+        footer: { bottom: "7%" },
+      },
+      "1x1": {
+        lead: { top: "29%", bottom: "6%", dir: "column", gap: 22, pad: "0 6%" },
+        footer: { bottom: "7%" },
+      },
+      "9x16": {
+        lead: { top: "23%", bottom: "6%", dir: "column", gap: 30, pad: "0 6%" },
+        footer: { bottom: "7%" },
+      },
+    },
+    // `size`-enum → per-format pixel tiers for the lead/trailing band.
+    bands: {
+      "16x9": { codeFont: 24, codeMax: 820, itemMax: 800, panelW: 620, panelMax: 620 },
+      "1x1": { codeFont: 17, codeMax: 940, itemMax: 940, panelW: "100%", panelMax: 620 },
+      "9x16": { codeFont: 21, codeMax: 940, itemMax: 940, panelW: "100%", panelMax: 620 },
     },
     defaultRegion: {
       title: "lead",
@@ -250,7 +268,9 @@ export const fieldNotebook: TemplateStyle = {
       code: "fill",
       panel: "md",
     },
-    variants: { hero: {} },
+    // `layout:center` / hero ⇒ the band fills the full frame (legacy
+    // `centered ? 0 : ...` for the container top/bottom).
+    variants: { hero: { lead: { top: "0", bottom: "0" } } },
   },
   motion: {
     cardEnter: { enter: "settle", delay: 12 }, // CARD_ENTER from useMotion.ts

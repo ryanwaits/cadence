@@ -46,6 +46,26 @@ export type RegionGeom = {
   maxWidth?: string;
 };
 
+/**
+ * Per-format pixel tiers for the `lead`/`trailing` band — the `size` enum
+ * (`fill`/`md`/`auto`) resolves through these. Carries the values the legacy
+ * `LAYOUT` map held that don't fit a single `RegionGeom` (code font + the
+ * per-tier max/width pixels). Extracted verbatim from `ChangelogScene`.
+ *
+ * - `codeFont`  → `<CodeWindow fontSize>` for the `fill` code instance.
+ * - `codeMax`   → `maxWidth` of a `fill` instance in a ROW band (16x9 split).
+ * - `itemMax`   → `maxWidth` of any instance in a STACKED band (column).
+ * - `panelW`    → `width` of an `md` instance in a ROW band.
+ * - `panelMax`  → `maxWidth` of an `md` instance in a ROW band.
+ */
+export type BandSizes = {
+  codeFont: number;
+  codeMax: number;
+  itemMax: number;
+  panelW: number | string;
+  panelMax: number;
+};
+
 /** Raw cubic-bezier control points `[x1, y1, x2, y2]` (a theme/template-agnostic curve). */
 export type BezierTuple = [number, number, number, number];
 
@@ -61,6 +81,8 @@ export type MotionPersonality = {
 export type LayoutModel = {
   /** Per-format region geometry. */
   regions: Record<Format, Partial<Record<RegionName, RegionGeom>>>;
+  /** Per-format `size`-enum → pixel tiers for the lead/trailing band. */
+  bands: Record<Format, BandSizes>;
   /** Where each component type lands when `placement.region` is omitted. */
   defaultRegion: Record<ComponentType, RegionName>;
   /** Default size tier per component type. */
