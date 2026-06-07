@@ -4,6 +4,14 @@ import { EASE } from "../brand/tokens";
 import type { EnterPreset, ExitPreset } from "./names";
 import { enterStyle, exitStyle } from "./presets";
 
+/**
+ * Shared default entrance for the two floating cards — the code window and the
+ * result panel — so they animate in on the same frame. Both `CodeWindow` and
+ * `PanelCard` default to this; change it here, not in two component defaults that
+ * can drift apart. (Panel *content* reveal is timed separately via `reveal`.)
+ */
+export const CARD_ENTER: MotionSpec = { enter: "settle", delay: 12 };
+
 /** Declarative motion for one element. Mirrored as zod in `src/schema/beats.ts`. */
 export type MotionSpec = {
   enter?: EnterPreset;

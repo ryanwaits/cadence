@@ -1,7 +1,7 @@
 import { useCurrentFrame } from "remotion";
 import { CARET_BG, CODE_CHROME, COLORS, FLOAT_SHADOW } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
-import { useMotion, type MotionSpec } from "../motion/useMotion";
+import { CARD_ENTER, useMotion, type MotionSpec } from "../motion/useMotion";
 import { CODE_BG, type CodeLine } from "../code/highlight";
 
 type Props = {
@@ -21,7 +21,7 @@ export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec) =>
   typeStartFor(motion) + Math.ceil(totalChars(tokens) / CHARS_PER_FRAME);
 
 /** Floating code window with a single-caret typewriter over pre-tokenized code. */
-export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = { enter: "settle", delay: 12 }, fontSize = 22 }) => {
+export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = CARD_ENTER, fontSize = 22 }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
   const minimal = CODE_CHROME === "minimal";

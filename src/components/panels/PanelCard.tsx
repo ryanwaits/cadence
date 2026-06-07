@@ -1,11 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import { COLORS, FLOAT_SHADOW, RADIUS } from "../../brand/tokens";
 import { FONTS } from "../../brand/fonts";
-import { useMotion, type MotionSpec } from "../../motion/useMotion";
+import { CARD_ENTER, useMotion, type MotionSpec } from "../../motion/useMotion";
 
 /** Floating Field Notebook panel shell (translucent paper, hairline, float shadow). */
 export const PanelCard: React.FC<{ motion?: MotionSpec; style?: CSSProperties; children: ReactNode }> = ({
-  motion = { enter: "settle", delay: 30 },
+  // Match the code window's entrance so both cards appear on the same frame.
+  motion = CARD_ENTER,
   style,
   children,
 }) => {
