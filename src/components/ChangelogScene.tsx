@@ -40,6 +40,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
         eyebrow={beat.eyebrow}
         headline={beat.headline}
         subhead={beat.hero ? beat.caption : undefined}
+        note={beat.note}
         place={beat.hero ? "center" : "top"}
         motion={beat.headlineMotion}
         format={format}

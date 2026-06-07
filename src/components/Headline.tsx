@@ -30,12 +30,14 @@ export const Headline: React.FC<{
   headline: string;
   /** Optional sub-tagline rendered directly under the headline (hero/title cards). */
   subhead?: string;
+  /** Optional handwritten flourish under the headline (FONTS.note, marker color). */
+  note?: string;
   /** `"top"` (default) anchors near the top; `"center"` vertically centers the block. */
   place?: "top" | "center";
   motion?: MotionSpec;
   format?: Format;
   light?: boolean;
-}> = ({ eyebrow, headline, subhead, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false }) => {
+}> = ({ eyebrow, headline, subhead, note, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
   const m = H[format];
@@ -46,6 +48,7 @@ export const Headline: React.FC<{
     easing: EASE.smooth,
   });
   const subheadIn = interpolate(frame, [18, 34], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
+  const noteIn = interpolate(frame, [24, 42], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
   const placement: React.CSSProperties =
     place === "center"
@@ -101,6 +104,22 @@ export const Headline: React.FC<{
           }}
         >
           {subhead}
+        </div>
+      )}
+      {note && (
+        <div
+          style={{
+            fontFamily: FONTS.note,
+            fontSize: Math.round(m.size * 0.5),
+            fontWeight: 500,
+            lineHeight: 1.0,
+            marginTop: 14,
+            color: COLORS.markerPink,
+            opacity: noteIn,
+            textShadow: light ? "none" : SUBHEAD_SHADOW,
+          }}
+        >
+          {note}
         </div>
       )}
     </div>

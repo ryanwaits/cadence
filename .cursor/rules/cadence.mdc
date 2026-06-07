@@ -83,7 +83,7 @@ Keep it tight: 3-6 beats. Pick what's visual.
 - **Opener (title)** — `headline` + `eyebrow` only (classic title card).
 - **Feature** — `headline` + `code` + `panel` (code left, render/result right at 16:9). Default to pairing code with a panel — show the *result*, not just a title.
 - **Stat / milestone** — a `stat` panel (one big number).
-- **Hero closer** — `hero: true` + `layout:"center"` + `headline` (package name) + `caption` (one-line pitch). A big centered title to close on (package + tagline).
+- **Hero closer** — `hero: true` + `layout:"center"` + `headline` (package name) + `caption` (one-line pitch). A big centered title to close on (package + tagline). Add `note` for a handwritten flourish under the headline (marker color, theme's `fonts.note`) — e.g. a logo lockup `{ headline: "Secondlayer", note: "Streams" }`.
 - **Install / CTA closer** — `layout:"center"` + a `bash`/install `code` block + `badge` + `caption` (when you'd rather end on the install).
 
 ## Panel picker (`panel.kind`) — choose by what the change produces

@@ -149,6 +149,10 @@ export const beatSchema = z
     /** Render as a centered hero/title card — big headline + `caption` as a
      * sub-tagline directly under it (e.g. a closing "package · one-line pitch"). */
     hero: z.boolean().optional(),
+    /** Optional handwritten flourish rendered under the headline (FONTS.note,
+     * marker color) — e.g. a product-name scrawl on a closer. Beat-level; distinct
+     * from the `diagram` panel's `note`. */
+    note: z.string().optional(),
     code: codeSchema.optional(),
     panel: panelSchema.optional(),
   })

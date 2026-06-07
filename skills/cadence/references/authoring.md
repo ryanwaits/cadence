@@ -44,10 +44,19 @@ below are identical; this reference uses TS snippets to show the types.)
   caption: "subscribe · verify · resume",  // optional bottom-center tagline
   badge: "v6.3",               // optional gold version pill (with caption)
   layout: "split",             // "split" (default) | "center" (for closers)
+  hero: true,                  // optional; centered title card (headline + caption under it)
+  note: "Streams",             // optional handwritten flourish under the headline (marker color)
   code: { /* see below */ },   // optional
   panel: { /* see below */ },  // optional
 }
 ```
+
+**Handwritten flourish (`note`).** A beat-level `note` renders under the headline
+in the handwriting font (the theme's `fonts.note`, marker color) — e.g. a logo
+lockup on a closer: `{ layout: "center", headline: "Secondlayer", note: "Streams" }`
+draws "Secondlayer" big over a handwritten "Streams". (Distinct from a `diagram`
+panel's `note`.) Needs a theme whose `fonts.note` is a loaded handwriting family
+(the default is `Caveat`).
 
 **Duration guidance.** Code+panel beats need room because the panel waits for the
 code to finish typing (see Sequencing). ~235 frames fits ~12 lines of code plus a
