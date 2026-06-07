@@ -18,6 +18,8 @@ export type UpdateManifest = {
   features: Feature[];
   /** Real install line, e.g. "npm i pkg", "brew install tool". */
   install?: string;
+  /** One-line pitch for the hero closer (e.g. "One API for every storage provider."). */
+  tagline?: string;
   repoUrl?: string;
   /** Anything the parser dropped (kept transparent — never silently truncate). */
   dropped?: number;

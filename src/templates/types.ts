@@ -20,6 +20,14 @@ export type TemplateOpts = {
   headline?: string;
   /** For the milestone template: a big number to feature. */
   stat?: { value: string; label: string; sub?: string };
+  /** Opening style. `"install-open"` (feature-launch default) opens on the install
+   * terminal + feature pills and closes on a hero title; `"title-open"` keeps the
+   * classic title opener + install closer. */
+  flow?: "install-open" | "title-open";
+  /** Override the install opener's feature pills (else derived from features). */
+  pills?: string[];
+  /** One-line pitch for the hero closer (else `manifest.tagline`). */
+  tagline?: string;
 };
 
 /**

@@ -35,7 +35,15 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   // re-fade); this scene renders only the content that transitions per beat.
   return (
     <AbsoluteFill>
-      <Headline eyebrow={beat.eyebrow} headline={beat.headline} motion={beat.headlineMotion} format={format} light={light} />
+      <Headline
+        eyebrow={beat.eyebrow}
+        headline={beat.headline}
+        subhead={beat.hero ? beat.caption : undefined}
+        place={beat.hero ? "center" : "top"}
+        motion={beat.headlineMotion}
+        format={format}
+        light={light}
+      />
 
       <div
         style={{
@@ -66,7 +74,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
         )}
       </div>
 
-      {(beat.caption || beat.badge) && (
+      {!beat.hero && (beat.caption || beat.badge) && (
         <div
           style={{
             position: "absolute",

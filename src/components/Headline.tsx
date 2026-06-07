@@ -17,13 +17,17 @@ const HEADLINE_SHADOW = "0 1px 2px rgba(30,41,59,0.24), 0 6px 34px rgba(30,41,59
 // On a light backdrop, a soft white halo lifts the dark headline off the field.
 const HEADLINE_SHADOW_LIGHT = "0 1px 2px rgba(255,255,255,0.6)";
 
-export const Headline: React.FC<{ eyebrow?: string; headline: string; motion?: MotionSpec; format?: Format; light?: boolean }> = ({
-  eyebrow,
-  headline,
-  motion = { enter: "rise", delay: 8 },
-  format = "16x9",
-  light = false,
-}) => {
+export const Headline: React.FC<{
+  eyebrow?: string;
+  headline: string;
+  /** Optional sub-tagline rendered directly under the headline (hero/title cards). */
+  subhead?: string;
+  /** `"top"` (default) anchors near the top; `"center"` vertically centers the block. */
+  place?: "top" | "center";
+  motion?: MotionSpec;
+  format?: Format;
+  light?: boolean;
+}> = ({ eyebrow, headline, subhead, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
   const m = H[format];
@@ -33,9 +37,15 @@ export const Headline: React.FC<{ eyebrow?: string; headline: string; motion?: M
     extrapolateRight: "clamp",
     easing: EASE.smooth,
   });
+  const subheadIn = interpolate(frame, [18, 34], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
+
+  const placement: React.CSSProperties =
+    place === "center"
+      ? { top: 0, bottom: 0, justifyContent: "center" }
+      : { top: m.top };
 
   return (
-    <div style={{ position: "absolute", top: m.top, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", ...style }}>
+    <div style={{ position: "absolute", left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", ...placement, ...style }}>
       {eyebrow && (
         <div
           style={{
@@ -68,6 +78,23 @@ export const Headline: React.FC<{ eyebrow?: string; headline: string; motion?: M
       >
         {headline}
       </div>
+      {subhead && (
+        <div
+          style={{
+            fontFamily: FONTS.body,
+            fontSize: Math.round(m.size * 0.32),
+            fontWeight: 500,
+            marginTop: 22,
+            color: light ? COLORS.textMuted : COLORS.titleWhite,
+            opacity: (light ? 1 : 0.9) * subheadIn,
+            textShadow: light ? "none" : "0 1px 14px rgba(30,41,59,0.5)",
+            maxWidth: m.max,
+            textWrap: "balance",
+          }}
+        >
+          {subhead}
+        </div>
+      )}
     </div>
   );
 };

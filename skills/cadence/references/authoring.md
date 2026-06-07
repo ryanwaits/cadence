@@ -79,6 +79,13 @@ Pick the kind that visualizes the *result* of the code. Exact shapes:
   rows: [["951475", "1,200.00", "SP2J6…"], ["951474", "48.50", "SP3K9…"]] }
 ```
 
+**browser** — a Finder-style file/folder listing (the result of a `list({ prefix, delimiter })`-style call). `sections` group rows (e.g. prefixes vs items); folder rows get a chevron, file rows a right-aligned `meta` (size).
+```ts
+{ kind: "browser", title: "photos/", meta: "delimiter: /", sections: [
+  { label: "prefixes", rows: [{ type: "folder", name: "2024/" }, { type: "folder", name: "raw/" }] },
+  { label: "items", rows: [{ type: "file", name: "cover.jpg", meta: "2.1 MB" }] } ] }
+```
+
 **stat** — one big number (counts up if numeric like "10,000,000"; shown as-is if not like "live").
 ```ts
 { kind: "stat", value: "10,000,000", label: "events decoded", sub: "block 0 → chain tip" }

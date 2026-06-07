@@ -70,7 +70,7 @@ cadence themes                      # list built-in themes
 
 ## Interpreting the request (natural language → beats)
 
-- **announcement / launch / teaser** → opener title card → 1-3 feature beats → install closer.
+- **announcement / launch / teaser** → install opener (`$ npm i …` + feature pills) → 1-3 code+panel feature beats → hero closer (package + tagline). This is the `feature-launch` default; pass `flow:"title-open"` for the classic title-open/install-close instead.
 - **changelog / what's new / new in X** → feature beats; eyebrow `"new in <project> <version>"`.
 - **milestone / N downloads / now stable** → a `stat` beat centerpiece.
 - **showcase / highlight <feature>** → feature beats with the panel that shows the result.
@@ -79,16 +79,19 @@ cadence themes                      # list built-in themes
 Keep it tight: 3-6 beats. Pick what's visual.
 
 ## Beat shapes
-- **Opener** — `headline` + `eyebrow` only (title card).
-- **Feature** — `headline` + `code` + `panel` (code left, output right at 16:9).
+- **Install opener** — `layout:"center"` + a `bash` install `code` block + `badge` (e.g. `"v1.7"`) + `caption` (terse feature pills, `"sync · folders · read-only"`). The default open for a launch reel (the `feature-launch` template emits this).
+- **Opener (title)** — `headline` + `eyebrow` only (classic title card).
+- **Feature** — `headline` + `code` + `panel` (code left, render/result right at 16:9). Default to pairing code with a panel — show the *result*, not just a title.
 - **Stat / milestone** — a `stat` panel (one big number).
-- **Install / CTA closer** — `layout:"center"` + a `bash`/install `code` block + `badge` + `caption`.
+- **Hero closer** — `hero: true` + `layout:"center"` + `headline` (package name) + `caption` (one-line pitch). A big centered title to close on (package + tagline).
+- **Install / CTA closer** — `layout:"center"` + a `bash`/install `code` block + `badge` + `caption` (when you'd rather end on the install).
 
 ## Panel picker (`panel.kind`) — choose by what the change produces
 | kind | shows | use for |
 |------|-------|---------|
 | `feed` | rows streaming in | live events/logs/a feed |
 | `data-table` | columns + rows | a query/list result, parsed output |
+| `browser` | Finder-style folder/file rows | a file/folder listing (`list({ prefix, delimiter })`) |
 | `status` | health/check rows (ok/syncing/error/idle) | CLI check output, service/test status |
 | `stat` | one big number | milestones, counts |
 | `proof` | a signature + drawn ✓ | signed/verifiable output |
@@ -115,7 +118,7 @@ A video reads its colors, fonts, and code styling from a theme. To match a brand
 - **From a screenshot / URL:** read the palette yourself and write the `ThemeConfig` — the dominant brand color becomes `signalBlue`; copy a built-in as a template (`cadence themes` lists them).
 - Or a built-in named theme: `cadence create <beats> --theme <name>`. Precedence: `--theme-file` > `--theme` > the project's `.cadence/theme.json` > default.
 
-**Custom painted backgrounds** (optional, needs `OPENAI_API_KEY`): `cadence art --prompt "<scene>" --name <slug>` generates a backdrop into `<project>/.cadence/backgrounds/_candidates/`; `cadence art --promote <slug>` moves the keeper to `.cadence/backgrounds/`; then reference it in a beat as `background: { src: "backgrounds/<file>.png" }` (cadence stages it at render). Reusable subject sets: `--pack <file.json>`; `--brand` tints art toward the project's theme palette. Default backdrop stays procedural — only reach for this when the user wants painted art. See `docs/guides/custom-backgrounds.md`.
+**Custom painted backgrounds** (optional, needs `OPENAI_API_KEY`): `cadence art --prompt "<scene>" --name <slug>` generates a backdrop into `<project>/.cadence/backgrounds/_candidates/`; `cadence art --promote <slug>` moves the keeper to `.cadence/backgrounds/`; then reference it in a beat as `background: { src: "backgrounds/<file>.png" }` (cadence stages it at render). Reusable subject sets: `--pack <file.json>`; `--brand` tints art toward the project's theme palette. The bundled default pack is the Austin "Hill Country Sublime" landmarks — reuse one without any key/generation by referencing it directly (`background: { src: "backgrounds/pennybacker.png" }`; also `capitol, congress, mount-bonnell, enchanted-rock, hamilton-pool, barton-springs, ut-tower`), or regenerate a branded variant with `cadence art --landmark <camelKey> --brand` (keys: `pennybacker, utTower, capitol, congress, mountBonnell, enchantedRock, hamiltonPool, bartonSprings`). Default backdrop stays procedural — only reach for this when the user wants painted art. See `docs/guides/custom-backgrounds.md`.
 
 ## Render
 ```bash

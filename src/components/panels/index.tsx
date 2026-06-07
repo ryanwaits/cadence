@@ -8,6 +8,13 @@ import { ProofPanel } from "./Proof";
 import { StreamResumePanel } from "./StreamResume";
 import { ForkPanel } from "./Fork";
 import { DiagramPanel } from "./Diagram";
+import { BrowserPanel } from "./Browser";
+
+/** Compile-time exhaustiveness guard: a new panel kind that isn't handled below
+ * becomes a tsc error here (the bare switch would otherwise silently render nothing). */
+const assertNever = (x: never): never => {
+  throw new Error(`Unhandled panel kind: ${JSON.stringify(x)}`);
+};
 
 /** Resolve a PanelSpec (by its `kind`) to the right panel component. */
 export const Panel: React.FC<{ spec: PanelSpec }> = ({ spec }) => {
@@ -30,5 +37,9 @@ export const Panel: React.FC<{ spec: PanelSpec }> = ({ spec }) => {
       return <ForkPanel spec={spec} />;
     case "diagram":
       return <DiagramPanel spec={spec} />;
+    case "browser":
+      return <BrowserPanel spec={spec} />;
+    default:
+      return assertNever(spec);
   }
 };

@@ -102,6 +102,21 @@ export const panelSchema = z.discriminatedUnion("kind", [
     note: z.string().optional(),
     motion: motionSchema.optional(),
   }),
+  // A Finder-style file/folder browser — the "result" card paired beside a code
+  // window (e.g. a `list({ prefix, delimiter })` call rendering the folders +
+  // files it returns). Sectioned so a listing can split into "prefixes"/"items".
+  z.object({
+    kind: z.literal("browser"),
+    title: z.string(),
+    meta: z.string().optional(),
+    sections: z.array(
+      z.object({
+        label: z.string().optional(),
+        rows: z.array(z.object({ type: z.enum(["folder", "file"]), name: z.string(), meta: z.string().optional() })),
+      })
+    ),
+    motion: motionSchema.optional(),
+  }),
 ]);
 
 export const beatSchema = z
@@ -131,6 +146,9 @@ export const beatSchema = z
     /** Optional gold version pill shown with the caption — e.g. "v1.0". */
     badge: z.string().optional(),
     layout: z.enum(["split", "center"]).default("split"),
+    /** Render as a centered hero/title card — big headline + `caption` as a
+     * sub-tagline directly under it (e.g. a closing "package · one-line pitch"). */
+    hero: z.boolean().optional(),
     code: codeSchema.optional(),
     panel: panelSchema.optional(),
   })
