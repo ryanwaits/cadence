@@ -1,5 +1,11 @@
 # @waits/cadence
 
+## 0.8.0
+
+### Minor Changes
+
+- 14d125d: Add a beat-level `note` field — a handwritten flourish (theme's `fonts.note`, marker color) rendered under the headline on title/center/hero beats. Enables a logo-lockup closer like `{ layout: "center", headline: "Secondlayer", note: "Streams" }`.
+
 ## 0.7.3
 
 ### Patch Changes
