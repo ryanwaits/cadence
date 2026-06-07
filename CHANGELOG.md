@@ -1,5 +1,11 @@
 # @waits/cadence
 
+## 0.9.1
+
+### Patch Changes
+
+- e2e426e: The handwritten `note` flourish now "writes in" — a left-to-right `clip-path` reveal over its entrance window, reading as the word being drawn rather than a plain opacity fade. Beats without a `note` are unaffected.
+
 ## 0.9.0
 
 ### Minor Changes
