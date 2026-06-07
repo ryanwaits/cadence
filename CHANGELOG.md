@@ -1,5 +1,19 @@
 # @waits/cadence
 
+## 0.7.0
+
+### Minor Changes
+
+- f78d43e: New `browser` panel kind (Finder-style folder/file listing) and an inverted launch flow for the `feature-launch` template.
+
+  - **`browser` panel** — a result card that pairs beside a code window: sectioned folder/file rows (folders get a chevron, files a right-aligned size), e.g. the result of a `list({ prefix, delimiter })` call.
+  - **`hero` beat flag** — render a centered title card (big headline + `caption` as a sub-tagline) to close on.
+  - **`feature-launch` default flow change** — it now opens on the install terminal (`$ npm i pkg` + feature pills) and closes on a hero title card (package + tagline), matching a launch-reel structure. Pass `flow: "title-open"` to keep the previous title-open / install-close behavior. `milestone` and `changelog-reel` are unchanged.
+
+### Patch Changes
+
+- b750148: Fix the global `cadence` CLI silently no-opping when installed as a scoped package. Bin resolution assumed the hoisted `.bin` sat one level above the package root, which holds for an unscoped install but not a scoped one (`node_modules/@scope/<pkg>`), where the hoist is two levels up. The runner is now found at either depth, and a launch that can't find its runner fails loudly with a non-zero exit instead of exiting 0 with no output.
+
 ## 0.6.1
 
 ### Patch Changes
