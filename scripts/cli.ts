@@ -27,6 +27,7 @@ const SCRIPTS: Record<string, string> = {
   guide: "scripts/guide.ts", // interactive walkthrough
   render: "scripts/render.ts", // a beats file → a video (create delegates here)
   storyboard: "scripts/storyboard.ts", // a beats file → a preview sheet (no MP4)
+  inspect: "scripts/inspect.ts", // a beats file → computed regions/timings/colors (json)
   study: "scripts/theme.ts", // brand color / URL / screenshot → a theme
   audit: "scripts/audit.ts", // check a beats file for issues
   redesign: "scripts/redesign.ts", // re-skin a beats file
@@ -45,6 +46,7 @@ author (kind → a durable beats file, no render):
 render:
   create     a repo OR a beats file → a video     cadence create --release owner/name --install "npm i pkg"
   storyboard a beats file → a preview sheet         cadence storyboard x.beats.json (or: cadence create … --dry-run)
+  inspect    computed regions/timings/colors (json)  cadence inspect x.beats.json --beat <id>
   redesign   re-skin a beats file (new look)        cadence redesign x.beats.json --theme slate
 
 setup + checks:
