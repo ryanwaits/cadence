@@ -26,9 +26,11 @@ export const totalChars = (tokens: CodeLine[]) =>
 export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec, timing: TimingTokens = TIMING) =>
   typeStartFor(motion) + Math.ceil(totalChars(tokens) / timing.typingSpeed);
 
-/** Code typing-done from tokens when present, else estimated from source length
- * (storyboard runs before `calculateMetadata` fills tokens). */
-const codeDoneEstimate = (code: { tokens?: CodeLine[]; source?: string; motion?: MotionSpec }, timing: TimingTokens = TIMING) => {
+/** Frame a code node finishes typing — from `tokens` when present (the render path),
+ * else estimated from `source` length (storyboard/inspect run before `calculateMetadata`
+ * fills tokens). Identical to `codeTypingDoneFrame` once tokens exist, so the renderer
+ * stays byte-identical while the read-only verbs get a sensible estimate. */
+export const codeDoneFrame = (code: { tokens?: CodeLine[]; source?: string; motion?: MotionSpec }, timing: TimingTokens = TIMING) => {
   if (code.tokens?.length) return codeTypingDoneFrame(code.tokens, code.motion, timing);
   const chars = (code.source ?? "").length;
   return typeStartFor(code.motion) + Math.ceil(chars / timing.typingSpeed);
@@ -44,7 +46,7 @@ export function settledFrame(nodes: Node[], timing: TimingTokens = TIMING): numb
   let anyPanel = false;
   const walk = (ns: Node[]): void => {
     for (const n of ns) {
-      if (n.type === "code") maxCodeDone = Math.max(maxCodeDone, codeDoneEstimate(n.code, timing));
+      if (n.type === "code") maxCodeDone = Math.max(maxCodeDone, codeDoneFrame(n.code, timing));
       else if (n.type === "panel") anyPanel = true;
       if ("children" in n) walk(n.children);
     }

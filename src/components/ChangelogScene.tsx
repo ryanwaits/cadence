@@ -1,21 +1,15 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { COLORS, EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
-import { BACKGROUNDS, LAYOUT_MODEL, MOTION, STYLES, resolveRole } from "../templates/active";
+import { BACKGROUNDS, LAYOUT_MODEL, STYLES, resolveRole } from "../templates/active";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
 import type { ComponentInstance, ComponentType, Node, Region } from "../schema/composition";
 import { Headline } from "./Headline";
 import { Scrim, type ScrimSpec } from "./Scrim";
-import { codeTypingDoneFrame } from "../motion/timing";
 import { renderNode, sizeOf, slotStyle } from "./layout";
 import { groupByRegion, pickIn } from "./layout/regions";
-
-// Frame-timing comes from the active template's tokens (typing speed, output gap,
-// settle) — see `MOTION.timing`. `OUTPUT_GAP`/`SETTLE` are no longer hardcoded.
-const OUTPUT_GAP = MOTION.timing.outputGap;
-/** Default frames a non-code node's entrance takes to settle (for revealAfter chains). */
-const SETTLE = MOTION.timing.settle;
+import { bandReveal } from "../resolve";
 
 /** The legibility wash for a beat: an explicit `background.scrim` wins; else a `hero`
  * beat over an image gets the template default (so white titles stay readable over
@@ -79,46 +73,10 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   const TEXT_TYPES = new Set(["title", "eyebrow", "caption", "note", "badge"]);
   const bandNodes = [...byRegion.lead, ...byRegion.trailing].filter((n) => !TEXT_TYPES.has(n.type));
 
-  // Sequential reveal, resolved as DATA (T7). A node's base reveal is its
-  // `revealAfter` target's done-frame + gap; absent that, a panel falls back to the
-  // legacy default — wait for the band's code (anywhere in the tree) to finish typing.
-  // This is the ONE timing path: the legacy code→panel coupling is just the default.
-  const findCode = (nodes: Node[]): Extract<Node, { type: "code" }> | undefined => {
-    for (const n of nodes) {
-      if (n.type === "code") return n;
-      if ("children" in n) {
-        const f = findCode(n.children);
-        if (f) return f;
-      }
-    }
-    return undefined;
-  };
-  const codeForReveal = findCode(bandNodes);
-
-  const byId = new Map<string, Node>();
-  const indexIds = (nodes: Node[]): void => {
-    for (const n of nodes) {
-      if (n.id) byId.set(n.id, n);
-      if ("children" in n) indexIds(n.children);
-    }
-  };
-  indexIds(bandNodes);
-
-  // doneFrame/baseReveal are mutually recursive over `revealAfter` references; the
-  // `seen` set guards against an authored cycle (treated as reveal 0).
-  const doneFrame = (node: Node, seen: Set<Node>): number => {
-    if (seen.has(node)) return 0;
-    seen.add(node);
-    const base = baseReveal(node, seen);
-    return node.type === "code" ? base + codeTypingDoneFrame(node.code.tokens ?? [], node.code.motion) : base + SETTLE;
-  };
-  const baseReveal = (node: Node, seen: Set<Node> = new Set()): number => {
-    const after = node.placement?.revealAfter;
-    if (after && byId.has(after)) return doneFrame(byId.get(after)!, seen) + OUTPUT_GAP;
-    // Legacy default: a panel waits for the band's code to finish typing.
-    if (node.type === "panel" && codeForReveal) return codeTypingDoneFrame(codeForReveal.code.tokens ?? [], codeForReveal.code.motion) + OUTPUT_GAP;
-    return 0;
-  };
+  // Sequential reveal, resolved as DATA — the single timing path shared with
+  // `cadence inspect` (see `src/resolve.ts`): a node reveals after its `revealAfter`
+  // target finishes (+ outputGap), and a panel defaults to waiting for the band's code.
+  const { revealOf } = bandReveal(bandNodes);
 
   // --- Block 3: footer caption + badge. ---
   const footerCaptionC = pickIn(byRegion.footer, "caption", (c) => c.variant === "footer");
@@ -166,7 +124,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
           // Both cards mount immediately so a result panel is present while the code
           // types; `reveal` (carried in ctx) holds the panel's *content* until done.
           <div key={i} style={slotStyle(sizeOf(n), stack, band)}>
-            {renderNode(n, { band, format, revealOf: baseReveal, staggerOffset: 0 })}
+            {renderNode(n, { band, format, revealOf, staggerOffset: 0 })}
           </div>
         ))}
       </div>
