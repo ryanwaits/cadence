@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { componentSchema } from "./composition";
+import { nodeSchema } from "./composition";
 import {
   codeSchema,
   formatSchema,
@@ -64,9 +64,11 @@ export const beatSchema = z
     note: z.string().optional(),
     code: codeSchema.optional(),
     panel: panelSchema.optional(),
-    /** NEW, additive composition layer. When present the renderer runs only on
-     * these; legacy fields desugar into the same shape (see `desugar.ts`). */
-    components: z.array(componentSchema).optional(),
+    /** NEW, additive composition layer — a recursive `Node[]` tree (v2). When
+     * present the renderer runs only on these; legacy fields desugar into a flat
+     * leaf list (a depth-0 tree — see `desugar.ts`). Containers (`row`/`col`/
+     * `grid`/`group`) nest *inside* a region; the top level stays region-routed. */
+    components: z.array(nodeSchema).optional(),
   })
   .strict()
   // Presence, not truthiness: a legacy install opener carries `headline: ""`
@@ -87,7 +89,7 @@ export const changelogSchema = z
 
 export type Beat = z.infer<typeof beatSchema>;
 /** Re-exported for downstream consumers that work off the beat contract. */
-export type { ComponentInstance } from "./composition";
+export type { ComponentInstance, Node } from "./composition";
 export type ChangelogVideo = z.infer<typeof changelogSchema>;
 /** Authoring type (defaults optional) — used by `content/*.beats.ts`. */
 export type ChangelogInput = z.input<typeof changelogSchema>;
