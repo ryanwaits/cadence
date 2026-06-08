@@ -38,7 +38,7 @@ export const useMotion = (spec: MotionSpec = {}, opts: { reduced?: boolean } = {
 
   const easing = EASE[spec.easing ?? MOTION.defaultEasing];
   const delay = spec.delay ?? 0;
-  const enterDur = spec.durationInFrames ?? Math.round(fps * 0.55);
+  const enterDur = spec.durationInFrames ?? Math.round(fps * MOTION.timing.enterDuration);
 
   const ep = interpolate(frame, [delay, delay + enterDur], [0, 1], {
     extrapolateLeft: "clamp",
@@ -55,7 +55,7 @@ export const useMotion = (spec: MotionSpec = {}, opts: { reduced?: boolean } = {
   if (enterFrag.transform !== "none") transforms.push(enterFrag.transform);
 
   if (spec.exit) {
-    const exitDur = Math.round(fps * 0.4);
+    const exitDur = Math.round(fps * MOTION.timing.exitDuration);
     const xStart = durationInFrames - exitDur;
     const xp = interpolate(frame, [xStart, durationInFrames], [0, 1], {
       extrapolateLeft: "clamp",

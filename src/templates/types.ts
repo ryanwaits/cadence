@@ -69,6 +69,25 @@ export type BandSizes = {
 /** Raw cubic-bezier control points `[x1, y1, x2, y2]` (a theme/template-agnostic curve). */
 export type BezierTuple = [number, number, number, number];
 
+/**
+ * Frame-timing tokens — lifted out of `src/motion/*` so typing speed, the output
+ * gap, settle, and entrance/exit durations are template-tunable instead of hardcoded
+ * constants. Every on-screen temporal DOF lives here (or as a per-element `motion`
+ * override), so it's enumerable from `cadence capabilities`.
+ */
+export type TimingTokens = {
+  /** Typewriter speed, chars/frame — lower is slower. (was `CHARS_PER_FRAME`) */
+  typingSpeed: number;
+  /** Frames a result panel waits after its source code finishes typing. (was `OUTPUT_GAP`) */
+  outputGap: number;
+  /** Frames a non-code node's entrance takes to settle. (was `SETTLE`) */
+  settle: number;
+  /** Default component entrance duration, seconds. (was `fps * 0.55`) */
+  enterDuration: number;
+  /** Default exit duration, seconds. (was `fps * 0.4`) */
+  exitDuration: number;
+};
+
 export type MotionPersonality = {
   /** Shared entrance for the floating cards (code window + result panel). */
   cardEnter: MotionSpecData; // was CARD_ENTER = { enter: "settle", delay: 12 }
@@ -76,6 +95,8 @@ export type MotionPersonality = {
   defaultEasing: "smooth" | "snappy";
   enterDistance: number; // px travel for `rise` (24)
   ease: { smooth: BezierTuple; snappy: BezierTuple };
+  /** Frame-timing tokens (typing speed, gaps, durations). */
+  timing: TimingTokens;
 };
 
 export type LayoutModel = {
@@ -130,6 +151,9 @@ export type TemplateStyles = {
   radius: { sm: number; md: number; lg: number; xl: number; full: number };
 };
 
+/** A legibility-wash token: how dark, and where. Mirrors the schema's `background.scrim`. */
+export type ScrimTokens = { strength: number; placement: "center" | "top" | "bottom" | "full" };
+
 export type TemplateStyle = {
   name: string;
   description: string;
@@ -138,7 +162,13 @@ export type TemplateStyle = {
   styles: TemplateStyles;
   layout: LayoutModel;
   motion: MotionPersonality;
-  backgrounds: { default: BackgroundSpec };
+  backgrounds: {
+    default: BackgroundSpec;
+    /** Default legibility wash auto-applied to a `hero` beat over an image when the
+     * beat sets no explicit `background.scrim` — keeps white titles readable over
+     * bright paintings. A token (not a hardcoded constant); an explicit scrim wins. */
+    heroScrim: ScrimTokens;
+  };
 };
 
 export type { Format, BackgroundSpec, MotionSpecData, EnterPreset, ComponentType };

@@ -2,7 +2,8 @@ import { useCurrentFrame } from "remotion";
 import { CARET_BG, CODE_CHROME, COLORS, FLOAT_SHADOW } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { CARD_ENTER, useMotion, type MotionSpec } from "../motion/useMotion";
-import { CHARS_PER_FRAME, codeTypingDoneFrame, totalChars, typeStartFor } from "../motion/timing";
+import { codeTypingDoneFrame, totalChars, typeStartFor } from "../motion/timing";
+import { MOTION } from "../templates/active";
 import { CODE_BG, type CodeLine } from "../code/highlight";
 
 type Props = {
@@ -27,7 +28,7 @@ export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = CARD_EN
 
   const typeStart = typeStartFor(motion);
   const total = totalChars(tokens);
-  const revealed = Math.min(total, Math.max(0, Math.round((frame - typeStart) * CHARS_PER_FRAME)));
+  const revealed = Math.min(total, Math.max(0, Math.round((frame - typeStart) * MOTION.timing.typingSpeed)));
   const typing = revealed < total; // caret only while typing; gone once "run"
   const caretOn = Math.floor(frame / 8) % 2 === 0;
 

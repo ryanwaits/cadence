@@ -281,6 +281,7 @@ export const fieldNotebook: TemplateStyle = {
       smooth: [0.19, 1, 0.22, 1], // EASE.smooth bezier
       snappy: [0.175, 0.885, 0.32, 1.1], // EASE.snappy bezier
     },
+    timing: { typingSpeed: 2.6, outputGap: 10, settle: 18, enterDuration: 0.55, exitDuration: 0.4 },
   },
-  backgrounds: { default: { shapes: true } },
+  backgrounds: { default: { shapes: true }, heroScrim: { strength: 0.45, placement: "center" } },
 };

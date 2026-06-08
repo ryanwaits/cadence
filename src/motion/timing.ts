@@ -1,5 +1,7 @@
 import type { CodeLine } from "../code/highlight";
 import type { Node } from "../schema/composition";
+import { MOTION } from "../templates/active";
+import type { TimingTokens } from "../templates/types";
 import type { MotionSpec } from "./useMotion";
 
 /**
@@ -7,46 +9,47 @@ import type { MotionSpec } from "./useMotion";
  * the render path share ONE source for "when does code finish typing / content
  * settle." This is the single timing path the panel-reveal coupling and the
  * `revealAfter` generalization both build on.
+ *
+ * Typing speed, the output gap, and settle are TEMPLATE tokens (`MOTION.timing`),
+ * not hardcoded constants — every helper takes an optional `timing` override
+ * (default = the active template) so it stays pure + unit-testable.
  */
 
-export const CHARS_PER_FRAME = 2.6;
-/** Frames a result panel waits after its source code finishes "running". */
-export const OUTPUT_GAP = 10;
-/** Default frames for a non-code node's entrance to settle (approximation). */
-const SETTLE = 18;
+/** Active template's timing tokens — the default for every helper below. */
+const TIMING: TimingTokens = MOTION.timing;
 
 export const typeStartFor = (motion?: MotionSpec) => (motion?.delay ?? 12) + 6;
 export const totalChars = (tokens: CodeLine[]) =>
   tokens.reduce((n, line) => n + line.reduce((m, t) => m + t.content.length, 0) + 1, 0);
 
 /** Frame at which the typewriter finishes — the output panel waits for this. */
-export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec) =>
-  typeStartFor(motion) + Math.ceil(totalChars(tokens) / CHARS_PER_FRAME);
+export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec, timing: TimingTokens = TIMING) =>
+  typeStartFor(motion) + Math.ceil(totalChars(tokens) / timing.typingSpeed);
 
 /** Code typing-done from tokens when present, else estimated from source length
  * (storyboard runs before `calculateMetadata` fills tokens). */
-const codeDoneEstimate = (code: { tokens?: CodeLine[]; source?: string; motion?: MotionSpec }) => {
-  if (code.tokens?.length) return codeTypingDoneFrame(code.tokens, code.motion);
+const codeDoneEstimate = (code: { tokens?: CodeLine[]; source?: string; motion?: MotionSpec }, timing: TimingTokens = TIMING) => {
+  if (code.tokens?.length) return codeTypingDoneFrame(code.tokens, code.motion, timing);
   const chars = (code.source ?? "").length;
-  return typeStartFor(code.motion) + Math.ceil(chars / CHARS_PER_FRAME);
+  return typeStartFor(code.motion) + Math.ceil(chars / timing.typingSpeed);
 };
 
 /**
  * A frame by which a beat's content has "settled" — a representative still (storyboard).
  * Approximation, not the exact render-time reveal resolution: the latest code finishes
- * typing, a result panel reveals `OUTPUT_GAP` later and settles. Pure + unit-testable.
+ * typing, a result panel reveals `timing.outputGap` later and settles. Pure + unit-testable.
  */
-export function settledFrame(nodes: Node[]): number {
+export function settledFrame(nodes: Node[], timing: TimingTokens = TIMING): number {
   let maxCodeDone = 0;
   let anyPanel = false;
   const walk = (ns: Node[]): void => {
     for (const n of ns) {
-      if (n.type === "code") maxCodeDone = Math.max(maxCodeDone, codeDoneEstimate(n.code));
+      if (n.type === "code") maxCodeDone = Math.max(maxCodeDone, codeDoneEstimate(n.code, timing));
       else if (n.type === "panel") anyPanel = true;
       if ("children" in n) walk(n.children);
     }
   };
   walk(nodes);
-  const panelSettled = anyPanel ? maxCodeDone + OUTPUT_GAP + SETTLE : 0;
-  return Math.max(SETTLE, maxCodeDone, panelSettled);
+  const panelSettled = anyPanel ? maxCodeDone + timing.outputGap + timing.settle : 0;
+  return Math.max(timing.settle, maxCodeDone, panelSettled);
 }

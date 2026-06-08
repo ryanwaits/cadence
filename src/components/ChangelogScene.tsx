@@ -1,17 +1,31 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { COLORS, EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
-import { LAYOUT_MODEL, STYLES, resolveRole } from "../templates/active";
+import { BACKGROUNDS, LAYOUT_MODEL, MOTION, STYLES, resolveRole } from "../templates/active";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
 import type { ComponentInstance, ComponentType, Node, Region } from "../schema/composition";
 import { Headline } from "./Headline";
-import { OUTPUT_GAP, codeTypingDoneFrame } from "../motion/timing";
+import { Scrim, type ScrimSpec } from "./Scrim";
+import { codeTypingDoneFrame } from "../motion/timing";
 import { renderNode, sizeOf, slotStyle } from "./layout";
 import { groupByRegion, pickIn } from "./layout/regions";
 
+// Frame-timing comes from the active template's tokens (typing speed, output gap,
+// settle) — see `MOTION.timing`. `OUTPUT_GAP`/`SETTLE` are no longer hardcoded.
+const OUTPUT_GAP = MOTION.timing.outputGap;
 /** Default frames a non-code node's entrance takes to settle (for revealAfter chains). */
-const SETTLE = 18;
+const SETTLE = MOTION.timing.settle;
+
+/** The legibility wash for a beat: an explicit `background.scrim` wins; else a `hero`
+ * beat over an image gets the template default (so white titles stay readable over
+ * bright paintings). Everything else → none (Scrim renders nothing). */
+const resolveScrim = (beat: Beat): ScrimSpec | undefined => {
+  const explicit = beat.background?.scrim;
+  if (explicit && explicit.strength > 0) return explicit;
+  if (beat.layout === "hero" && beat.background?.src) return BACKGROUNDS.heroScrim;
+  return explicit;
+};
 
 /**
  * One beat: painting backdrop + Field Notebook UI layer. Renders by WALKING the
@@ -114,6 +128,8 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   // re-fade); this scene renders only the content that transitions per beat.
   return (
     <AbsoluteFill>
+      {/* Per-beat legibility wash behind the content (the backdrop layer is continuous). */}
+      <Scrim scrim={resolveScrim(beat)} />
       <Headline
         eyebrow={eyebrowC?.text}
         headline={titleC?.text ?? ""}

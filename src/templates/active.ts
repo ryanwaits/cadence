@@ -27,6 +27,7 @@ export const activeTemplate: TemplateStyle = resolveActiveTemplate();
 export const STYLES = activeTemplate.styles;
 export const MOTION = activeTemplate.motion;
 export const LAYOUT_MODEL = activeTemplate.layout;
+export const BACKGROUNDS = activeTemplate.backgrounds;
 
 /**
  * role → theme token; the only template↔theme coupling (spec §4). An optional

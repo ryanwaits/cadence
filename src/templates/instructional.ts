@@ -282,6 +282,7 @@ export const instructional: TemplateStyle = {
       smooth: [0.22, 1, 0.36, 1],
       snappy: [0.175, 0.885, 0.32, 1.1],
     },
+    timing: { typingSpeed: 2.6, outputGap: 10, settle: 18, enterDuration: 0.55, exitDuration: 0.4 },
   },
-  backgrounds: { default: { shapes: true } },
+  backgrounds: { default: { shapes: true }, heroScrim: { strength: 0.4, placement: "center" } },
 };
