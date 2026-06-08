@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Beat } from "./beats";
-import type { ComponentInstance } from "./composition";
+import { CONTAINER_TYPES, nodeSchema, type ComponentInstance } from "./composition";
 import { desugarBeat } from "./desugar";
 
 /**
@@ -143,6 +143,30 @@ describe("desugarBeat — §3 mapping table", () => {
       placement: { region: "footer", align: "center", size: "auto", order: 0 },
       text: "v1.0",
     });
+  });
+
+  test("desugar stays FLAT — no container wrapping, every node is a valid leaf", () => {
+    // Composition v2 keeps legacy desugar a depth-0 tree: the code-left/panel-right
+    // band is reproduced renderer-side (regions), NOT by wrapping in a row/col. This
+    // locks that contract — a regression that wrapped legacy fields in a container
+    // would change the render path and likely break byte-identity.
+    const beat: Beat = {
+      id: "feature",
+      durationInFrames: 120,
+      eyebrow: "shipped",
+      headline: "A new API",
+      layout: "split",
+      code: { filename: "i.ts", lang: "ts", source: "1", theme: "light" },
+      panel: { kind: "stat", value: "1M", label: "events" },
+    };
+
+    const { components } = desugarBeat(beat);
+
+    const containers = new Set<string>(CONTAINER_TYPES);
+    for (const c of components) {
+      expect(containers.has(c.type)).toBe(false); // no row/col/grid/group
+      expect(() => nodeSchema.parse(c)).not.toThrow(); // each leaf is a valid tree node
+    }
   });
 
   test("pass-through: an authored components array is returned untouched", () => {

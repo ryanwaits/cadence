@@ -2,6 +2,7 @@ import { interpolate, useCurrentFrame } from "remotion";
 import { EASE } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { STYLES, resolveRole } from "../templates/active";
+import type { ColorRole } from "../templates/types";
 import { useMotion, type MotionSpec } from "../motion/useMotion";
 import type { Format } from "../schema/beats";
 
@@ -27,7 +28,12 @@ export const Headline: React.FC<{
   motion?: MotionSpec;
   format?: Format;
   light?: boolean;
-}> = ({ eyebrow, headline, subhead, note, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false }) => {
+  /** Per-node color-role overrides (node `style.color`) — undefined keeps the template role. */
+  eyebrowColor?: ColorRole;
+  titleColor?: ColorRole;
+  subheadColor?: ColorRole;
+  noteColor?: ColorRole;
+}> = ({ eyebrow, headline, subhead, note, place = "top", motion = { enter: "rise", delay: 8 }, format = "16x9", light = false, eyebrowColor, titleColor, subheadColor, noteColor }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
   const m = HEAD.scale[format];
@@ -58,7 +64,7 @@ export const Headline: React.FC<{
             fontWeight: HEAD.eyebrowWeight,
             letterSpacing: `${m.track}em`,
             textTransform: HEAD.eyebrowUppercase ? "uppercase" : "none",
-            color: resolveRole(HEAD.eyebrowColor),
+            color: resolveRole(HEAD.eyebrowColor, eyebrowColor),
             opacity: eyebrowIn,
             marginBottom: 16,
             textShadow: light ? "none" : EYEBROW_SHADOW,
@@ -74,7 +80,7 @@ export const Headline: React.FC<{
           fontWeight: HEAD.headlineWeight,
           letterSpacing: HEAD.headlineTracking,
           lineHeight: HEAD.headlineLineHeight,
-          color: light ? resolveRole(HEAD.headlineLightColor) : resolveRole(HEAD.headlineColor),
+          color: light ? resolveRole(HEAD.headlineLightColor, titleColor) : resolveRole(HEAD.headlineColor, titleColor),
           textShadow: light ? HEADLINE_SHADOW_LIGHT : HEADLINE_SHADOW,
           maxWidth: m.max,
           textWrap: "balance",
@@ -89,7 +95,7 @@ export const Headline: React.FC<{
             fontSize: Math.round(m.size * HEAD.subheadScale),
             fontWeight: HEAD.subheadWeight,
             marginTop: 22,
-            color: light ? resolveRole("textMuted") : resolveRole(HEAD.subheadColor),
+            color: light ? resolveRole("textMuted", subheadColor) : resolveRole(HEAD.subheadColor, subheadColor),
             opacity: (light ? 1 : 0.9) * subheadIn,
             textShadow: light ? "none" : SUBHEAD_SHADOW,
             maxWidth: m.max,
@@ -107,7 +113,7 @@ export const Headline: React.FC<{
             fontWeight: HEAD.subheadWeight,
             lineHeight: HEAD.headlineLineHeight,
             marginTop: 14,
-            color: resolveRole(HEAD.noteColor),
+            color: resolveRole(HEAD.noteColor, noteColor),
             // Reveal left→right (writing motion); the opacity ramp keeps the
             // leading edge from popping. inset clips from the right toward 0.
             clipPath: `inset(-0.15em ${(1 - noteWrite) * 100}% -0.15em 0)`,

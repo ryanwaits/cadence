@@ -28,5 +28,10 @@ export const STYLES = activeTemplate.styles;
 export const MOTION = activeTemplate.motion;
 export const LAYOUT_MODEL = activeTemplate.layout;
 
-/** role → theme token; the only template↔theme coupling (spec §4). */
-export const resolveRole = (r: ColorRole) => activeTheme.colors[r];
+/**
+ * role → theme token; the only template↔theme coupling (spec §4). An optional
+ * per-node `override` role wins over the template's default role — the resolution
+ * chain for node `style.color`/`bg` (T8). Both are ROLES (never raw hex), so a node
+ * override still re-colors on a theme swap. `undefined` override → the base role.
+ */
+export const resolveRole = (r: ColorRole, override?: ColorRole) => activeTheme.colors[override ?? r];

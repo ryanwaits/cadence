@@ -5,16 +5,19 @@ import { LAYOUT_MODEL, STYLES, resolveRole } from "../templates/active";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
 import { desugarBeat } from "../schema/desugar";
-import type { ComponentInstance } from "../schema/composition";
+import type { ComponentInstance, Node, Region } from "../schema/composition";
 import { Headline } from "./Headline";
-import { CodeWindow, codeTypingDoneFrame } from "./CodeWindow";
-import { Panel } from "./panels";
+import { OUTPUT_GAP, codeTypingDoneFrame } from "../motion/timing";
+import { renderNode, sizeOf, slotStyle } from "./layout";
 
-/** Beat after the code finishes typing before the output panel "runs". */
-const OUTPUT_GAP = 10;
+/** Default frames a non-code node's entrance takes to settle (for revealAfter chains). */
+const SETTLE = 18;
 
-/** Narrow a component instance by its discriminant. */
-const pick = <T extends ComponentInstance["type"]>(
+/** A node's region: explicit placement wins, else the template's default for its type. */
+const regionOf = (c: ComponentInstance): Region => c.placement?.region ?? LAYOUT_MODEL.defaultRegion[c.type];
+
+/** Find the first node of `type` (optionally matching `match`) within a region's nodes. */
+const pickIn = <T extends ComponentInstance["type"]>(
   cs: ComponentInstance[],
   type: T,
   match?: (c: Extract<ComponentInstance, { type: T }>) => boolean,
@@ -25,21 +28,23 @@ const pick = <T extends ComponentInstance["type"]>(
   ) as Extract<ComponentInstance, { type: T }> | undefined;
 
 /**
- * One beat: painting backdrop + Field Notebook UI layer. Renders from the
- * DESUGARED component list (legacy beats desugar into the same instances an
- * authored `components` array would produce), grouped by region into the three
- * render blocks the scene has always emitted — byte-identical:
+ * One beat: painting backdrop + Field Notebook UI layer. Renders by WALKING the
+ * DESUGARED component list grouped into the four named regions (header/lead/
+ * trailing/footer), then emitting the three render blocks the scene has always
+ * produced — byte-identical with the legacy path:
  *
  *   1. Headline  — eyebrow (header) + title/subhead/note (lead) re-composited
- *      into ONE `<Headline>` (a single DOM block preserves shadow/spacing).
- *   2. Lead/trailing band — the `code` instance (left) + `panel` instance
- *      (right), reflowed row (16x9 split) vs stacked column.
- *   3. Footer bar — footer caption + badge (suppressed for hero beats, which
- *      have no footer instances).
+ *      into ONE `<Headline>`. This is the one place a region is *logical*, not a
+ *      separate DOM band: a single block preserves shadow/spacing exactly.
+ *   2. Lead/trailing band — the `code` instance (lead) + `panel` instance
+ *      (trailing), reflowed row (16x9 split) vs stacked column.
+ *   3. Footer bar — footer caption + badge (suppressed for hero beats).
  *
- * Reflow is renderer-side (spec §3): 16:9 lays code + panel side-by-side;
- * square/vertical stack them in a column. Per-format geometry + size tiers come
- * from `LAYOUT_MODEL` (the template), not hardcoded here.
+ * Containers (`row`/`col`/`grid`/`group`) are introduced in T6; legacy beats
+ * desugar to a flat leaf list, so this region walk reproduces today's output with
+ * no recursion. Per-format geometry + size tiers come from `LAYOUT_MODEL` (the
+ * template), not hardcoded here. Reflow is renderer-side: 16:9 lays code + panel
+ * side-by-side; square/vertical stack them in a column.
  */
 export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat, format }) => {
   const frame = useCurrentFrame();
@@ -49,11 +54,15 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   const light = isLightBackdrop(beat.background);
   const captionIn = interpolate(frame, [40, 58], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
-  // Walk the desugared composition. Code tokens flow through `code.code.tokens`
-  // (the same object as `beat.code`, carried by reference in desugar) which is
-  // filled by `calculateMetadata` upstream.
+  // Walk the desugared composition, grouped by region. Code tokens flow through
+  // `code.code.tokens` (the same object as `beat.code`, carried by reference in
+  // desugar) which is filled by `calculateMetadata` upstream.
   const { components } = desugarBeat(beat);
   const hero = !!beat.hero;
+
+  // Group leaves by region (the on-brand top-level skeleton).
+  const byRegion: Record<Region, ComponentInstance[]> = { header: [], lead: [], trailing: [], footer: [] };
+  for (const c of components) byRegion[regionOf(c)].push(c);
 
   // Band geometry + size tiers from the template (hero/centered ⇒ full-frame).
   const region = LAYOUT_MODEL.regions[format].lead ?? {};
@@ -62,21 +71,60 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   const footerGeom = LAYOUT_MODEL.regions[format].footer ?? {};
 
   // --- Block 1: re-composite header + lead text into ONE <Headline>. ---
-  const eyebrowC = pick(components, "eyebrow");
-  const titleC = pick(components, "title");
-  const subheadC = pick(components, "caption", (c) => c.variant === "subhead");
-  const noteC = pick(components, "note");
+  const eyebrowC = pickIn(byRegion.header, "eyebrow");
+  const titleC = pickIn(byRegion.lead, "title");
+  const subheadC = pickIn(byRegion.lead, "caption", (c) => c.variant === "subhead");
+  const noteC = pickIn(byRegion.lead, "note");
 
-  // --- Block 2: lead `code` + trailing `panel`. ---
-  const codeC = pick(components, "code");
-  const panelC = pick(components, "panel");
+  // --- Block 2: the lead/trailing band — non-text nodes, walked generically so
+  //     containers (row/col/grid) compose. Legacy desugars to just [code, panel]. ---
+  const TEXT_TYPES = new Set(["title", "eyebrow", "caption", "note", "badge"]);
+  const bandNodes = [...byRegion.lead, ...byRegion.trailing].filter((n) => !TEXT_TYPES.has(n.type)) as Node[];
 
-  // Sequential: the output panel waits for the code to finish "running".
-  const panelStart = codeC ? codeTypingDoneFrame(codeC.code.tokens ?? [], codeC.code.motion) + OUTPUT_GAP : 0;
+  // Sequential reveal, resolved as DATA (T7). A node's base reveal is its
+  // `revealAfter` target's done-frame + gap; absent that, a panel falls back to the
+  // legacy default — wait for the band's code (anywhere in the tree) to finish typing.
+  // This is the ONE timing path: the legacy code→panel coupling is just the default.
+  const findCode = (nodes: Node[]): Extract<Node, { type: "code" }> | undefined => {
+    for (const n of nodes) {
+      if (n.type === "code") return n;
+      if ("children" in n) {
+        const f = findCode(n.children);
+        if (f) return f;
+      }
+    }
+    return undefined;
+  };
+  const codeForReveal = findCode(bandNodes);
+
+  const byId = new Map<string, Node>();
+  const indexIds = (nodes: Node[]): void => {
+    for (const n of nodes) {
+      if (n.id) byId.set(n.id, n);
+      if ("children" in n) indexIds(n.children);
+    }
+  };
+  indexIds(bandNodes);
+
+  // doneFrame/baseReveal are mutually recursive over `revealAfter` references; the
+  // `seen` set guards against an authored cycle (treated as reveal 0).
+  const doneFrame = (node: Node, seen: Set<Node>): number => {
+    if (seen.has(node)) return 0;
+    seen.add(node);
+    const base = baseReveal(node, seen);
+    return node.type === "code" ? base + codeTypingDoneFrame(node.code.tokens ?? [], node.code.motion) : base + SETTLE;
+  };
+  const baseReveal = (node: Node, seen: Set<Node> = new Set()): number => {
+    const after = node.placement?.revealAfter;
+    if (after && byId.has(after)) return doneFrame(byId.get(after)!, seen) + OUTPUT_GAP;
+    // Legacy default: a panel waits for the band's code to finish typing.
+    if (node.type === "panel" && codeForReveal) return codeTypingDoneFrame(codeForReveal.code.tokens ?? [], codeForReveal.code.motion) + OUTPUT_GAP;
+    return 0;
+  };
 
   // --- Block 3: footer caption + badge. ---
-  const footerCaptionC = pick(components, "caption", (c) => c.variant === "footer");
-  const badgeC = pick(components, "badge");
+  const footerCaptionC = pickIn(byRegion.footer, "caption", (c) => c.variant === "footer");
+  const badgeC = pickIn(byRegion.footer, "badge");
 
   // Background is a continuous layer in Changelog (so same-bg beats don't
   // re-fade); this scene renders only the content that transitions per beat.
@@ -91,6 +139,10 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
         motion={titleC?.motion ?? beat.headlineMotion}
         format={format}
         light={light}
+        eyebrowColor={eyebrowC?.style?.color}
+        titleColor={titleC?.style?.color}
+        subheadColor={subheadC?.style?.color}
+        noteColor={noteC?.style?.color}
       />
 
       <div
@@ -110,18 +162,13 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
           padding: region.pad,
         }}
       >
-        {codeC && (
-          <div style={{ flex: stack ? "0 0 auto" : "1 1 0", width: stack ? "100%" : undefined, maxWidth: stack ? band.itemMax : band.codeMax }}>
-            <CodeWindow filename={codeC.code.filename} tokens={codeC.code.tokens ?? []} motion={codeC.code.motion} fontSize={band.codeFont} />
+        {bandNodes.map((n, i) => (
+          // Both cards mount immediately so a result panel is present while the code
+          // types; `reveal` (carried in ctx) holds the panel's *content* until done.
+          <div key={i} style={slotStyle(sizeOf(n), stack, band)}>
+            {renderNode(n, { band, format, revealOf: baseReveal, staggerOffset: 0 })}
           </div>
-        )}
-        {panelC && (
-          <div style={{ flex: "0 0 auto", width: stack ? "100%" : band.panelW, maxWidth: stack ? band.itemMax : band.panelMax }}>
-            {/* Both cards mount immediately so the result panel is present while the
-                code types; `reveal` holds the panel's *content* until the code is done. */}
-            <Panel spec={panelC.panel} reveal={panelStart} />
-          </div>
-        )}
+        ))}
       </div>
 
       {!hero && (footerCaptionC || badgeC) && (
