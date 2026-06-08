@@ -81,7 +81,7 @@ can carry its own cadence config under `<project>/.cadence/`:
 No project-specific files live in the cadence engine itself. Full walkthrough of
 the convention: **[project-setup.md](project-setup.md)**. For the brand / theme
 detail see **[branding-and-formats.md](branding-and-formats.md)**; for the
-generated-art workflow see **[custom-backgrounds.md](custom-backgrounds.md)**.
+generated-art workflow see **[Branding, Themes & Formats](branding-and-formats.md)**.
 
 ---
 
@@ -97,8 +97,13 @@ cadence create --release owner/name --install "npm i your-pkg"
 What happens:
 
 1. Cadence reads the latest release from `owner/name` (via the `gh` CLI).
-2. It applies a template (default: `changelog-reel`) to build the beats.
+2. It builds the beats with the default `changelog` arc.
 3. It renders to an MP4.
+
+> This one-shot path uses the default arc and look. To choose the structural **kind**
+> (the arc) and the visual **template** (the look), use the durable flow —
+> `cadence new <kind> --template <style>` → edit → `cadence create <file>` — see
+> **[Videos](videos.md)**.
 
 The finished video lands in the project's **`.cadence/out`** (or `./out` if the
 repo has no `.cadence/` dir), alongside the generated `make-<product>.beats.json`
@@ -130,7 +135,7 @@ cadence create --release owner/name --install "npm i your-pkg" --frame 150
 | `--release owner/name` | Source the video from a GitHub release |
 | `--changelog ./CHANGELOG.md` | Source from a changelog file instead |
 | `--install "npm i your-pkg"` | The verified install line to show |
-| `--template <name>` | Pick a template (`cadence templates` to list) |
+| `--template <kind>` | The arc on this repo→video path: `changelog` (default), `launch`, `milestone` (the visual templates from `cadence templates` apply via `cadence new`) |
 | `--format 16x9 \| 1x1 \| 9x16` | Aspect ratio |
 | `--theme <name>` | One of the 18 built-ins (`cadence themes`) |
 | `--theme-file <path>` | A custom theme JSON (e.g. from `cadence study`) |
@@ -188,4 +193,4 @@ Art lands in the project's `.cadence/backgrounds/` (under `_candidates/` until y
 `--promote` it). This is the **only** part of the toolchain that calls an external
 API, requiring `OPENAI_API_KEY`. Full workflow — prompts, branding, promoting,
 referencing the result in a beat — in
-[custom-backgrounds.md](custom-backgrounds.md).
+[Branding, Themes & Formats](branding-and-formats.md).

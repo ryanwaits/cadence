@@ -15,7 +15,7 @@ your docs, backgrounds, formats, and re-skinning a finished video.
 > means either the global binary (`npm i -g @waits/cadence`) or `npx @waits/cadence …`
 > (no install). Inside the engine repo, use `bun run cli …`. Every render runs locally
 > and free — the only part of the toolchain that calls an external API is the optional
-> painterly background pack, flagged clearly below.
+> painterly background generator, flagged clearly below.
 
 ---
 
@@ -42,7 +42,7 @@ it:
 
 ```bash
 cd my-project
-cadence storyboard src/changelog.beats.ts
+cadence storyboard src/changelog.beats.json
 #  · using project theme .../my-project/.cadence/theme.json
 ```
 
@@ -51,12 +51,15 @@ cadence storyboard src/changelog.beats.ts
 Flags always win, so you can override per-run:
 
 ```
---theme-file <path>  >  --theme <name>  >  .cadence/theme.json  >  default
+--theme-file <path>  >  --theme <name>  >  .cadence/theme.json  >  template's bound theme  >  default
 ```
 
 `--theme-file <path>` points at any `ThemeConfig` JSON; `--theme <name>` selects a
-built-in (§2). Both work on `create` / `render` / `redesign`. With a `.cadence/theme.json`
-in place you stop passing either.
+built-in (§2). Both work on `create` / `redesign` / `storyboard`. Theme is **not** a
+beats-file field — it's resolved at render time. (Templates — the styling layer
+selected with `--template`, separate from the structural `kind` you pass to
+`cadence new <kind>` — each bind a default theme that `--theme` overrides.) With a
+`.cadence/theme.json` in place you stop passing either.
 
 > The `.cadence/` directory holds more than the theme — generated art and renders
 > live there too. See **[Per-Project Setup](project-setup.md)** for the full layout
@@ -133,15 +136,15 @@ match `fonts.mono` + `codeTheme` to your highlighter:
 }
 ```
 
+> Per-beat override: a single `code` node can carry `style.chrome` (`window` /
+> `minimal` / `none`) to drop the window on just that snippet — see
+> [composition.md](composition.md).
+
 Verify the result without rendering a full MP4:
 
 ```bash
-cadence storyboard src/changelog.beats.ts   # one still per beat — see the code window
+cadence storyboard src/changelog.beats.json   # one still per beat — see the code window
 ```
-
-Copy a built-in theme JSON as a template if you want the full `ThemeConfig` shape in
-front of you (`cadence themes` lists them; the `codeTheme` palette is auto-derived
-from the accent, so you only override what you want to pin).
 
 ---
 
@@ -175,7 +178,7 @@ cadence study --from-url https://acme.dev --out acme/.cadence/theme.json
 #   prints: · extracted accent #… from https://acme.dev
 
 # from then on, no theme flag — cadence finds it
-cadence create acme/src/changelog.beats.ts
+cadence create acme/src/changelog.beats.json
 ```
 
 Or pass the color straight in, with neutral overrides:
@@ -224,7 +227,7 @@ everywhere for the consistent procedural default).
 | `shapes` | procedural, theme-colored gradient arcs (the default look) |
 | `gradient:#hex1,#hex2` | a two-stop gradient, e.g. `gradient:#312e81,#0b1120` |
 | `solid:#hex` | a flat solid color, e.g. `solid:#0b1120` |
-| `image:filename` | a static image staged from `backgrounds/` (the painterly pack lives here) |
+| `image:filename` | a static image staged from `backgrounds/` (generated painterly art lives here) |
 
 ```bash
 cadence create my.beats.json --background "gradient:#312e81,#0b1120"
@@ -234,17 +237,85 @@ cadence redesign my.beats.json --background shapes      # back to the procedural
 `gradient` and `image` get a slow Ken Burns drift; `solid` and `shapes` stay static.
 
 When authoring beats by hand, the same options appear as the per-beat `background`
-object: `shapes`, `gradient: [from, to]`, `solid`, or `src` (an image), with an
+object: `shapes`, `gradient: [from, to]`, `solid`, or `src` (an image path), with an
 optional `angle` and `treatment` (`kenburns` | `static`). Omit the object for the
 default.
 
-### Generated painterly backdrops
+### Generated painterly backdrops — `cadence art`
 
-`cadence art` paints landscape-style backdrops from a freeform prompt and stages them
-in `<project>/.cadence/backgrounds/`. **This is the only part of the toolchain that
-calls an external API** — it needs `OPENAI_API_KEY`. Reference a promoted image with
-`image:<file>`. Full details — prompts, levels, promoting candidates, the cost guard —
-in **[Custom Backgrounds](custom-backgrounds.md)**.
+When you want a *painted* backdrop instead of the procedural default, `cadence art`
+generates one from a freeform prompt. **This is the only part of the toolchain that
+calls an external API** — it needs `OPENAI_API_KEY` (it calls OpenAI `gpt-image-1`).
+
+Generated art is **project-local**: run `cadence art` from a repo with a `.cadence/`
+dir and images land in `<project>/.cadence/backgrounds/` — never in the cadence
+engine. (Without a `.cadence/`, it falls back to the engine's own
+`public/backgrounds/`.)
+
+**Generate from a prompt:**
+
+```bash
+cadence art --prompt "misty redwood coastline at dawn, layered fog" --name redwood
+```
+
+- `--name <slug>` (required with `--prompt`) — the filename + manifest label.
+- `--format 16x9|1x1|9x16` (default `16x9`) · `--level grounded|heightened|mythic`
+  (default `heightened`) · `--quality low|medium|high` (default `medium`).
+
+The image writes to `<project>/.cadence/backgrounds/_candidates/` as
+`<slug>-<level>-<format>.png`. Generate a few, review, then **promote** the keeper:
+
+```bash
+cadence art --promote redwood        # _candidates/ → backgrounds/
+```
+
+**Use it in a video.** Reference a promoted image by path in a beat — cadence stages
+a merged public dir at render so both your art and any built-in assets resolve:
+
+```json
+{ "headline": "Stream every event.", "background": { "src": "backgrounds/redwood-heightened-16x9.png" } }
+```
+
+(With `--background` on the CLI, the same image is `image:redwood-heightened-16x9.png`.)
+Then `cadence storyboard <beats>` / `cadence create <beats>` as usual.
+
+**Match your brand.** `--brand` tints the art toward your project's `.cadence/theme.json`
+palette (its accent + paper tone), so backdrops sit in the same color family as the
+video:
+
+```bash
+cadence art --prompt "a calm braided river delta at dawn" --name flow --brand
+```
+
+It appends an explicit palette nudge that wins over the base style. For full color
+control, set `style` in a `--pack` / `--style-file`.
+
+**Reusable subject packs.** A pack is a JSON of named subjects (plus optional
+`style` / `negatives`):
+
+```json
+{
+  "style": "A clean isometric 3D render, soft studio light, matte pastel palette.",
+  "subjects": {
+    "pipeline": { "name": "Pipeline", "subject": "an abstract data pipeline of flowing nodes" },
+    "ledger":   { "name": "Ledger",   "subject": "a stylized stack of glowing ledger blocks" }
+  }
+}
+```
+
+```bash
+cadence art --pack ./brand-art.json --all --yes     # every subject in the pack
+cadence art --pack ./brand-art.json --landmark pipeline
+```
+
+`--style-file <txt>` overrides the style for a one-off. With no `--pack`, the bundled
+"Hill Country Sublime" landscape pack is the default (`cadence art --all`); see
+**[ART-DIRECTION.md](../../ART-DIRECTION.md)**.
+
+**Cost.** `gpt-image-1` is billed per image. A batch (`--all` / a multi-subject pack)
+prints an estimate and requires `--yes` to proceed; single images generate directly.
+Default `--quality` is `medium` — bump to `high` for finals. The default backdrop
+stays procedural and key-free; reach for `cadence art` only when you want painted art.
 
 ---
 
@@ -266,7 +337,8 @@ cadence create my.beats.json --format 9x16    # vertical reel
 
 Format is also settable as `format` at the top of a beats file; the `--format` flag
 overrides it. Plan the same content in the format you'll ship — at 16:9 a feature beat
-puts code left and output right; vertical formats restack.
+puts code left and output right; vertical formats restack (layout containers reflow
+automatically — see [composition.md](composition.md)).
 
 ---
 
@@ -293,6 +365,10 @@ cadence redesign my.beats.json --enter rise --exit dissolve --background shapes
 With no `--theme`/`--theme-file`, redesign honors the same `.cadence/theme.json`
 auto-discovery as everything else.
 
+> To restyle the **look** (the styling layer / template) or retarget an existing
+> video without re-rendering, see `cadence fork <beats>` — same arc, new
+> template/format/opener, as a pure data rewrite.
+
 The `--enter` / `--exit` values come from the motion lexicon:
 
 - **enter:** `rise`, `settle`, `bloom`, `type`, `stagger`, `draw`, `count`
@@ -306,22 +382,16 @@ ease-out only, no bounce, so every video moves the same considered way.)
 ## Where this fits
 
 - The brand lives in **`<project>/.cadence/theme.json`** — auto-discovered, no flags.
-  `--theme-file` > `--theme` > `.cadence/theme.json` > `default` when you need to
-  override.
+  `--theme-file` > `--theme` > `.cadence/theme.json` > the template's bound theme >
+  `default` when you need to override. Theme is resolved at render time, never a
+  beats-file field.
 - A theme styles the **code window** too — `fonts.mono`, `codeTheme`, `codeBg`, and
   `codeChrome: "minimal"` match a docs-style snippet. Check it with `cadence storyboard`.
-- The **default backdrop** is procedural and key-free; the painterly pack is opt-in
-  and is the only API-key step.
+- The **default backdrop** is procedural and key-free; `cadence art` (the painterly
+  generator) is opt-in and is the only API-key step.
 - One theme + one background + one format = a coherent, on-brand video that doesn't
   read as AI-generated.
 
 See also: **[Per-Project Setup](project-setup.md)** (the `.cadence/` overview),
-**[Custom Backgrounds](custom-backgrounds.md)** (generated backdrops),
 **[Installation & Quickstart](install.md)**, and the **[gallery](../gallery.md)** for
 the same engine across themes, formats, and arcs.
-
----
-
-Index entry:
-
-- [Branding, Themes & Formats](branding-and-formats.md) — brand a repo with an auto-discovered `.cadence/theme.json`, match your docs' code styling, and ship 16:9 / 1:1 / 9:16 — without the AI look.

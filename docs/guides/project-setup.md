@@ -12,9 +12,9 @@ Every command assumes the `cadence` binary (`npm i -g @waits/cadence`); `npx
 run cli …`.
 
 > This guide is the holistic view. The individual knobs each have a deeper guide:
-> **[Branding, Themes & Formats](branding-and-formats.md)** for `study` / themes,
-> **[Custom Backgrounds](custom-backgrounds.md)** for `art`, and
-> **[Iterate & Preview](iterate-and-preview.md)** for the storyboard loop.
+> **[Branding, Themes & Formats](branding-and-formats.md)** for `study` / themes /
+> `art` backgrounds, and **[Iterate & Preview](iterate-and-preview.md)** for the
+> storyboard loop.
 
 ---
 
@@ -185,7 +185,7 @@ built-in images resolve:
 
 `--brand` tints generated art toward `.cadence/theme.json` so backdrops sit in the
 same color family. Full details — packs, levels, cost guard — in
-**[Custom Backgrounds](custom-backgrounds.md)**.
+**[Branding, Themes & Formats](branding-and-formats.md)**.
 
 ---
 
@@ -229,7 +229,7 @@ on-brand video — the repo carries its own cadence.
 
 See also: **[Installation & Quickstart](install.md)**,
 **[Branding, Themes & Formats](branding-and-formats.md)**,
-**[Custom Backgrounds](custom-backgrounds.md)**, and
+**[Branding, Themes & Formats](branding-and-formats.md)**, and
 **[Iterate & Preview](iterate-and-preview.md)**.
 
 ---

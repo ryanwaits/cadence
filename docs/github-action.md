@@ -20,7 +20,7 @@ jobs:
         uses: <owner>/<this-repo>@v1
         with:
           install: "npm i your-package"          # real install line for the closer
-          template: changelog-reel               # or feature-launch | milestone
+          template: changelog-reel               # the arc/kind: changelog | launch | milestone (legacy aliases ok)
           format: "16x9"                          # or 1x1 | 9x16
           background: "gradient:#312e81,#0b1120"  # or image:/solid:
           # theme-file: themes/yourbrand.json     # optional brand colors
@@ -39,7 +39,7 @@ applies the template, and renders. The MP4 is exposed as `outputs.video`.
 Generate a theme once and commit it, then pass `theme-file`:
 
 ```bash
-cli theme --from-url https://yourbrand.dev --name yourbrand   # → themes/yourbrand.json
+cadence study --from-url https://yourbrand.dev --name yourbrand   # → themes/yourbrand.json
 ```
 
 ## Notes / limits

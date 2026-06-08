@@ -35,7 +35,7 @@ npx @waits/cadence create --release owner/name --install "npm i …"   # …or r
 
 A render runs entirely on your machine (or your own GitHub Actions) — free, no API key.
 
-→ **New here? Start with the [guides](docs/guides/)** — install, changelog, announcement, milestone, branding, and CI walkthroughs.
+→ **New here? Start with the [guides](docs/guides/)** — install, videos, composition, branding, iterate, and CI walkthroughs.
 
 ## Why it doesn't look AI-generated
 
@@ -71,7 +71,7 @@ and render.
 Panels visualize what a change *produces* — pick by result:
 `feed · data-table · status · stat · proof · stream-resume · fork · upload-progress · diagram · browser · quote`.
 
-- **[docs/guides/](docs/guides/)** — task-oriented walkthroughs (install, changelog, announcement, milestone, branding, iterate, CI).
+- **[docs/guides/](docs/guides/)** — task-oriented walkthroughs (install, videos, composition, branding, iterate, CI).
 - **[docs/recipes.md](docs/recipes.md)** — worked examples (changelog, announcement, showcase, brand-from-URL, CI).
 - **[docs/gallery.md](docs/gallery.md)** — the same engine, visibly different videos.
 - **[WALKTHROUGH.md](WALKTHROUGH.md)** — architecture + how to adjust each part.
@@ -105,9 +105,10 @@ bun run check        # tsc
 bun run check:motion # MOTION.md ↔ presets parity
 ```
 
-Layout: `src/schema` (the beats contract), `src/components` (scene + panels),
-`src/motion` (the lexicon), `src/theme` (themes + derivation), `src/templates`
-(the no-LLM repo→beats path), `prompts/art` (the optional painterly pack).
+Layout: `src/schema` (the beats + composition contract), `src/components` (scene +
+`layout/` containers + panels + `registry.ts`), `src/motion` (the lexicon),
+`src/theme` (themes + derivation), `src/kinds` (the no-LLM repo→beats arcs),
+`src/templates` (the styling layer), `prompts/art` (the optional painterly pack).
 
 ## Optional: generated backgrounds
 
@@ -123,5 +124,5 @@ cadence art --promote redwood                                           # candid
 Reusable subject sets go in a `--pack <file.json>`; the bundled "Hill Country
 Sublime" landscape pack is the default (`cadence art --all`). This is the only
 part of the toolchain that calls an external API. See
-**[docs/guides/custom-backgrounds.md](docs/guides/custom-backgrounds.md)** and
+**[docs/guides/branding-and-formats.md](docs/guides/branding-and-formats.md)** and
 **[ART-DIRECTION.md](ART-DIRECTION.md)**.

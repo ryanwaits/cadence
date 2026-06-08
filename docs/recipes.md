@@ -26,7 +26,8 @@ beats → install closer).
 An arc: title card → a headline stat → a feature → install closer.
 
 ```bash
-cadence create --release owner/name --template feature-launch --install "npm i your-pkg"
+cadence new launch --release owner/name --install "npm i your-pkg"   # scaffold the launch arc
+# → edit the beats, then: cadence create <file>
 ```
 
 Hand-authored example: `src/content/mainnet-launch.beats.ts`

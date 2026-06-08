@@ -47,7 +47,7 @@ project carries a `.cadence/theme.json`, storyboard auto-discovers it and previe
 in your brand with no flag — see
 **[Per-Project Setup](project-setup.md)**. For custom
 backdrops (painted art, gradients, brand images), see
-**[Custom Backgrounds](custom-backgrounds.md)**.
+**[Branding, Themes & Formats](branding-and-formats.md)**.
 
 ### Straight from a repo
 

@@ -1,5 +1,11 @@
 # Cadence Phase-1 SPEC — kind × template × theme + composition layer
 
+> **HISTORICAL — Phase 1 (shipped, 0.9.x).** The flat `components[]` + desugar layer
+> described here shipped. It has since been extended by **Composition v2** (recursive
+> containers, per-node style, sequencing-as-data, the registry). For the current model
+> see [composition-v2-rfc.md](composition-v2-rfc.md); for usage see
+> [guides/composition.md](../guides/composition.md). Kept for design history.
+
 **Status:** DESIGN CONTRACT (Phase 1). No code changes in this phase. Phase-2 agents implement this verbatim.
 **Target version:** 0.9.0 (see Open Decision #7). **Regression goal:** byte-identical render of all existing `*.beats.json`/`*.beats.ts`.
 

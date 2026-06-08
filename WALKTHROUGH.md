@@ -17,9 +17,9 @@ repo ─[adapter]→ UpdateManifest ─[template]→ beats ─[engine]→ mp4
 ```
 
 There are **two ways** to make the beats:
-- **Deterministic templates** (`cli make`) — fast, no LLM, honest by omission (shows
-  feature titles + the real install, no invented code). This is what the GitHub
-  Action uses.
+- **Deterministic kinds** (`cli create --release …`) — fast, no LLM, honest by
+  omission (shows feature titles + the real install, no invented code). This is what
+  the GitHub Action uses.
 - **The brain (the `cadence` skill)** — reads the target repo's *types* to
   write real code snippets (the honesty ladder: types → examples → README →
   install-only, never invent). Higher fidelity, needs an LLM in the loop.
@@ -29,10 +29,11 @@ There are **two ways** to make the beats:
 | Stage | What it does | Files | Adjust / extend |
 |------|--------------|-------|-----------------|
 | **Adapter** | release notes / changelog → `UpdateManifest` | `src/adapters/` (`parse.ts`, `index.ts`) | parsing heuristics, what counts as a "feature" |
-| **Template** | manifest → beats | `src/templates/` | add a template → register in `templates/index.ts` |
-| **Schema** | the beats contract (zod, `.strict()`) | `src/schema/beats.ts` | new beat/panel fields |
-| **Engine** | beats → video (Remotion) | `src/components/` | `ChangelogScene` (layout/sequencing), `CodeWindow`, `Headline`, `panels/*` |
-| **Panels** | the "output window" | `src/components/panels/` (+ `index.tsx`) | add a panel → register + add to schema |
+| **Kind** | manifest → beats (the structural arc) | `src/kinds/` | add a kind → register in `kinds/index.ts` |
+| **Template** | the styling layer (scale/weight/spacing/motion + bound theme) | `src/templates/` | add a template → register in `templates/registry.ts` |
+| **Schema** | the beats + composition contract (zod, `.strict()`) | `src/schema/` (`beats.ts`, `composition.ts`, `primitives.ts`) | new beat/component/panel fields |
+| **Engine** | beats → video (Remotion) | `src/components/` | `ChangelogScene` (region walk), `layout/` (containers), `CodeWindow`, `Headline`, `panels/*` |
+| **Panels** | the "output window" | `src/components/panels/` + `registry.ts` | add a panel → one schema entry + component + a `PANEL_REGISTRY` line |
 | **Motion** | named enter/exit transitions | `src/motion/` + `MOTION.md` | new preset → `names.ts` + `presets.ts` + doc |
 | **Theme** | colors, fonts, code palette, shadow | `src/theme/` | add a preset, or `cli theme` to derive one |
 | **Style packs** | background: gradient / solid / image | `src/components/Background.tsx` | new pack mode |
@@ -43,12 +44,14 @@ There are **two ways** to make the beats:
 ```bash
 cli guide                                   # interactive walkthrough (start here)
 cli changes --release owner/name            # see the parsed manifest
-cli make --release owner/name --install …   # repo → video (no LLM)
-cli render src/content/x.beats.ts --format 9x16 [--theme slate] [--theme-file f]
-cli theme --from-url https://brand.dev --name brand   # → themes/brand.json
-cli templates                               # list templates
+cli new <kind> --release owner/name --install …    # repo → a durable beats file (no render)
+cli edit <beats.json>                       # validate + normalize gate (re-run after each edit)
+cli storyboard <beats.json>                 # preview: plan + one still per beat (no MP4)
+cli create <repo|beats.json> [--format 9x16] [--template terminal] [--theme slate]   # render the MP4
+cli study --from-url https://brand.dev --name brand   # → themes/brand.json
+cli kinds | templates | themes              # list the three axes
 cli art --landmark pennybacker --level heightened     # painterly backgrounds
-bun run check && bun run check:render && bun run check:motion   # the gates
+bun run check && bun run check:render && bun run check:motion && bun run check:skill   # the gates
 ```
 
 ## The two key invariants (don't break these)

@@ -66,12 +66,16 @@ real inputs:
 | Input        | What it does                                            | Example                          |
 | ------------ | ------------------------------------------------------- | -------------------------------- |
 | `install`    | Real install command shown in the closer                | `"npm i your-pkg"`               |
-| `template`   | `changelog-reel` \| `feature-launch` \| `milestone`     | `changelog-reel` (default)       |
+| `template`   | the arc/kind: `changelog` \| `launch` \| `milestone` (legacy aliases `changelog-reel` / `feature-launch` accepted) | `changelog-reel` (default)       |
 | `format`     | `16x9` \| `1x1` \| `9x16`                                | `9x16` for a vertical reel       |
 | `background` | `gradient:#a,#b` \| `solid:#hex` \| `image:file.png`    | `gradient:#312e81,#0b1120`       |
 | `theme-file` | Path to a committed theme JSON for brand colors         | `themes/yourbrand.json`          |
 | `repo`       | `owner/name` to read the release from                   | defaults to the current repo     |
 | `tag`        | Release tag to render                                   | defaults to the triggering release |
+
+> Note: the Action's `template` input is the legacy name for the structural **kind**
+> (the arc). The standalone CLI splits this into `cadence new <kind>` for the arc and
+> `--template <style>` for the look; the Action keeps the single `template` input.
 
 ### Branding CI renders
 
@@ -90,7 +94,7 @@ what you saw locally. See the full input reference in
 The action is not a different code path. It runs:
 
 ```bash
-cadence create --release owner/name --template changelog-reel --format 16x9 --install "npm i your-pkg"
+cadence create --release owner/name --template changelog --format 16x9 --install "npm i your-pkg"
 ```
 
 — the same command you run on your laptop, with each `with:` input mapped to a
