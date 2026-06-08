@@ -32,6 +32,7 @@ const SCRIPTS: Record<string, string> = {
   redesign: "scripts/redesign.ts", // re-skin a beats file
   changes: "scripts/changes.ts", // a repo → an UpdateManifest
   art: "scripts/generate-art.ts", // optional painterly background pack
+  capabilities: "scripts/capabilities.ts", // the machine-readable beat vocabulary (json)
 };
 
 const HELP = `cadence — turn a repo / release into a changelog or announcement video.
@@ -49,6 +50,7 @@ render:
 setup + checks:
   study      a brand color / URL → a theme         cadence study --from-url https://acme.dev --name acme
   audit      check a beats file for issues          cadence audit x.beats.json
+  capabilities  the full beat vocabulary (json)     cadence capabilities   (every node/panel/token/preset + defaults)
   guide      interactive walkthrough (start here)   cadence guide
 
 utilities:
