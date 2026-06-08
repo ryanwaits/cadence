@@ -13,15 +13,19 @@ const video: ChangelogInput = {
       id: "opener",
       durationInFrames: 150,
       background: { gradient: GRADIENT, angle: 155 },
-      eyebrow: "milestone",
-      headline: "A million installs.",
+      components: [
+        { type: "eyebrow", text: "milestone" },
+        { type: "title", text: "A million installs." },
+      ],
     },
     {
       id: "stat",
       durationInFrames: 170,
       background: { gradient: GRADIENT, angle: 155 },
-      headline: "Thank you.",
-      panel: { kind: "stat", value: "1,000,000", label: "downloads", sub: "and counting" },
+      components: [
+        { type: "title", text: "Thank you." },
+        { type: "panel", panel: { kind: "stat", value: "1,000,000", label: "downloads", sub: "and counting" } },
+      ],
     },
   ],
 };

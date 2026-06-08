@@ -14,22 +14,26 @@ const video: ChangelogInput = {
       id: "install",
       durationInFrames: 160,
       background: { src: BG },
-      headline: "",
       layout: "center",
-      code: { filename: "terminal", lang: "bash", source: "npm i files-sdk@1.7.0" },
-      badge: "v1.7",
-      caption: "resumable uploads · sync · folders · read-only",
+      components: [
+        { type: "code", code: { filename: "terminal", lang: "bash", source: "npm i files-sdk@1.7.0" } },
+        { type: "badge", text: "v1.7" },
+        { type: "caption", text: "resumable uploads · sync · folders · read-only" },
+      ],
     },
     {
       id: "delimiters",
       durationInFrames: 235,
       background: { src: BG },
-      eyebrow: "new in 1.7",
-      headline: "List folders with delimiters.",
-      code: {
-        filename: "browser.ts",
-        lang: "ts",
-        source: `const { items, prefixes } = await files.list({
+      components: [
+        { type: "eyebrow", text: "new in 1.7" },
+        { type: "title", text: "List folders with delimiters." },
+        {
+          type: "code",
+          code: {
+            filename: "browser.ts",
+            lang: "ts",
+            source: `const { items, prefixes } = await files.list({
   prefix: "photos/",
   delimiter: "/",
 });
@@ -38,39 +42,45 @@ const video: ChangelogInput = {
 for (const folder of prefixes ?? []) {
   console.log(folder);
 }`,
-      },
-      panel: {
-        kind: "browser",
-        title: "photos/",
-        meta: "delimiter: /",
-        sections: [
-          {
-            label: "prefixes",
-            rows: [
-              { type: "folder", name: "2023/" },
-              { type: "folder", name: "2024/" },
-              { type: "folder", name: "2025/" },
-              { type: "folder", name: "raw/" },
+          },
+        },
+        {
+          type: "panel",
+          panel: {
+            kind: "browser",
+            title: "photos/",
+            meta: "delimiter: /",
+            sections: [
+              {
+                label: "prefixes",
+                rows: [
+                  { type: "folder", name: "2023/" },
+                  { type: "folder", name: "2024/" },
+                  { type: "folder", name: "2025/" },
+                  { type: "folder", name: "raw/" },
+                ],
+              },
+              {
+                label: "items",
+                rows: [
+                  { type: "file", name: "cover.jpg", meta: "2.1 MB" },
+                  { type: "file", name: "index.json", meta: "1.2 KB" },
+                ],
+              },
             ],
           },
-          {
-            label: "items",
-            rows: [
-              { type: "file", name: "cover.jpg", meta: "2.1 MB" },
-              { type: "file", name: "index.json", meta: "1.2 KB" },
-            ],
-          },
-        ],
-      },
+        },
+      ],
     },
     {
       id: "hero",
       durationInFrames: 150,
       background: { src: BG },
-      hero: true,
-      layout: "center",
-      headline: "files-sdk",
-      caption: "One API for every storage provider.",
+      layout: "hero",
+      components: [
+        { type: "title", text: "files-sdk" },
+        { type: "caption", text: "One API for every storage provider.", variant: "subhead", placement: { region: "lead" } },
+      ],
     },
   ],
 };

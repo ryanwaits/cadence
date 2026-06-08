@@ -16,41 +16,53 @@ const video: ChangelogInput = {
       id: "opener",
       durationInFrames: 150,
       background: { src: BG },
-      eyebrow: "new in clarinet 3.18",
-      headline: "Clarity 6, in preview.",
+      components: [
+        { type: "eyebrow", text: "new in clarinet 3.18" },
+        { type: "title", text: "Clarity 6, in preview." },
+      ],
     },
     {
       id: "lint",
       durationInFrames: 220,
       background: { src: BG },
-      eyebrow: "clarinet check",
-      headline: "Lint as you check.",
-      code: {
-        filename: "terminal",
-        lang: "bash",
-        source: `clarinet contract new counter
+      components: [
+        { type: "eyebrow", text: "clarinet check" },
+        { type: "title", text: "Lint as you check." },
+        {
+          type: "code",
+          code: {
+            filename: "terminal",
+            lang: "bash",
+            source: `clarinet contract new counter
 clarinet check --show-lints`,
-      },
-      panel: {
-        kind: "status",
-        title: "clarinet check",
-        services: [
-          { name: "counter.clar", state: "ok", detail: "checked" },
-          { name: "type analysis", state: "ok" },
-          { name: "unnecessary_tuple", state: "idle", detail: "style lint" },
-          { name: "clarity 6", state: "ok", detail: "preview" },
-        ],
-      },
+          },
+        },
+        {
+          type: "panel",
+          panel: {
+            kind: "status",
+            title: "clarinet check",
+            services: [
+              { name: "counter.clar", state: "ok", detail: "checked" },
+              { name: "type analysis", state: "ok" },
+              { name: "unnecessary_tuple", state: "idle", detail: "style lint" },
+              { name: "clarity 6", state: "ok", detail: "preview" },
+            ],
+          },
+        },
+      ],
     },
     {
       id: "cta",
       durationInFrames: 160,
       background: { src: BG },
-      headline: "Start building.",
       layout: "center",
-      code: { filename: "terminal", lang: "bash", source: `brew install clarinet` },
-      badge: "v3.18",
-      caption: "write · test · deploy on Stacks",
+      components: [
+        { type: "title", text: "Start building." },
+        { type: "code", code: { filename: "terminal", lang: "bash", source: `brew install clarinet` } },
+        { type: "badge", text: "v3.18" },
+        { type: "caption", text: "write · test · deploy on Stacks" },
+      ],
     },
   ],
 };

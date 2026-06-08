@@ -18,19 +18,24 @@ const video: ChangelogInput = {
       id: "opener",
       durationInFrames: 150,
       background: { src: BG },
-      eyebrow: "new in sdk 6.5",
-      headline: "The mempool, indexed.",
+      components: [
+        { type: "eyebrow", text: "new in sdk 6.5" },
+        { type: "title", text: "The mempool, indexed." },
+      ],
     },
     {
       id: "pending",
       durationInFrames: 235,
       background: { src: BG },
-      eyebrow: "index.mempool",
-      headline: "Query the pending set.",
-      code: {
-        filename: "mempool.ts",
-        lang: "ts",
-        source: `import { SecondLayer } from "@secondlayer/sdk";
+      components: [
+        { type: "eyebrow", text: "index.mempool" },
+        { type: "title", text: "Query the pending set." },
+        {
+          type: "code",
+          code: {
+            filename: "mempool.ts",
+            lang: "ts",
+            source: `import { SecondLayer } from "@secondlayer/sdk";
 
 const sl = new SecondLayer();
 
@@ -38,28 +43,35 @@ const { mempool } = await sl.index.mempool.list({
   contractId: "SP….amm-pool-v2",
   limit: 50,
 });`,
-      },
-      panel: {
-        kind: "data-table",
-        title: "index.mempool",
-        columns: ["tx_id", "function", "sender"],
-        rows: [
-          ["0x8f2a…", "swap-x-for-y", "SP2J6…WVEF"],
-          ["0x3c91…", "add-liquidity", "SP3K9…X1A0"],
-          ["0x7e0d…", "swap-x-for-y", "SPF8M…7QQC"],
-          ["0x1a44…", "transfer", "SP1Y4…NZ2D"],
-        ],
-      },
+          },
+        },
+        {
+          type: "panel",
+          panel: {
+            kind: "data-table",
+            title: "index.mempool",
+            columns: ["tx_id", "function", "sender"],
+            rows: [
+              ["0x8f2a…", "swap-x-for-y", "SP2J6…WVEF"],
+              ["0x3c91…", "add-liquidity", "SP3K9…X1A0"],
+              ["0x7e0d…", "swap-x-for-y", "SPF8M…7QQC"],
+              ["0x1a44…", "transfer", "SP1Y4…NZ2D"],
+            ],
+          },
+        },
+      ],
     },
     {
       id: "cta",
       durationInFrames: 160,
       background: { src: BG },
-      headline: "Start building.",
       layout: "center",
-      code: { filename: "terminal", lang: "bash", source: `bun add @secondlayer/sdk` },
-      badge: "v6.5",
-      caption: "index · streams · datasets · subgraphs",
+      components: [
+        { type: "title", text: "Start building." },
+        { type: "code", code: { filename: "terminal", lang: "bash", source: `bun add @secondlayer/sdk` } },
+        { type: "badge", text: "v6.5" },
+        { type: "caption", text: "index · streams · datasets · subgraphs" },
+      ],
     },
   ],
 };
