@@ -1,2 +1,5 @@
 # Build scratch — generated art candidates, never shipped.
 public/backgrounds/_candidates/
+
+# Composition v2 demo fixtures — in-repo examples, not shipped.
+src/content/_fixtures/
