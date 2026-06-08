@@ -9,15 +9,18 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { changelogSchema, type Beat, type ChangelogVideo } from "../src/schema/beats";
+import { normalizeVideo } from "../src/schema/normalize";
 
 export const FPS = 30;
 
-/** Load a `.ts`/`.js` module (default export) or a `.json` file, then validate. */
+/** Load a `.ts`/`.js` module (default export) or a `.json` file, then validate.
+ * Authoring sugar is normalized to canonical nodes before parsing (the single
+ * desugar step — see `src/schema/normalize.ts`). */
 export async function loadBeats(file: string): Promise<ChangelogVideo> {
   const raw = file.endsWith(".json")
     ? JSON.parse(readFileSync(resolve(file), "utf8"))
     : (await import(pathToFileURL(resolve(file)).href)).default;
-  return changelogSchema.parse(raw);
+  return changelogSchema.parse(normalizeVideo(raw));
 }
 
 export type BeatTiming = { start: number; mid: number; dur: number };
