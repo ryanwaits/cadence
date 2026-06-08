@@ -52,19 +52,24 @@ template. Cadence refuses both:
 - **Refuses freehand animation.** A controlled motion lexicon — ease-out only, no
   bounce — so every video moves the same, considered way.
 
-The whole surface is small and countable: **7 enter + 4 exit transitions, 9 panel
-kinds, 3 formats, 18 themes — and one honesty rule: zero invented code.**
+The whole surface is small and countable: **7 enter + 4 exit transitions, 11 panel
+kinds, 3 formats, 18 themes — and one honesty rule: zero invented code.** Beats
+**compose**: layout containers (`row`/`col`/`grid`), per-node style overrides, and
+data-driven sequencing — all schema-validated, so the agent can extend a video
+without inventing anything the engine can't render.
 
 ## How it works
 
 A video is a list of **beats** — a small JSON file (`*.beats.json`). Each beat is a
 generic unit: an optional background + headline + optional code window + optional
-panel. The engine owns motion, fonts, layout, the typewriter, and code highlighting,
-so the same engine makes changelogs, feature drops, launch announcements, and
-milestones. The agent (via the skill) writes the beats; you tweak and render.
+panel — or an explicit `components` tree composing those with layout containers and
+per-node style. The engine owns motion, fonts, layout, the typewriter, and code
+highlighting, so the same engine makes changelogs, feature drops, launch
+announcements, and milestones. The agent (via the skill) writes the beats; you tweak
+and render.
 
 Panels visualize what a change *produces* — pick by result:
-`feed · data-table · status · stat · proof · stream-resume · fork · upload-progress · diagram`.
+`feed · data-table · status · stat · proof · stream-resume · fork · upload-progress · diagram · browser · quote`.
 
 - **[docs/guides/](docs/guides/)** — task-oriented walkthroughs (install, changelog, announcement, milestone, branding, iterate, CI).
 - **[docs/recipes.md](docs/recipes.md)** — worked examples (changelog, announcement, showcase, brand-from-URL, CI).
