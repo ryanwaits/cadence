@@ -216,6 +216,28 @@ A component is `{ type, placement, …props }`:
 
 Exact fields per kind: `references/authoring.md`.
 
+## Allowed vocabulary (generated — the closed sets the gate enforces)
+<!-- BEGIN GENERATED:vocabulary — run `bun run sync-skill`; do not edit by hand -->
+**Components (leaves):** `title`, `eyebrow`, `note`, `caption`, `badge`, `code`, `panel`
+
+**Layout containers:** `row`, `col`, `grid`, `group`
+
+**Regions:** `header`, `lead`, `trailing`, `footer`
+
+**Panel kinds:** `feed`, `upload-progress`, `data-table`, `status`, `proof`, `stream-resume`, `fork`, `stat`, `diagram`, `browser`, `quote`
+<!-- END GENERATED:vocabulary -->
+
+## Compose within a region — layout containers (v2)
+The top level is region-routed (`header/lead/trailing/footer`); to arrange content
+*inside* a region, nest a container — this is data, no PR:
+- **`col`** stacks children vertically (e.g. code *over* a result panel).
+- **`row`** lays children side-by-side at 16:9; it **reflows to a column** below 16:9.
+- **`grid`** tiles `cols` across (collapses to 1 column below 16:9).
+- **`group`** scopes style/motion with no layout effect.
+Each node also takes optional `style` (color/bg = a theme **role**, `gap`/`padding`,
+`chrome: window|minimal|none`, `size`) and sequencing (`id` + another node's
+`placement.revealAfter`, a container's `stagger`).
+
 ## Data vs. code — what you compose vs. what needs a PR
 The schema *is* the boundary, and `cadence edit`'s parse step is the enforcer:
 **if `cadence edit` accepts it, it's data you compose in JSON; if it rejects an
@@ -228,6 +250,9 @@ unknown type/region/kind, it needs an engine PR.**
 - reorder beats, retime `durationInFrames`, drop a beat
 - `layout: split↔center`, swap `theme` / `template` / `format`, set a per-video `background`
 - pick a different motion **preset** from the named vocabulary
+- **layout** — wrap nodes in a `row`/`col`/`grid`/`group` to compose within a region
+- **per-node `style`** — `color`/`bg` (a theme role), `gap`/`padding`, `chrome`, `size`
+- **sequencing** — give a node an `id` and another `placement.revealAfter: <id>`, or a container `stagger`
 
 **Needs an engine PR (stop and report — don't fake it):**
 - a **new component type** (e.g. `Quote`, `Avatar`)

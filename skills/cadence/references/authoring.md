@@ -145,7 +145,50 @@ type Placement = {
 
 `hero`/`layout` stay beat-level routing flags (they pick the centered hero layout +
 suppress the footer); they are not components. The code↔panel reveal timing is computed
-by the renderer per beat — you don't set it.
+by the renderer per beat — you don't set it (but you can override it; see *Sequencing*).
+
+### Layout containers (v2)
+
+`components` is a **tree**: alongside the leaf types above, four containers carry
+`children: Node[]` and arrange them *inside* a region. The top level stays
+region-routed (that's the on-brand skeleton); containers compose within a region.
+
+```ts
+| { type: "row";   placement; children: Node[]; gap?; align?; justify?; stagger? }  // side-by-side at 16:9
+| { type: "col";   placement; children: Node[]; gap?; align?; justify?; stagger? }  // stacked vertically
+| { type: "grid";  placement; children: Node[]; cols: number; gap?; … }              // N-up tiles
+| { type: "group"; placement; children: Node[] }                                     // style/motion scope, no layout
+```
+
+**Reflow** (renderer-side, no measurement): a `row` becomes a column below 16:9; a
+`grid` collapses to one column below 16:9; a `col` is always vertical. So "code over
+result" = a `col` of `[code, panel]` in `lead` (leave `trailing` empty); it degrades
+sanely on 9:16/1:1 for free.
+
+### Per-node style (v2)
+
+Every node takes an optional `style` — a CLOSED, validated set (not arbitrary CSS):
+
+```ts
+type NodeStyle = {
+  color?: ColorRole;  bg?: ColorRole;   // theme ROLES only (e.g. "gold") — never raw hex, so a theme swap re-colors them
+  gap?: number;  padding?: string;       // containers
+  track?: number;                        // letter-spacing
+  chrome?: "window" | "minimal" | "none"; // code-window chrome
+  size?: "auto" | "sm" | "md" | "lg" | "fill";
+};
+```
+
+Resolution: `style` → template default → theme token. `color` applies to text leaves
+(title/eyebrow/caption/note); `bg`/`gap`/`padding` to containers; `chrome` to `code`.
+
+### Sequencing as data (v2)
+
+Give a node an `id`, and another node `placement.revealAfter: <id>` — it reveals after
+that node finishes (typing-done for code, entrance-settle otherwise) + a gap. A
+container's `stagger: <frames>` offsets each child by `i × stagger`. The legacy
+code→panel coupling is just the default: a panel with no `revealAfter` waits for the
+band's code automatically (so existing beats are unchanged).
 
 ## Panel kinds
 

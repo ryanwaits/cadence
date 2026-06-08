@@ -15,36 +15,17 @@
 import { ZodError } from "zod";
 import { ICON, auditBeats, rankFindings } from "./_audit";
 import { FPS, loadBeats } from "./_beats";
-import { regionSchema } from "../src/schema/composition";
+import { explainVocabulary } from "./_explain";
 import { desugarBeat } from "../src/schema/desugar";
 
 const args = process.argv.slice(2);
 
 // `--explain` dumps the allowed vocabulary so the skill can pre-check an edit
 // before writing it (data-vs-code boundary: unknown type/region/kind ⇒ a PR).
+// The vocabulary is GENERATED from the schema/registry (see `_explain.ts`) — never
+// hand-maintained — so a newly-registered component/panel surfaces automatically.
 if (args.includes("--explain")) {
-  const componentTypes = ["title", "eyebrow", "note", "caption", "badge", "code", "panel"];
-  const regions = regionSchema.options;
-  // Panel kinds are the discriminated-union literals on `panel.kind`.
-  const panelKinds = [
-    "feed",
-    "upload-progress",
-    "data-table",
-    "status",
-    "proof",
-    "stream-resume",
-    "fork",
-    "stat",
-    "diagram",
-    "browser",
-  ];
-  console.log("allowed component types:\n  " + componentTypes.join(", "));
-  console.log("\nallowed regions:\n  " + regions.join(", "));
-  console.log("\nallowed panel kinds (panel.kind):\n  " + panelKinds.join(", "));
-  console.log(
-    "\nanything outside these needs a code change (a PR): a new component type, region, panel kind,\n" +
-      "or motion preset is an engine primitive — not data.",
-  );
+  console.log(explainVocabulary());
   process.exit(0);
 }
 
