@@ -1,5 +1,11 @@
 # @waits/cadence
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix a chrome-colored strip exposed along the bottom of image backdrops. The Ken Burns pan started with zero overscan at frame 0, uncovering the parent fill; with the continuous-background layer this persisted across the opening beats of a shared backdrop. The pan now always keeps enough overscan to cover the frame.
+
 ## 0.11.0
 
 ### Minor Changes
