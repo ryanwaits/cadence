@@ -1,15 +1,18 @@
 import { z } from "zod";
-import { nodeSchema } from "./composition";
-import {
-  codeSchema,
-  formatSchema,
-  motionSchema,
-  panelSchema,
-  type CodeSpec,
-  type Format,
-  type MotionSpecData,
-  type PanelSpec,
-} from "./primitives";
+import { CONTAINER_TYPES, nodeSchema, type Node } from "./composition";
+import { formatSchema, type Format } from "./primitives";
+
+const CONTAINER_SET = new Set<string>(CONTAINER_TYPES);
+
+/** True if the composition tree contains ≥1 renderable leaf (a non-container node) —
+ * an empty array or a beat of only empty containers draws nothing and is rejected. */
+function hasRenderableLeaf(nodes: Node[]): boolean {
+  for (const n of nodes) {
+    if (!CONTAINER_SET.has(n.type)) return true;
+    if ("children" in n && hasRenderableLeaf(n.children)) return true;
+  }
+  return false;
+}
 
 /**
  * The data contract for a changelog video. Authored as a `.ts` module (for types
@@ -45,35 +48,17 @@ export const beatSchema = z
       })
       .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes")
       .optional(),
-    eyebrow: z.string().optional(),
-    /** Relaxed from required → optional. A beat now needs EITHER a legacy
-     * `headline` OR an explicit `components` array (enforced by `.refine` below). */
-    headline: z.string().optional(),
-    headlineMotion: motionSchema.optional(),
-    /** Optional sub-line pinned bottom-center — e.g. an install closer's tagline. */
-    caption: z.string().optional(),
-    /** Optional gold version pill shown with the caption — e.g. "v1.0". */
-    badge: z.string().optional(),
-    layout: z.enum(["split", "center"]).default("split"),
-    /** Render as a centered hero/title card — big headline + `caption` as a
-     * sub-tagline directly under it (e.g. a closing "package · one-line pitch"). */
-    hero: z.boolean().optional(),
-    /** Optional handwritten flourish rendered under the headline (FONTS.note,
-     * marker color) — e.g. a product-name scrawl on a closer. Beat-level; distinct
-     * from the `diagram` panel's `note`. */
-    note: z.string().optional(),
-    code: codeSchema.optional(),
-    panel: panelSchema.optional(),
-    /** NEW, additive composition layer — a recursive `Node[]` tree (v2). When
-     * present the renderer runs only on these; legacy fields desugar into a flat
-     * leaf list (a depth-0 tree — see `desugar.ts`). Containers (`row`/`col`/
-     * `grid`/`group`) nest *inside* a region; the top level stays region-routed. */
-    components: z.array(nodeSchema).optional(),
+    /** Full-frame composition. `split` = headline on top, content band below, footer shown.
+     * `center` = content band centered full-frame, headline still on top, footer shown (an
+     * install opener). `hero` = everything centered, footer suppressed (a closing hero card). */
+    layout: z.enum(["split", "center", "hero"]).default("split"),
+    /** The single authoring spine: a recursive `Node[]` composition tree (leaves +
+     * `row`/`col`/`grid`/`group` containers). Terse key-shorthand (`{title}`, `{code}`,
+     * …) is normalized to canonical nodes before parse (see `schema/normalize.ts`).
+     * Must contain ≥1 renderable leaf. */
+    components: z.array(nodeSchema).refine(hasRenderableLeaf, "beat needs at least one renderable leaf node (title/code/panel/…)"),
   })
-  .strict()
-  // Presence, not truthiness: a legacy install opener carries `headline: ""`
-  // (terminal-only card) and must stay valid.
-  .refine((b) => b.components !== undefined || b.headline !== undefined, "beat needs `components` or a legacy `headline`");
+  .strict();
 
 export const changelogSchema = z
   .object({

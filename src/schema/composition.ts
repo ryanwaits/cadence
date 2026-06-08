@@ -3,12 +3,13 @@ import { COLOR_ROLES } from "../theme/types";
 import { codeSchema, motionSchema, panelSchema } from "./primitives";
 
 /**
- * COMPOSITION SCHEMA (spec §2).
+ * COMPOSITION SCHEMA — the single authoring model.
  *
- * A beat may carry an optional `components: ComponentInstance[]`. The renderer
- * runs *only* on `components`; legacy beat fields desugar into this array
- * (see `desugar.ts`). `code`/`panel` instances REUSE `codeSchema`/`panelSchema`
- * from `./primitives` verbatim — never re-shaped — so the render stays byte-identical.
+ * A beat's `components: Node[]` is THE content spine the renderer walks. Terse
+ * key-shorthand (`{title}`, `{code}`, …) is normalized to these canonical nodes
+ * before parse (see `schema/normalize.ts`) — there is no separate legacy path.
+ * `code`/`panel` instances REUSE `codeSchema`/`panelSchema` from `./primitives`
+ * verbatim — never re-shaped.
  *
  * Import direction is one-way and acyclic: `beats.ts → composition.ts → primitives.ts`
  * (and `beats.ts → primitives.ts`). No `require`/lazy hack needed.
@@ -83,8 +84,9 @@ const badgeNode = z.object({ type: z.literal("badge"), ...idField, placement: pl
 const codeNode = z.object({ type: z.literal("code"), ...idField, placement: placementSchema.default({}), ...styleField, code: codeSchema }).strict();
 const panelNode = z.object({ type: z.literal("panel"), ...idField, placement: placementSchema.default({}), ...styleField, panel: panelSchema }).strict();
 
-/** The 7 leaf component types — the legacy/flat shape. Kept as its own union so
- * `ComponentInstance` stays leaf-only (desugar/`pick`/tests are untouched). */
+/** The 7 leaf component types. Kept as its own union (separate from the container
+ * tree `nodeSchema`) so `ComponentInstance` stays leaf-only — the introspection
+ * walker + `_explain` read `componentSchema.options` for the leaf vocabulary. */
 export const componentSchema = z.discriminatedUnion("type", [
   titleNode, eyebrowNode, noteNode, captionNode, badgeNode, codeNode, panelNode,
 ]);

@@ -1,6 +1,23 @@
-import { changelogSchema, DIMENSIONS, type ChangelogVideo } from "./schema/beats";
+import { changelogSchema, DIMENSIONS, type ChangelogVideo, type Node } from "./schema/beats";
+import { normalizeVideo } from "./schema/normalize";
 import { tokenize } from "./code/highlight";
 import { waitForFonts } from "./brand/fonts";
+
+/** Tokenize every `code` node in a composition tree (recursing into containers),
+ * filling `code.tokens` via shiki so the typewriter + panel-reveal timing read the
+ * same pre-tokenized source the render does. */
+async function tokenizeNodes(nodes: Node[]): Promise<Node[]> {
+  return Promise.all(
+    nodes.map(async (node): Promise<Node> => {
+      if (node.type === "code" && !node.code.tokens) {
+        const tokens = await tokenize(node.code.source, node.code.lang);
+        return { ...node, code: { ...node.code, tokens } };
+      }
+      if ("children" in node) return { ...node, children: await tokenizeNodes(node.children) };
+      return node;
+    }),
+  );
+}
 
 /**
  * Pre-render preparation, shared by Root's `calculateMetadata` and the render
@@ -13,16 +30,10 @@ export async function prepareChangelog(raw: unknown): Promise<{
   height: number;
   props: ChangelogVideo;
 }> {
-  const video = changelogSchema.parse(raw);
+  const video = changelogSchema.parse(normalizeVideo(raw));
 
   const beats = await Promise.all(
-    video.beats.map(async (beat) => {
-      if (beat.code && !beat.code.tokens) {
-        const tokens = await tokenize(beat.code.source, beat.code.lang);
-        return { ...beat, code: { ...beat.code, tokens } };
-      }
-      return beat;
-    })
+    video.beats.map(async (beat) => ({ ...beat, components: await tokenizeNodes(beat.components) })),
   );
 
   const durationInFrames = beats.reduce((n, b) => n + b.durationInFrames, 0);

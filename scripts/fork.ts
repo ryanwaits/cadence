@@ -58,19 +58,14 @@ if (template) parsed.template = template;
 const format = flag("--format") as Format | undefined;
 if (format) parsed.format = format;
 
-// --headline → overwrite the opener beat. Beats may carry a legacy `headline`
-// or a `title` component (composition path); handle both.
+// --headline → overwrite the opener beat's `title` node (adding one if absent).
 const headline = flag("--headline");
 if (headline) {
   const opener = parsed.beats[0];
   if (opener) {
-    if (opener.components?.length) {
-      const title = opener.components.find((c) => c.type === "title");
-      if (title && title.type === "title") title.text = headline;
-      else opener.headline = headline;
-    } else {
-      opener.headline = headline;
-    }
+    const title = opener.components.find((c) => c.type === "title");
+    if (title && title.type === "title") title.text = headline;
+    else opener.components.unshift({ type: "title", placement: {}, text: headline });
   }
 }
 

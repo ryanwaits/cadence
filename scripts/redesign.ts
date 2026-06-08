@@ -11,6 +11,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { changelogSchema, type Beat } from "../src/schema/beats";
+import type { Node } from "../src/schema/composition";
+import { normalizeVideo } from "../src/schema/normalize";
 import { ENTER_PRESETS, EXIT_PRESETS } from "../src/motion/names";
 import { binPath, pkgFile } from "./_pkg";
 
@@ -59,18 +61,33 @@ if (exit && !(EXIT_PRESETS as readonly string[]).includes(exit)) {
 const raw = file.endsWith(".json")
   ? JSON.parse(readFileSync(resolve(file), "utf8"))
   : (await import(pathToFileURL(resolve(file)).href)).default;
-const parsed = changelogSchema.parse(raw);
+const parsed = changelogSchema.parse(normalizeVideo(raw));
 
-// Re-skin: override style fields, preserve content (headline/eyebrow/code/panel).
+// Re-skin: override style fields, preserve content (the `components` tree).
 const enterVal = enter as (typeof ENTER_PRESETS)[number] | undefined;
 const exitVal = exit as (typeof EXIT_PRESETS)[number] | undefined;
-parsed.beats = parsed.beats.map((b) => ({
-  ...b,
-  ...(bgSpec ? { background: bgSpec } : {}),
-  ...(enterVal || exitVal
-    ? { headlineMotion: { ...(b.headlineMotion ?? {}), ...(enterVal ? { enter: enterVal } : {}), ...(exitVal ? { exit: exitVal } : {}) } }
-    : {}),
-}));
+
+/** Merge the enter/exit override onto the FIRST `title` node in the tree. */
+function setTitleMotion(nodes: Node[]): Node[] {
+  let done = false;
+  const walk = (ns: Node[]): Node[] =>
+    ns.map((n) => {
+      if (done) return n;
+      if (n.type === "title") {
+        done = true;
+        return { ...n, motion: { ...(n.motion ?? {}), ...(enterVal ? { enter: enterVal } : {}), ...(exitVal ? { exit: exitVal } : {}) } };
+      }
+      if ("children" in n) return { ...n, children: walk(n.children) };
+      return n;
+    });
+  return walk(nodes);
+}
+
+parsed.beats = parsed.beats.map((b) => {
+  const beat: Beat = bgSpec ? { ...b, background: bgSpec } : { ...b };
+  if (enterVal || exitVal) beat.components = setTitleMotion(beat.components ?? []);
+  return beat;
+});
 
 mkdirSync("out", { recursive: true });
 const name = basename(file).replace(/\.beats\.(ts|js|json)$/, "").replace(/\.(ts|js|json)$/, "");

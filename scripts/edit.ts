@@ -3,7 +3,7 @@
  * normalize gate. There is NO LLM here: the NL string is the SKILL's prompt, not
  * an engine input. The engine only proves the file is renderable:
  *
- *   loadBeats → changelogSchema.parse → desugarBeat (normalize) →
+ *   loadBeats (sugar→canonical normalize + changelogSchema.parse) →
  *   auditBeats + rankFindings (soft warnings) →
  *     on zod error: print the issue path + message, exit NON-ZERO (skill self-corrects)
  *     on success:   print a 1-line summary + `→ cadence storyboard <file>`
@@ -16,7 +16,6 @@ import { ZodError } from "zod";
 import { ICON, auditBeats, rankFindings } from "./_audit";
 import { FPS, loadBeats } from "./_beats";
 import { explainVocabulary } from "./_explain";
-import { desugarBeat } from "../src/schema/desugar";
 
 const args = process.argv.slice(2);
 
@@ -59,17 +58,8 @@ try {
   process.exit(1);
 }
 
-// 2. Normalize: run desugarBeat on each beat (legacy fields → composition). This
-//    proves every beat resolves to a renderable component set; a malformed
-//    composition surfaces here rather than at render time.
-try {
-  for (const beat of parsed.beats) desugarBeat(beat);
-} catch (err) {
-  console.error(`✗ normalize failed: ${(err as Error).message}`);
-  process.exit(1);
-}
-
-// 3. Soft warnings (advisory only — never fail the gate on these).
+// 2. Soft warnings (advisory only — never fail the gate on these). `loadBeats`
+//    already normalized sugar + parsed the composition (the renderability proof).
 const findings = rankFindings(auditBeats(parsed.beats));
 if (findings.length) {
   console.log("");

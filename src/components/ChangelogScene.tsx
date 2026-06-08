@@ -4,34 +4,19 @@ import { FONTS } from "../brand/fonts";
 import { LAYOUT_MODEL, STYLES, resolveRole } from "../templates/active";
 import { isLightBackdrop } from "../brand/tone";
 import type { Beat, Format } from "../schema/beats";
-import { desugarBeat } from "../schema/desugar";
-import type { ComponentInstance, Node, Region } from "../schema/composition";
+import type { ComponentInstance, ComponentType, Node, Region } from "../schema/composition";
 import { Headline } from "./Headline";
 import { OUTPUT_GAP, codeTypingDoneFrame } from "../motion/timing";
 import { renderNode, sizeOf, slotStyle } from "./layout";
+import { groupByRegion, pickIn } from "./layout/regions";
 
 /** Default frames a non-code node's entrance takes to settle (for revealAfter chains). */
 const SETTLE = 18;
 
-/** A node's region: explicit placement wins, else the template's default for its type. */
-const regionOf = (c: ComponentInstance): Region => c.placement?.region ?? LAYOUT_MODEL.defaultRegion[c.type];
-
-/** Find the first node of `type` (optionally matching `match`) within a region's nodes. */
-const pickIn = <T extends ComponentInstance["type"]>(
-  cs: ComponentInstance[],
-  type: T,
-  match?: (c: Extract<ComponentInstance, { type: T }>) => boolean,
-): Extract<ComponentInstance, { type: T }> | undefined =>
-  cs.find(
-    (c): c is Extract<ComponentInstance, { type: T }> =>
-      c.type === type && (!match || match(c as Extract<ComponentInstance, { type: T }>)),
-  ) as Extract<ComponentInstance, { type: T }> | undefined;
-
 /**
  * One beat: painting backdrop + Field Notebook UI layer. Renders by WALKING the
- * DESUGARED component list grouped into the four named regions (header/lead/
- * trailing/footer), then emitting the three render blocks the scene has always
- * produced — byte-identical with the legacy path:
+ * beat's `components` tree grouped into the four named regions (header/lead/
+ * trailing/footer), then emitting three render blocks:
  *
  *   1. Headline  — eyebrow (header) + title/subhead/note (lead) re-composited
  *      into ONE `<Headline>`. This is the one place a region is *logical*, not a
@@ -40,29 +25,28 @@ const pickIn = <T extends ComponentInstance["type"]>(
  *      (trailing), reflowed row (16x9 split) vs stacked column.
  *   3. Footer bar — footer caption + badge (suppressed for hero beats).
  *
- * Containers (`row`/`col`/`grid`/`group`) are introduced in T6; legacy beats
- * desugar to a flat leaf list, so this region walk reproduces today's output with
- * no recursion. Per-format geometry + size tiers come from `LAYOUT_MODEL` (the
- * template), not hardcoded here. Reflow is renderer-side: 16:9 lays code + panel
- * side-by-side; square/vertical stack them in a column.
+ * Containers (`row`/`col`/`grid`/`group`) compose inside a region; a simple beat
+ * is just a flat leaf list. Per-format geometry + size tiers come from
+ * `LAYOUT_MODEL` (the template), not hardcoded here. Reflow is renderer-side:
+ * 16:9 lays code + panel side-by-side; square/vertical stack them in a column.
  */
 export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat, format }) => {
   const frame = useCurrentFrame();
   const isWide = format === "16x9";
-  const centered = beat.layout === "center";
+  // `center` and `hero` both center the content band full-frame; `hero` additionally
+  // centers the headline + suppresses the footer (see `hero` below).
+  const centered = beat.layout === "center" || beat.layout === "hero";
   const stack = !isWide || centered;
   const light = isLightBackdrop(beat.background);
   const captionIn = interpolate(frame, [40, 58], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: EASE.smooth });
 
-  // Walk the desugared composition, grouped by region. Code tokens flow through
-  // `code.code.tokens` (the same object as `beat.code`, carried by reference in
-  // desugar) which is filled by `calculateMetadata` upstream.
-  const { components } = desugarBeat(beat);
-  const hero = !!beat.hero;
+  // Walk the composition tree, grouped by region. Code tokens (`code.code.tokens`)
+  // are filled by `calculateMetadata` (prepare.ts) upstream.
+  const { components } = beat;
+  const hero = beat.layout === "hero";
 
-  // Group leaves by region (the on-brand top-level skeleton).
-  const byRegion: Record<Region, ComponentInstance[]> = { header: [], lead: [], trailing: [], footer: [] };
-  for (const c of components) byRegion[regionOf(c)].push(c);
+  // Group nodes by region (the on-brand top-level skeleton) — shared with `inspect`.
+  const byRegion = groupByRegion(components);
 
   // Band geometry + size tiers from the template (hero/centered ⇒ full-frame).
   const region = LAYOUT_MODEL.regions[format].lead ?? {};
@@ -77,9 +61,9 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
   const noteC = pickIn(byRegion.lead, "note");
 
   // --- Block 2: the lead/trailing band — non-text nodes, walked generically so
-  //     containers (row/col/grid) compose. Legacy desugars to just [code, panel]. ---
+  //     containers (row/col/grid) compose. A simple beat is just [code, panel]. ---
   const TEXT_TYPES = new Set(["title", "eyebrow", "caption", "note", "badge"]);
-  const bandNodes = [...byRegion.lead, ...byRegion.trailing].filter((n) => !TEXT_TYPES.has(n.type)) as Node[];
+  const bandNodes = [...byRegion.lead, ...byRegion.trailing].filter((n) => !TEXT_TYPES.has(n.type));
 
   // Sequential reveal, resolved as DATA (T7). A node's base reveal is its
   // `revealAfter` target's done-frame + gap; absent that, a panel falls back to the
@@ -136,7 +120,7 @@ export const ChangelogScene: React.FC<{ beat: Beat; format: Format }> = ({ beat,
         subhead={subheadC?.text}
         note={noteC?.text}
         place={hero ? "center" : "top"}
-        motion={titleC?.motion ?? beat.headlineMotion}
+        motion={titleC?.motion}
         format={format}
         light={light}
         eyebrowColor={eyebrowC?.style?.color}
