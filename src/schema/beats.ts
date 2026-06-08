@@ -45,6 +45,15 @@ export const beatSchema = z
         solid: z.string().optional(),
         /** Procedural theme-colored backdrop (no asset, no API key) — the default. */
         shapes: z.boolean().optional(),
+        /** Dark legibility wash behind centered/hero text — fixes white titles over
+         * bright paintings. `strength` 0 = off (the default for non-hero beats); a
+         * centered/hero beat over an image gets a template default scrim automatically. */
+        scrim: z
+          .object({
+            strength: z.number().min(0).max(1).default(0),
+            placement: z.enum(["center", "top", "bottom", "full"]).default("center"),
+          })
+          .optional(),
       })
       .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes")
       .optional(),
