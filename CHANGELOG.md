@@ -1,5 +1,14 @@
 # @waits/cadence
 
+## 0.12.0
+
+### Minor Changes
+
+- Stop videos opening on a black frame, and add a poster still for social thumbnails.
+
+  - The first backdrop now renders at full opacity from frame 0 instead of fading in from the near-black base, so the opening frame (and any platform that grabs frame 0 for the thumbnail) shows the backdrop, not a black card. Mid-video backdrop changes still crossfade.
+  - `cadence render … --poster [frame]` writes an extra still alongside the mp4 — a settled frame near the end of the first beat by default — to upload as the social thumbnail.
+
 ## 0.11.1
 
 ### Patch Changes
