@@ -120,8 +120,10 @@ export type TemplateStyles = {
     bodyFontRole: "mono";
     titleSize: number;
     titleWeight: number;
-    /** Per-panel literals (OD #2 — RESOLVED: nested under `panel.byKind`). */
-    byKind: Record<PanelKind, Record<string, unknown>>;
+    /** Per-panel literals (OD #2 — RESOLVED: nested under `panel.byKind`). Partial:
+     * a panel kind that styles itself inline (no template knobs) needs no entry, so
+     * adding a kind stays a registry add — schema + component + registry line. */
+    byKind: Partial<Record<PanelKind, Record<string, unknown>>>;
   };
   badge: { size: number; track: string; radius: number; bgRole: ColorRole; fgRole: ColorRole };
   caption: { footerSize: number; subheadSize: number; weight: number; colorRole: ColorRole };
