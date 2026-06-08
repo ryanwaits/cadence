@@ -32,6 +32,32 @@ const flag = (name: string, def?: string) => {
 const has = (name: string) => args.includes(name);
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
+const USAGE = `cadence art — generate a background painting (gpt-image-1; needs OPENAI_API_KEY).
+
+  cadence art --prompt "<scene>" --name <slug>   freeform: generate one image
+  cadence art --landmark <key>                   one built-in subject (default: the first)
+  cadence art --all [--yes]                       every built-in subject (batch; cost-guarded)
+  cadence art --promote <slug>                    move a candidate → backgrounds/ (no API call)
+
+flags: --level <heightened> · --format 16x9|1x1|9x16 · --quality low|medium|high
+       --pack <file.json> · --style-file <f> · --brand (tint toward the project theme)
+
+output: <project>/.cadence/backgrounds/_candidates/  — review, then --promote the keeper`;
+
+// `--help`/`-h` must short-circuit BEFORE any generation. (Previously an unknown flag
+// fell through to generating the default landmark — `cadence art --help` cost an image.)
+if (has("--help") || has("-h")) {
+  console.log(USAGE);
+  process.exit(0);
+}
+
+// Require explicit intent: a bare `cadence art` (no actionable flag) prints usage
+// instead of silently generating + charging for the first landmark.
+if (!has("--prompt") && !has("--landmark") && !has("--all") && !has("--promote")) {
+  console.log(USAGE);
+  process.exit(0);
+}
+
 // T4: project-local art base. A project's `.cadence/backgrounds/` if present
 // (discovered from cwd), else the engine's committed `public/backgrounds/`.
 const cad = findCadenceDir(process.cwd());
