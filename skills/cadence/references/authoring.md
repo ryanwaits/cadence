@@ -44,32 +44,40 @@ below are identical; this reference uses TS snippets to show the types.)
 {
   id: "slug",                  // unique within the video
   durationInFrames: 235,       // 30fps. ~150 title, ~235 code+panel, ~170 stat
-  background: { src: "backgrounds/mount-bonnell.png", treatment: "kenburns" },
-  eyebrow: "new in streams",   // optional; lowercase → renders gold UPPERCASE
-  headline: "Stream every event.",
-  caption: "subscribe · verify · resume",  // optional bottom-center tagline
-  badge: "v6.3",               // optional gold version pill (with caption)
-  layout: "split",             // "split" (default) | "center" (for closers)
-  hero: true,                  // optional; centered title card (headline + caption under it)
-  note: "Streams",             // optional handwritten flourish under the headline (marker color)
-  code: { /* see below */ },   // optional
-  panel: { /* see below */ },  // optional
-  components: [ /* see Composition */ ], // optional; explicit placement (replaces the legacy fields above)
+  background: { src: "backgrounds/mount-bonnell.png", treatment: "kenburns" }, // optional
+  layout: "split",             // "split" (default) | "center" | "hero"
+  components: [ /* the node tree — see Composition */ ],
 }
 ```
 
-A beat needs **either** the legacy fields above **or** a `components` array — both are
-valid (the legacy fields desugar into `components` automatically). `headline` is only
-required on the legacy path; a `components` beat carries its title as a `Title`
-component instead. Use `components` when you need to move/resize/reorder a piece (see
-[Composition](#composition)).
+`components` is the **one authoring model**: a list of nodes (must hold ≥1 renderable
+leaf). Author nodes terse with **key-shorthand**; the engine normalizes shorthand to the
+canonical `{ type, … }` form before render:
 
-**Handwritten flourish (`note`).** A beat-level `note` renders under the headline
-in the handwriting font (the theme's `fonts.note`, marker color) — e.g. a logo
-lockup on a closer: `{ layout: "center", headline: "Secondlayer", note: "Streams" }`
-draws "Secondlayer" big over a handwritten "Streams". (Distinct from a `diagram`
-panel's `note`.) Needs a theme whose `fonts.note` is a loaded handwriting family
-(the default is `Caveat`).
+```ts
+components: [
+  { eyebrow: "new in streams" },          // → { type: "eyebrow", text: "…" }
+  { title: "Stream every event." },       // → { type: "title", text: "…" }
+  { code: { filename, lang, source } },   // → { type: "code", code: {…} }
+  { panel: { kind: "feed", … } },         // → { type: "panel", panel: {…} }
+  { badge: "v6.3" }, { caption: "subscribe · verify" }, { note: "Streams" },
+]
+```
+
+Shorthand keys: `title` · `eyebrow` · `note` · `caption` · `badge` (value = the node's
+`text`), and `code` · `panel` (value carried under the same key). Any sibling keys
+(`variant`, `placement`, `style`, `id`, `motion`) are preserved. Use the canonical
+`{ type, placement, … }` form when you need to move/resize/reorder (see [Composition](#composition)).
+
+`layout` picks the full-frame composition: `split` (headline top, content band below,
+footer) · `center` (centered band, top headline, footer — install openers) · `hero`
+(everything centered, footer suppressed — closers).
+
+**Handwritten flourish (`note`).** A `{ note: "…" }` node renders in the handwriting font
+(theme `fonts.note`, marker color) — e.g. a logo lockup on a hero closer:
+`{ layout: "hero", components: [ { title: "Secondlayer" }, { note: "Streams" } ] }`.
+(Distinct from a `diagram` panel's `note`.) Needs a theme whose `fonts.note` is a loaded
+handwriting family (default `Caveat`).
 
 **Duration guidance.** Code+panel beats need room because the panel waits for the
 code to finish typing (see Sequencing). ~235 frames fits ~12 lines of code plus a
@@ -87,12 +95,11 @@ code: {
 
 ## Composition
 
-A beat can carry an explicit `components: ComponentInstance[]` instead of the legacy
-fields — independently placeable pieces. The renderer runs *only* on `components`; the
-legacy fields desugar into this exact model, so both shapes are valid and you can
-hand-author `components` only where you need the placement control.
+`components` is the node tree. Author leaves terse (shorthand) or in canonical form —
+they're the **same model** (shorthand normalizes to canonical before parse). Reach for
+the canonical `{ type, placement, … }` form where you need placement control.
 
-**Component shape** — a discriminated union on `type`:
+**Node shape** — a discriminated union on `type`:
 
 ```ts
 type ComponentInstance =
@@ -101,8 +108,8 @@ type ComponentInstance =
   | { type: "note";    placement: Placement; text: string }
   | { type: "caption"; placement: Placement; text: string; variant?: "footer" | "subhead" } // default "footer"
   | { type: "badge";   placement: Placement; text: string }
-  | { type: "code";    placement: Placement; code: Code }    // same `code` shape as the legacy field
-  | { type: "panel";   placement: Placement; panel: Panel }; // same `panel` shape (panel.kind stays inside)
+  | { type: "code";    placement: Placement; code: Code }    // shorthand: { code: {…} }
+  | { type: "panel";   placement: Placement; panel: Panel }; // shorthand: { panel: {…} } — panel.kind stays inside
 ```
 
 The schema is `.strict()` — an unknown `type` or extra prop fails `cadence edit` (that
@@ -130,22 +137,23 @@ type Placement = {
 - **order**: text components reserve 0–2 (eyebrow 0 in `header`; title 0, caption 1,
   note 2 in `lead`), code uses 10 so it never sorts above the note within `lead`.
 
-**Desugar mapping** (what each legacy field becomes — handy when converting a beat):
+**Default placement per node type** (what a node lands on when `placement` is omitted —
+the template's defaults; override any field via `placement`):
 
-| legacy field | condition | → type | region | align | size | order |
-|---|---|---|---|---|---|---|
-| `eyebrow` | present | `eyebrow` | `header` | center | auto | 0 |
-| `headline` | always | `title` | `lead` | center | auto | 0 |
-| `caption` | `hero` | `caption` `variant:"subhead"` | `lead` | center | auto | 1 |
-| `note` | present | `note` | `lead` | center | auto | 2 |
-| `caption` | not `hero` | `caption` `variant:"footer"` | `footer` | center | auto | 1 |
-| `badge` | present | `badge` | `footer` | center | auto | 0 |
-| `code` | present | `code` | `lead` | start | `fill` | 10 |
-| `panel` | present | `panel` | `trailing` | start | `md` | 0 |
+| node | region | align | size | order |
+|---|---|---|---|---|
+| `eyebrow` | `header` | center | auto | 0 |
+| `title` | `lead` | center | auto | 0 |
+| `caption` `variant:"subhead"` | `lead` | center | auto | 1 |
+| `note` | `lead` | center | auto | 2 |
+| `caption` `variant:"footer"` | `footer` | center | auto | 1 |
+| `badge` | `footer` | center | auto | 0 |
+| `code` | `lead` | start | `fill` | 10 |
+| `panel` | `trailing` | start | `md` | 0 |
 
-`hero`/`layout` stay beat-level routing flags (they pick the centered hero layout +
-suppress the footer); they are not components. The code↔panel reveal timing is computed
-by the renderer per beat — you don't set it (but you can override it; see *Sequencing*).
+`layout` is the beat-level full-frame routing (`split`/`center`/`hero`) — it picks the
+centered/hero composition and (for `hero`) suppresses the footer. The code↔panel reveal
+timing is computed per beat — you don't set it (but can override it; see *Sequencing*).
 
 ### Layout containers (v2)
 
@@ -186,9 +194,9 @@ Resolution: `style` → template default → theme token. `color` applies to tex
 
 Give a node an `id`, and another node `placement.revealAfter: <id>` — it reveals after
 that node finishes (typing-done for code, entrance-settle otherwise) + a gap. A
-container's `stagger: <frames>` offsets each child by `i × stagger`. The legacy
-code→panel coupling is just the default: a panel with no `revealAfter` waits for the
-band's code automatically (so existing beats are unchanged).
+container's `stagger: <frames>` offsets each child by `i × stagger`. The code→panel
+coupling is just the default: a panel with no `revealAfter` waits for the band's code
+automatically. `cadence inspect <beats> --beat <id>` shows the resolved reveal frames.
 
 ## Panel kinds
 
@@ -272,10 +280,14 @@ only with a reason, using one of these names:
 - exit: `sink dissolve lift cut`
 
 ```ts
-headlineMotion: { enter: "rise", delay: 8 }
-code: { ..., motion: { enter: "settle", delay: 12 } }
-panel: { ..., motion: { enter: "settle" } }
+{ type: "title", text: "…", motion: { enter: "rise", delay: 8 } }
+{ type: "code", code: { ..., motion: { enter: "settle", delay: 12 } } }
+{ type: "panel", panel: { ..., motion: { enter: "settle" } } }
 ```
+
+The frame-timing the engine applies (typing speed, output gap, settle, entrance/exit
+durations) lives in the template's `motion.timing` token — `cadence capabilities`
+enumerates the tokens + every motion preset's "feel".
 
 The full content→motion taxonomy (which element speaks which transition) is
 documented in the engine package's `MOTION.md`. Easing is fixed by the brand:
@@ -314,6 +326,13 @@ the engine: `backgrounds/pennybacker.png`, `congress.png`, `mount-bonnell.png`,
 Generating new ones needs `cadence art …` and an `OPENAI_API_KEY` (the only part of
 the toolchain that calls an API). The procedural default is preferred for an
 on-brand, key-free look.
+
+**Legibility scrim.** Any background takes an optional `scrim` — a dark wash behind
+the content so light text stays readable over a bright image:
+`{ "src": "backgrounds/pennybacker.png", "scrim": { "strength": 0.5, "placement": "center" } }`
+(`strength` 0–1, default 0; `placement` `center|top|bottom|full`). A `hero` beat over
+an image gets a template-default scrim automatically — only set it explicitly to tune or
+to add one to a non-hero beat.
 
 ## Sequencing model
 

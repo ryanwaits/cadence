@@ -49,6 +49,8 @@ cadence storyboard <beats.json>     # preview: plan + one still per beat → a s
 cadence create <repo|beats.json>    # the build verb (repo → video, or a beats file → video)
 cadence create … --dry-run          # same preview, straight from a repo (no MP4)
 cadence audit <beats.json>          # heuristic checks on a beats file (ranked, no auto-fix)
+cadence capabilities                # the full machine vocabulary (every prop/default/range) → json
+cadence inspect <beats.json> --beat <id>  # what a beat RESOLVED to: regions, reveal timings, colors → json
 cadence study --from-url <url>      # a brand URL/color → a theme JSON
 cadence kinds | templates | themes  # list each axis (arcs · looks · tokens)
 ```
@@ -96,8 +98,8 @@ edit) → `cadence storyboard` → `cadence create`.**
    `background` to get the default procedural, theme-colored backdrop.
 5. **Run the `cadence edit` gate after every edit.** `cadence edit <slug>.beats.json`
    is a **deterministic validate + normalize** step (no LLM in the binary — the
-   optional NL string is just *your* note). It parses the schema, desugars every beat,
-   and runs soft audits. On a schema error it prints the **issue path + message and
+   optional NL string is just *your* note). It normalizes shorthand to canonical nodes,
+   parses the schema, and runs soft audits. On a schema error it prints the **issue path + message and
    exits non-zero** — that means *fix and re-run* (a tight self-correction loop). On
    success it prints a 1-line summary + `→ cadence storyboard`. Run `cadence edit
    --explain` to dump the allowed component types / regions / panel kinds before you
@@ -137,30 +139,35 @@ Map the ask to a **kind** (the `cadence new <kind>` arc), then a format:
 
 `cadence kinds` lists each arc with a "when to use". Keep it tight: 3-6 beats; pick what's visual.
 
-## Beat shapes (legacy, still valid)
-These shorthand fields are the quickest way to author a beat and **still work** —
-the engine desugars them into the composition model automatically. Use them for the
-common shapes; reach for explicit `components` (below) when you need to move/resize/
-reorder a piece.
-- **Install opener** — `layout:"center"` + a `bash` install `code` block + `badge` (e.g. `"v1.7"`) + `caption` (terse feature pills, `"sync · folders · read-only"`). The default open for a `launch` reel.
-- **Opener (title)** — `headline` + `eyebrow` only (classic title card).
-- **Feature** — `headline` + `code` + `panel` (code left, render/result right at 16:9). Default to pairing code with a panel — show the *result*, not just a title.
-- **Stat / milestone** — a `stat` panel (one big number).
-- **Hero closer** — `hero: true` + `layout:"center"` + `headline` (package name) + `caption` (one-line pitch). A big centered title to close on (package + tagline). Add `note` for a handwritten flourish under the headline (marker color, theme's `fonts.note`) — e.g. a logo lockup `{ headline: "Secondlayer", note: "Streams" }`.
-- **Install / CTA closer** — `layout:"center"` + a `bash`/install `code` block + `badge` + `caption` (when you'd rather end on the install).
+## Beat shapes (the common compositions)
+A beat is `{ id, durationInFrames, layout?, background?, components }`. **`components`
+is the one authoring model** — a list of nodes. Author them terse with **key-shorthand**
+(`{ title: "…" }`, `{ code: {…} }`, `{ panel: {…} }`, `{ eyebrow }`, `{ caption }`,
+`{ badge }`, `{ note }`); the engine normalizes shorthand into canonical `{ type, … }`
+nodes before render. Reach for the canonical form + `placement` only when you need to
+move/resize/reorder a piece (next section). The common shapes:
+
+- **Opener (title)** — `[{ eyebrow }, { title }]` (classic title card).
+- **Install opener** — `layout:"center"` + `[{ code:{ lang:"bash", … } }, { badge:"v1.7" }, { caption:"sync · folders · read-only" }]`. The default open for a `launch` reel.
+- **Feature** — `[{ eyebrow }, { title }, { code:{…} }, { panel:{…} }]` (code lead, result panel trailing at 16:9). Default to pairing code with a panel — show the *result*, not just a title.
+- **Stat / milestone** — `[{ title }, { panel:{ kind:"stat", … } }]` (one big number).
+- **Hero closer** — `layout:"hero"` + `[{ title:"<package>" }, { caption:"<pitch>", variant:"subhead", placement:{ region:"lead" } }]`. Everything centered, footer suppressed. Add `{ note:"…" }` for a handwritten flourish (marker color, theme `fonts.note`).
+- **Install / CTA closer** — `layout:"center"` + `[{ title:"Get it." }, { code:{ lang:"bash", … } }, { badge }]`.
+
+**`layout`** picks the full-frame composition: `split` (default — headline on top,
+content band below, footer shown) · `center` (centered content band, headline still on
+top, footer shown — install openers) · `hero` (everything centered, footer suppressed —
+closers).
 
 ## Composition — moving, resizing, reordering pieces
-A beat can instead carry an explicit **`components` list** — independently placeable
-pieces. This is how you say "put the note on the headline line", "code left, panel
-right", "center the title", or reorder things. **Both shapes are valid**; legacy beats
-desugar into this exact model, so you can hand-author `components` only where you need
-the control and leave the rest as shorthand.
+Terse shorthand and canonical nodes are the **same model** — author a node in canonical
+form `{ type, placement, …props }` when you need to "put the note on the headline line",
+"code left, panel right", "center the title", or reorder things, and leave the rest as
+shorthand. A node is `{ type, placement, …props }`:
 
-A component is `{ type, placement, …props }`:
-
-- **types:** `Title` · `Eyebrow` · `Note` · `Caption` · `Badge` · `Code` · `Panel`
-  (text components take `text`; `Code` takes `code:{…}`; `Panel` takes `panel:{…}` —
-  same shapes as the legacy fields). `Caption` also takes `variant:"footer"|"subhead"`.
+- **types:** `title` · `eyebrow` · `note` · `caption` · `badge` · `code` · `panel`
+  (text nodes take `text`; `code` takes `code:{…}`; `panel` takes `panel:{…}`).
+  `caption` also takes `variant:"footer"|"subhead"`.
 - **`placement: { region, align, size, order }`** — all optional (omitted ⇒ the
   template's default for that type):
   - **`region`** — a CLOSED set: `header | lead | trailing | footer`. `header` =
@@ -190,7 +197,7 @@ A component is `{ type, placement, …props }`:
 **Centered hero + note closer** (big title over a handwritten flourish):
 ```json
 {
-  "id": "close", "durationInFrames": 160, "layout": "center", "hero": true,
+  "id": "close", "durationInFrames": 160, "layout": "hero",
   "components": [
     { "type": "title", "text": "Secondlayer", "placement": { "region": "lead", "align": "center" } },
     { "type": "note", "text": "Streams", "placement": { "region": "lead", "align": "center", "order": 2 } }
@@ -219,12 +226,30 @@ Exact fields per kind: `references/authoring.md`.
 ## Allowed vocabulary (generated — the closed sets the gate enforces)
 <!-- BEGIN GENERATED:vocabulary — run `bun run sync-skill`; do not edit by hand -->
 **Components (leaves):** `title`, `eyebrow`, `note`, `caption`, `badge`, `code`, `panel`
-
 **Layout containers:** `row`, `col`, `grid`, `group`
-
 **Regions:** `header`, `lead`, `trailing`, `footer`
 
-**Panel kinds:** `feed`, `upload-progress`, `data-table`, `status`, `proof`, `stream-resume`, `fork`, `stat`, `diagram`, `browser`, `quote`
+**Panel kinds** (`panel.kind` — pick by what the change produces):
+- `feed` — live events / logs / a feed
+- `upload-progress` — long-running / bulk ops
+- `data-table` — a query / list result
+- `status` — service / test health
+- `proof` — signed / verifiable output
+- `stream-resume` — resumable streams / iterators
+- `fork` — reorg / finality
+- `stat` — one big number (milestones, counts)
+- `diagram` — architecture / how-it-works
+- `browser` — file / folder listing
+- `quote` — a pull-quote / testimonial
+
+**Motion presets** (per-node `motion.enter` / `.exit`):
+- enter: `rise` (slides up + fades in (headlines, cards)) · `settle` (scales 1.03→1 + fades (windows/panels arriving)) · `bloom` (fade + de-blur (backgrounds)) · `type` (character-by-character typewriter (code)) · `stagger` (children cascade in (list rows)) · `draw` (SVG stroke reveal (diagrams, the ✓ badge)) · `count` (number tweens 0→value (stat))
+- exit: `sink` (slides up + fades out) · `dissolve` (fade out) · `lift` (scales up + fades out) · `cut` (instant)
+
+**Timing tokens** (template `motion.timing` — every temporal DOF; per-element `motion` overrides win):
+- typingSpeed 2.6 chars/frame · outputGap 10 frames · settle 18 frames · enterDuration 0.55 seconds · exitDuration 0.4 seconds
+
+> Full machine vocabulary (every prop with type/default/range/example): `cadence capabilities`. Engine sha256:62e9293cb9fec349b04d936de377f18640bcf8e54c024690f06067d537f70f94
 <!-- END GENERATED:vocabulary -->
 
 ## Compose within a region — layout containers (v2)
@@ -248,7 +273,7 @@ unknown type/region/kind, it needs an engine PR.**
 - placement — move a component `region`↔`region`, re-`align`, pick a `size` tier, set `order`
 - swap a `panel.kind` or its rows/columns
 - reorder beats, retime `durationInFrames`, drop a beat
-- `layout: split↔center`, swap `theme` / `template` / `format`, set a per-video `background`
+- `layout: split↔center↔hero`, swap `theme` / `template` / `format`, set a per-video `background` (+ `scrim`)
 - pick a different motion **preset** from the named vocabulary
 - **layout** — wrap nodes in a `row`/`col`/`grid`/`group` to compose within a region
 - **per-node `style`** — `color`/`bg` (a theme role), `gap`/`padding`, `chrome`, `size`

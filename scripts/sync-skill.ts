@@ -12,22 +12,37 @@
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PKG_ROOT } from "./_pkg";
-import { containerTypes, leafTypes, panelKinds, regions } from "./_explain";
+import { containerTypes, leafTypes, regions } from "./_explain";
+import { buildCapabilities } from "./_capabilities";
 
 const NAME = "cadence";
 const SRC = join(PKG_ROOT, ".claude/skills", NAME);
 const SKILL_PATH = join(SRC, "SKILL.md");
 const CHECK = process.argv.includes("--check");
 
-// The GENERATED:vocabulary block in SKILL.md is filled from the schema/registry
-// (single source — see `_explain.ts`), so the closed sets can never drift from the
-// engine. `sync-skill --check` fails CI if the committed block is stale.
+// The GENERATED:vocabulary block in SKILL.md is filled from `cadence capabilities`
+// (the same manifest the agent reads — generated FROM the zod schemas/registries),
+// so the skill's tables can never drift from the engine. The embedded `schemaDigest`
+// makes drift a hard failure: change a schema → the digest changes → the committed
+// block is stale → `sync-skill --check` fails CI until the skill is regenerated.
+const cap = buildCapabilities();
 const VOCAB = [
   `**Components (leaves):** ${leafTypes().map((t) => `\`${t}\``).join(", ")}`,
   `**Layout containers:** ${containerTypes().map((t) => `\`${t}\``).join(", ")}`,
   `**Regions:** ${regions().map((t) => `\`${t}\``).join(", ")}`,
-  `**Panel kinds:** ${panelKinds().map((t) => `\`${t}\``).join(", ")}`,
-].join("\n\n");
+  "",
+  "**Panel kinds** (`panel.kind` — pick by what the change produces):",
+  cap.panels.kinds.map((k) => `- \`${k.kind}\` — ${k.use}`).join("\n"),
+  "",
+  "**Motion presets** (per-node `motion.enter` / `.exit`):",
+  `- enter: ${cap.motion.enter.values.map((v) => `\`${v.value}\` (${v.feel})`).join(" · ")}`,
+  `- exit: ${cap.motion.exit.values.map((v) => `\`${v.value}\` (${v.feel})`).join(" · ")}`,
+  "",
+  "**Timing tokens** (template `motion.timing` — every temporal DOF; per-element `motion` overrides win):",
+  `- ${Object.entries(cap.theme.timing).map(([k, t]) => `${k} ${(t as { value: number; unit?: string }).value}${(t as { unit?: string }).unit ? ` ${(t as { unit?: string }).unit}` : ""}`).join(" · ")}`,
+  "",
+  `> Full machine vocabulary (every prop with type/default/range/example): \`cadence capabilities\`. Engine ${cap.engine.schemaDigest}`,
+].join("\n");
 
 const fillVocabulary = (md: string): string =>
   md.replace(
