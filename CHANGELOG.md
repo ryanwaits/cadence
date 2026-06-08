@@ -1,5 +1,40 @@
 # @waits/cadence
 
+## 0.10.0
+
+### Minor Changes
+
+- bb03b72: Composition v2 — a bounded, agent-editable component tree.
+
+  Beats now compose. The flat `components[]` becomes a recursive tree with layout
+  containers (`row`/`col`/`grid`/`group`) that nest inside the named regions, so
+  layouts like "code over result" or N-up tiles are expressible as data (and reflow
+  across formats automatically). Every node takes an optional `style` override
+  (color/bg as theme roles, `gap`/`padding`/`chrome`/`size`) and data-driven
+  sequencing (a node `id` + another node's `placement.revealAfter`, or a container
+  `stagger`).
+
+  Panels and components now dispatch through a registry, so adding a panel kind is a
+  schema entry + a component + one registry line — no renderer or union edits (the new
+  `quote` panel ships this way). `cadence edit --explain` and the skill's allowed-set
+  docs are generated from that registry, with a `sync-skill --check` drift-lint.
+
+  Fully backward compatible: every existing `*.beats.{ts,json}` validates and renders
+  byte-identically (guarded by a new render-snapshot regression gate). Legacy beat
+  fields desugar into the new tree unchanged.
+
+### Patch Changes
+
+- 2fd5a58: Reconcile the repo→video flag naming with the kind × template split.
+
+  `cadence create --release …` (and the GitHub Action) now take `--kind` / `kind:` for
+  the structural arc and `--template` / a beats `template` field for the styling layer
+  — matching `cadence new` and the rest of the CLI. `--template` naming the arc is a
+  **deprecated alias** (still honored, with a notice) so existing commands and Action
+  workflows keep working; the Action gains a `kind` input alongside the deprecated
+  `template`. As a bonus, the repo one-shot now supports the styling template too
+  (`--template terminal`).
+
 ## 0.9.1
 
 ### Patch Changes
