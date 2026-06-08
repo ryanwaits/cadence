@@ -4,6 +4,21 @@ import type { Beat } from "../schema/beats";
 
 type BG = Beat["background"];
 
+/**
+ * Ken Burns drift for an image backdrop: a slow zoom + vertical pan. The image is
+ * `objectFit: cover` at `transform: scale(s) translateY(t)` (origin center), so the
+ * scale must always overscan enough to cover the pan — otherwise an edge of the
+ * frame shows through to the parent fill. The binding case is the bottom edge:
+ * `s·(H/2 + t) ≥ H/2`. Starting scale at 1 with a non-zero `t` (the old [1,1.08] /
+ * [-12,0]) left zero overscan at frame 0 and exposed a strip along the bottom —
+ * doubly visible now that the backdrop is one continuous layer across same-bg beats.
+ * Starting at 1.04 keeps ~12px of overscan, comfortably covering the 12px pan.
+ */
+export const kenBurns = (frame: number, duration: number) => ({
+  scale: interpolate(frame, [0, duration], [1.04, 1.12], { extrapolateRight: "clamp" }),
+  translateY: interpolate(frame, [0, duration], [-12, 0], { extrapolateRight: "clamp" }),
+});
+
 /** hex (#abc | #aabbcc) → rgba string with alpha. */
 const hexA = (hex: string, a: number) => {
   let h = hex.replace("#", "");
@@ -45,7 +60,7 @@ export const Background: React.FC<{ bg?: BG }> = ({ bg }) => {
   }
 
   if (bg.solid || bg.gradient) {
-    const drift = interpolate(frame, [0, durationInFrames], [0, 1.04], { extrapolateRight: "clamp" });
+    const drift = interpolate(frame, [0, durationInFrames], [1, 1.04], { extrapolateRight: "clamp" });
     const fill = bg.solid
       ? bg.solid
       : `linear-gradient(${bg.angle}deg, ${bg.gradient![0]} 0%, ${bg.gradient![1]} 100%)`;
@@ -59,8 +74,7 @@ export const Background: React.FC<{ bg?: BG }> = ({ bg }) => {
   }
 
   const kb = bg.treatment === "kenburns";
-  const scale = kb ? interpolate(frame, [0, durationInFrames], [1, 1.08], { extrapolateRight: "clamp" }) : 1;
-  const translateY = kb ? interpolate(frame, [0, durationInFrames], [-12, 0], { extrapolateRight: "clamp" }) : 0;
+  const { scale, translateY } = kb ? kenBurns(frame, durationInFrames) : { scale: 1, translateY: 0 };
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.chrome, opacity }}>
