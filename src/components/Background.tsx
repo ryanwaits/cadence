@@ -32,10 +32,14 @@ const hexA = (hex: string, a: number) => {
  * `image` (optional painterly pack, Ken Burns + haze), an AI-free `gradient`, or a
  * `solid`. All add a soft vignette + slow drift so they're never flat.
  */
-export const Background: React.FC<{ bg?: BG }> = ({ bg }) => {
+export const Background: React.FC<{ bg?: BG; fadeIn?: boolean }> = ({ bg, fadeIn = true }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const opacity = interpolate(frame, [0, 18], [0, 1], { extrapolateRight: "clamp" });
+  // `fadeIn` ramps the backdrop up from transparent so a backdrop *change* mid-video
+  // crossfades. The first segment has nothing behind it but the near-black `ink`
+  // base — fading it in would open the whole video on a black frame (a black social
+  // thumbnail), so the first backdrop renders at full opacity from frame 0.
+  const opacity = fadeIn ? interpolate(frame, [0, 18], [0, 1], { extrapolateRight: "clamp" }) : 1;
 
   // Default backdrop: procedural soft arcs tinted from the active theme.
   if (!bg || bg.shapes) {

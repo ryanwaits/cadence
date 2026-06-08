@@ -50,7 +50,7 @@ export const Changelog: React.FC<ChangelogVideo> = ({ format, beats }) => {
         const from = i === 0 ? 0 : Math.max(0, seg.from - XFADE);
         return (
           <Sequence key={`${seg.key}-${seg.from}`} from={from} durationInFrames={seg.from + seg.duration - from} layout="none">
-            <Background bg={seg.bg} />
+            <Background bg={seg.bg} fadeIn={i > 0} />
           </Sequence>
         );
       })}
