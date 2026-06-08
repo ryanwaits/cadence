@@ -14,12 +14,12 @@ const exitEnum = z.enum(EXIT_PRESETS);
 
 export const motionSchema = z
   .object({
-    enter: enterEnum.optional(),
-    exit: exitEnum.optional(),
-    easing: z.enum(["smooth", "snappy"]).optional(),
-    delay: z.number().optional(),
-    durationInFrames: z.number().optional(),
-    distance: z.number().optional(),
+    enter: enterEnum.optional().meta({ describe: "entrance preset (see motion.enter for feels)" }),
+    exit: exitEnum.optional().meta({ describe: "exit preset; omit to hold until the cut" }),
+    easing: z.enum(["smooth", "snappy"]).optional().meta({ describe: "entrance easing", default: "smooth (template)" }),
+    delay: z.number().optional().meta({ unit: "frames", default: 0, describe: "frames to wait before entering" }),
+    durationInFrames: z.number().optional().meta({ unit: "frames", describe: "entrance length; default round(fps * timing.enterDuration)" }),
+    distance: z.number().optional().meta({ unit: "px", default: 24, describe: "travel for the `rise` preset" }),
   })
   .strict();
 
@@ -29,13 +29,13 @@ const codeTokenSchema = z.object({ content: z.string(), color: z.string() });
 
 export const codeSchema = z
   .object({
-    filename: z.string(),
-    lang: z.enum(["ts", "tsx", "bash", "json"]),
-    source: z.string(),
+    filename: z.string().meta({ describe: "window tab label", example: "stream.ts" }),
+    lang: z.enum(["ts", "tsx", "bash", "json"]).meta({ describe: "syntax-highlight language" }),
+    source: z.string().meta({ describe: "the code typed out by the typewriter", example: "const sl = createClient();" }),
     theme: z.literal("light").default("light"),
     motion: motionSchema.optional(),
     /** Filled by calculateMetadata via shiki — do not author by hand. */
-    tokens: z.array(z.array(codeTokenSchema)).optional(),
+    tokens: z.array(z.array(codeTokenSchema)).optional().meta({ describe: "engine-filled (shiki) — never author by hand" }),
   })
   .strict();
 

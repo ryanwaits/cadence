@@ -21,16 +21,11 @@ export const sizeSchema = z.enum(["auto", "sm", "md", "lg", "fill"]);
 
 export const placementSchema = z
   .object({
-    /** Optional → falls to `template.defaultRegion[type]` at render. */
-    region: regionSchema.optional(),
-    align: alignSchema.optional(),
-    /** Enum tier → per-format pixel sizing owned by the template. */
-    size: sizeSchema.optional(),
-    /** Intra-region sort key. */
-    order: z.number().int().optional(),
-    /** Sequencing-as-data (T7): this node reveals after the node with this `id`
-     * finishes (its typing-done for code, entrance-settle otherwise) + a gap. */
-    revealAfter: z.string().optional(),
+    region: regionSchema.optional().meta({ describe: "which of the 4 regions; omit → the template default for the node type" }),
+    align: alignSchema.optional().meta({ describe: "intra-region alignment", default: "center" }),
+    size: sizeSchema.optional().meta({ describe: "size tier (template maps to per-format pixels); omit → template default" }),
+    order: z.number().int().optional().meta({ describe: "sort key within a region" }),
+    revealAfter: z.string().optional().meta({ describe: "hold this node until the node with this id finishes (+ outputGap)", example: "code1" }),
   })
   .strict();
 
@@ -44,16 +39,13 @@ export const placementSchema = z
 const colorRoleSchema = z.enum(COLOR_ROLES);
 export const styleSchema = z
   .object({
-    color: colorRoleSchema.optional(),
-    bg: colorRoleSchema.optional(),
-    gap: z.number().optional(),
-    padding: z.string().optional(),
-    /** letter-spacing override. */
-    track: z.number().optional(),
-    /** code-window chrome override (e.g. drop the window frame for a docs-style snippet). */
-    chrome: z.enum(["window", "minimal", "none"]).optional(),
-    /** per-instance size-tier override (otherwise the template default for the type). */
-    size: sizeSchema.optional(),
+    color: colorRoleSchema.optional().meta({ describe: "text color — a theme ROLE (not raw hex), so it survives a theme swap" }),
+    bg: colorRoleSchema.optional().meta({ describe: "background tint — a theme ROLE (not raw hex)" }),
+    gap: z.number().optional().meta({ unit: "px", describe: "gap between this container's children" }),
+    padding: z.string().optional().meta({ describe: "CSS padding string", example: "24px 32px" }),
+    track: z.number().optional().meta({ unit: "px", describe: "letter-spacing override" }),
+    chrome: z.enum(["window", "minimal", "none"]).optional().meta({ describe: "code-window chrome: window = traffic-light dots; minimal/none = chromeless", default: "window (theme)" }),
+    size: sizeSchema.optional().meta({ describe: "per-instance size-tier override" }),
   })
   .strict();
 export type NodeStyle = z.infer<typeof styleSchema>;

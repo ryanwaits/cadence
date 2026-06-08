@@ -29,43 +29,45 @@ function hasRenderableLeaf(nodes: Node[]): boolean {
 export { codeSchema, formatSchema, motionSchema, panelSchema } from "./primitives";
 export type { CodeSpec, Format, MotionSpecData, PanelSpec } from "./primitives";
 
+/** A beat's backdrop. Omit for the default procedural, theme-colored "shapes" pack. */
+export const backgroundSchema = z
+  .object({
+    src: z.string().optional().meta({ describe: "a painting/image under public/ (painterly pack)", example: "backgrounds/congress.png" }),
+    treatment: z.enum(["kenburns", "static"]).default("kenburns").meta({ describe: "image motion: slow pan/zoom or hold" }),
+    gradient: z.tuple([z.string(), z.string()]).optional().meta({ describe: "AI-free [from, to] gradient", example: ["#312e81", "#0b1120"] }),
+    angle: z.number().default(160).meta({ unit: "deg", describe: "gradient angle" }),
+    solid: z.string().optional().meta({ describe: "a solid color fill", example: "#0b1120" }),
+    shapes: z.boolean().optional().meta({ describe: "procedural theme-colored backdrop (no asset/API key) — the default when background is omitted" }),
+    scrim: z
+      .object({
+        strength: z.number().min(0).max(1).default(0).meta({ min: 0, max: 1, default: 0, describe: "dark legibility wash opacity; 0 = off" }),
+        placement: z.enum(["center", "top", "bottom", "full"]).default("center").meta({ describe: "where the wash sits" }),
+      })
+      .optional()
+      .meta({ describe: "legibility wash behind centered/hero text over bright art; a hero-over-image beat gets a template default automatically" }),
+  })
+  .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes");
+
 export const beatSchema = z
   .object({
     id: z.string(),
     durationInFrames: z.number().int().positive(),
-    /** Omit for the default procedural, theme-colored backdrop (the "shapes" pack). */
-    background: z
-      .object({
-        /** A painting/image in public/ (the optional painterly style pack). */
-        src: z.string().optional(),
-        treatment: z.enum(["kenburns", "static"]).default("kenburns"),
-        /** AI-free packs: a [from, to] gradient or a solid color. */
-        gradient: z.tuple([z.string(), z.string()]).optional(),
-        angle: z.number().default(160),
-        solid: z.string().optional(),
-        /** Procedural theme-colored backdrop (no asset, no API key) — the default. */
-        shapes: z.boolean().optional(),
-        /** Dark legibility wash behind centered/hero text — fixes white titles over
-         * bright paintings. `strength` 0 = off (the default for non-hero beats); a
-         * centered/hero beat over an image gets a template default scrim automatically. */
-        scrim: z
-          .object({
-            strength: z.number().min(0).max(1).default(0),
-            placement: z.enum(["center", "top", "bottom", "full"]).default("center"),
-          })
-          .optional(),
-      })
-      .refine((b) => b.src || b.gradient || b.solid || b.shapes, "background needs src, gradient, solid, or shapes")
-      .optional(),
+    background: backgroundSchema.optional(),
     /** Full-frame composition. `split` = headline on top, content band below, footer shown.
      * `center` = content band centered full-frame, headline still on top, footer shown (an
      * install opener). `hero` = everything centered, footer suppressed (a closing hero card). */
-    layout: z.enum(["split", "center", "hero"]).default("split"),
+    layout: z
+      .enum(["split", "center", "hero"])
+      .default("split")
+      .meta({ describe: "split = headline top + content band below + footer; center = centered band, top headline, footer (install opener); hero = all centered, no footer (closer)" }),
     /** The single authoring spine: a recursive `Node[]` composition tree (leaves +
      * `row`/`col`/`grid`/`group` containers). Terse key-shorthand (`{title}`, `{code}`,
      * …) is normalized to canonical nodes before parse (see `schema/normalize.ts`).
      * Must contain ≥1 renderable leaf. */
-    components: z.array(nodeSchema).refine(hasRenderableLeaf, "beat needs at least one renderable leaf node (title/code/panel/…)"),
+    components: z
+      .array(nodeSchema)
+      .refine(hasRenderableLeaf, "beat needs at least one renderable leaf node (title/code/panel/…)")
+      .meta({ describe: "the node tree — leaves (title/eyebrow/code/panel/…) and containers (row/col/grid/group)" }),
   })
   .strict();
 
