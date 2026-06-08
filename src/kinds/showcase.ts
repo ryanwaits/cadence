@@ -21,8 +21,10 @@ export const showcase: Kind = (m, opts = {}) => {
       id: "feature",
       durationInFrames: 190,
       background: bg,
-      eyebrow: `new in ${m.product}`,
-      headline: clip(feature, 44),
+      components: [
+        { type: "eyebrow", text: `new in ${m.product}` },
+        { type: "title", text: clip(feature, 44) },
+      ],
     };
     beats.push(centerpiece);
   }

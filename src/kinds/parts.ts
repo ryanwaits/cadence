@@ -13,8 +13,10 @@ export const opener = (m: UpdateManifest, bg: BackgroundSpec, headline?: string)
   id: "opener",
   durationInFrames: 150,
   background: bg,
-  eyebrow: `new in ${m.product}`,
-  headline: headline ?? `${m.version} is out.`,
+  components: [
+    { type: "eyebrow", text: `new in ${m.product}` },
+    { type: "title", text: headline ?? `${m.version} is out.` },
+  ],
 });
 
 /** Install closer — only when the manifest actually knows the install command. */
@@ -24,10 +26,12 @@ export const cta = (m: UpdateManifest, bg: BackgroundSpec): TBeat | null =>
         id: "cta",
         durationInFrames: 160,
         background: bg,
-        headline: "Get it.",
         layout: "center",
-        code: { filename: "terminal", lang: "bash", source: m.install },
-        badge: `v${m.version}`,
+        components: [
+          { type: "title", text: "Get it." },
+          { type: "code", code: { filename: "terminal", lang: "bash", source: m.install } },
+          { type: "badge", text: `v${m.version}` },
+        ],
       }
     : null;
 
@@ -49,21 +53,18 @@ export const installOpener = (m: UpdateManifest, bg: BackgroundSpec, pills?: str
         id: "install",
         durationInFrames: 160,
         background: bg,
-        headline: "",
         layout: "center",
-        code: { filename: "terminal", lang: "bash", source: m.install },
-        badge: shortVersion(m.version),
-        caption: pills ?? pillsFrom(m),
+        components: [
+          { type: "code", code: { filename: "terminal", lang: "bash", source: m.install } },
+          { type: "badge", text: shortVersion(m.version) },
+          { type: "caption", text: pills ?? pillsFrom(m) },
+        ],
       }
     : opener(m, bg);
 
 /** Hero closer — a big centered title card: the package name + a one-line pitch. */
-export const heroClose = (m: UpdateManifest, bg: BackgroundSpec, tagline?: string): TBeat => ({
-  id: "hero",
-  durationInFrames: 150,
-  background: bg,
-  hero: true,
-  layout: "center",
-  headline: m.product,
-  caption: tagline,
-});
+export const heroClose = (m: UpdateManifest, bg: BackgroundSpec, tagline?: string): TBeat => {
+  const components: NonNullable<TBeat["components"]> = [{ type: "title", text: m.product }];
+  if (tagline) components.push({ type: "caption", text: tagline, variant: "subhead", placement: { region: "lead" } });
+  return { id: "hero", durationInFrames: 150, background: bg, layout: "hero", components };
+};

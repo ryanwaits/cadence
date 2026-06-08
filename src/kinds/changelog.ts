@@ -17,8 +17,10 @@ export const changelogReel: Kind = (m, opts = {}) => {
       id: "changes",
       durationInFrames: Math.min(320, 150 + rows.length * 24),
       background: bg,
-      headline: "What's new.",
-      panel: { kind: "data-table", title: `${m.product} ${m.version}`, columns: ["#", "change"], rows },
+      components: [
+        { type: "title", text: "What's new." },
+        { type: "panel", panel: { kind: "data-table", title: `${m.product} ${m.version}`, columns: ["#", "change"], rows } },
+      ],
     });
   }
 

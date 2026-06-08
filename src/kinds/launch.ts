@@ -21,8 +21,10 @@ export const featureLaunch: Kind = (m, opts = {}) => {
       id: `feature-${i}`,
       durationInFrames: 140,
       background: bg,
-      eyebrow: `feature ${i + 1}`,
-      headline: clip(f.title, 40),
+      components: [
+        { type: "eyebrow", text: `feature ${i + 1}` },
+        { type: "title", text: clip(f.title, 40) },
+      ],
     });
   });
 

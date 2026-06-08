@@ -23,8 +23,10 @@ export const announcement: Kind = (m, opts = {}) => {
       id: "highlight",
       durationInFrames: 150,
       background: bg,
-      eyebrow: "highlights",
-      headline: top.join("  ·  "),
+      components: [
+        { type: "eyebrow", text: "highlights" },
+        { type: "title", text: top.join("  ·  ") },
+      ],
     };
     beats.push(highlight);
   }

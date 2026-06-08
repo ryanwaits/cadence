@@ -15,8 +15,10 @@ export const milestone: Kind = (m, opts = {}) => {
       id: "stat",
       durationInFrames: 170,
       background: bg,
-      headline: "By the numbers.",
-      panel: { kind: "stat", value: stat.value, label: stat.label, sub: stat.sub },
+      components: [
+        { type: "title", text: "By the numbers." },
+        { type: "panel", panel: { kind: "stat", value: stat.value, label: stat.label, sub: stat.sub } },
+      ],
     },
   ];
   const close = cta(m, bg);
