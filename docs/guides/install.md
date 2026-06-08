@@ -100,10 +100,10 @@ What happens:
 2. It builds the beats with the default `changelog` arc.
 3. It renders to an MP4.
 
-> This one-shot path uses the default arc and look. To choose the structural **kind**
-> (the arc) and the visual **template** (the look), use the durable flow —
-> `cadence new <kind> --template <style>` → edit → `cadence create <file>` — see
-> **[Videos](videos.md)**.
+> This one-shot path defaults to the `changelog` arc and the default look. Pick the
+> arc with `--kind` and the look with `--template` (see the flags table below), or use
+> the durable flow — `cadence new <kind> --template <style>` → edit → `cadence create
+> <file>` — for full control. See **[Videos](videos.md)**.
 
 The finished video lands in the project's **`.cadence/out`** (or `./out` if the
 repo has no `.cadence/` dir), alongside the generated `make-<product>.beats.json`
@@ -135,7 +135,8 @@ cadence create --release owner/name --install "npm i your-pkg" --frame 150
 | `--release owner/name` | Source the video from a GitHub release |
 | `--changelog ./CHANGELOG.md` | Source from a changelog file instead |
 | `--install "npm i your-pkg"` | The verified install line to show |
-| `--template <kind>` | The arc on this repo→video path: `changelog` (default), `launch`, `milestone` (the visual templates from `cadence templates` apply via `cadence new`) |
+| `--kind <arc>` | The structural arc: `changelog` (default), `launch`, `milestone`, `announcement`, `showcase` |
+| `--template <style>` | The visual template: `field-notebook` (default), `terminal`, `instructional` |
 | `--format 16x9 \| 1x1 \| 9x16` | Aspect ratio |
 | `--theme <name>` | One of the 18 built-ins (`cadence themes`) |
 | `--theme-file <path>` | A custom theme JSON (e.g. from `cadence study`) |

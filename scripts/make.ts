@@ -3,13 +3,14 @@
  * applies a kind (structural arc), and renders.
  *
  *   tsx scripts/make.ts --release stx-labs/clarinet --install "brew install clarinet"
- *   tsx scripts/make.ts --release owner/name --template changelog-reel --background "gradient:#312e81,#0b1120" --format 9x16
+ *   tsx scripts/make.ts --release owner/name --kind launch --template terminal --format 9x16
  *   tsx scripts/make.ts --changelog ./CHANGELOG.md --product my-pkg --install "npm i my-pkg" --frame 230
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { author, parseBackground } from "./_author";
+import { KINDS } from "../src/kinds";
 import { binPath, pkgFile } from "./_pkg";
 import { resolveOutDir } from "./_theme";
 
@@ -25,13 +26,28 @@ const flag = (n: string) => {
 const release = flag("--release");
 const changelog = flag("--changelog");
 if (!release && !changelog) {
-  console.error("usage: make.ts --release <owner/name> | --changelog <path> [--template T] [--background B] [--format F] [--theme T] [--frame N]");
+  console.error("usage: make.ts --release <owner/name> | --changelog <path> [--kind K] [--template <style>] [--background B] [--format F] [--theme T] [--frame N]");
   process.exit(1);
 }
 
+// `--kind` (the structural arc) vs `--template` (the styling layer) — the same split
+// as the rest of the CLI. `--template` historically named the ARC; keep that working
+// as a DEPRECATED alias when its value is a known kind, otherwise it's the styling
+// template (stamped into the beats so the look travels with them).
+const kindFlag = flag("--kind");
+const templateFlag = flag("--template");
+let kind = kindFlag;
+let styleTemplate = templateFlag;
+if (!kindFlag && templateFlag && KINDS[templateFlag]) {
+  console.error("· note: --template naming the arc is deprecated — use --kind (treating it as the kind)");
+  kind = templateFlag;
+  styleTemplate = undefined;
+}
+
 const statValue = flag("--stat-value");
-const { beats, kind, manifest } = author({
-  kind: flag("--template") ?? "changelog",
+const { beats, kind: resolvedKind, manifest } = author({
+  kind: kind ?? "changelog",
+  template: styleTemplate,
   source: { release, tag: flag("--tag"), changelog, install: flag("--install"), product: flag("--product") },
   authorOpts: {
     format: flag("--format") as never,
@@ -41,7 +57,7 @@ const { beats, kind, manifest } = author({
   },
 });
 
-console.error(`· ${manifest.product} ${manifest.version}: ${manifest.features.length} features${manifest.dropped ? ` (+${manifest.dropped} dropped)` : ""} → ${kind}`);
+console.error(`· ${manifest.product} ${manifest.version}: ${manifest.features.length} features${manifest.dropped ? ` (+${manifest.dropped} dropped)` : ""} → ${resolvedKind}`);
 
 // 2. Write beats JSON, then render — or, with --dry-run, storyboard it (preview
 // sheet + plan, no MP4). Outputs go to the project's .cadence/out (or --out).

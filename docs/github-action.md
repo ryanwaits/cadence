@@ -20,7 +20,7 @@ jobs:
         uses: <owner>/<this-repo>@v1
         with:
           install: "npm i your-package"          # real install line for the closer
-          template: changelog-reel               # the arc/kind: changelog | launch | milestone (legacy aliases ok)
+          kind: changelog                         # the arc: changelog | launch | milestone | announcement | showcase
           format: "16x9"                          # or 1x1 | 9x16
           background: "gradient:#312e81,#0b1120"  # or image:/solid:
           # theme-file: themes/yourbrand.json     # optional brand colors
@@ -32,7 +32,7 @@ jobs:
 
 `repo` and `tag` default to the release that triggered the run. It reads the
 release notes with the runner's `GITHUB_TOKEN`, parses them into a manifest,
-applies the template, and renders. The MP4 is exposed as `outputs.video`.
+applies the kind (the arc), and renders. The MP4 is exposed as `outputs.video`.
 
 ## Brand colors
 
@@ -45,7 +45,7 @@ cadence study --from-url https://yourbrand.dev --name yourbrand   # → themes/y
 ## Notes / limits
 
 - **Local render in the runner** is free and runs entirely on your own GitHub
-  Actions minutes — no hosted service. Keep videos short (the templates are);
+  Actions minutes — no hosted service. Keep videos short (the arcs are);
   renders are bounded by runner memory/time.
 - Remotion downloads a headless Chrome on first render (adds ~30-60s).
 - Artifacts expire; the example also `gh release upload`s the MP4 so it's permanent.

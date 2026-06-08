@@ -35,7 +35,7 @@ There are **two ways** to make the beats:
 | **Engine** | beats → video (Remotion) | `src/components/` | `ChangelogScene` (region walk), `layout/` (containers), `CodeWindow`, `Headline`, `panels/*` |
 | **Panels** | the "output window" | `src/components/panels/` + `registry.ts` | add a panel → one schema entry + component + a `PANEL_REGISTRY` line |
 | **Motion** | named enter/exit transitions | `src/motion/` + `MOTION.md` | new preset → `names.ts` + `presets.ts` + doc |
-| **Theme** | colors, fonts, code palette, shadow | `src/theme/` | add a preset, or `cli theme` to derive one |
+| **Theme** | colors, fonts, code palette, shadow | `src/theme/` | add a preset, or `cli study` to derive one |
 | **Style packs** | background: gradient / solid / image | `src/components/Background.tsx` | new pack mode |
 | **Render** | TS/JSON beats → mp4 | `scripts/render.ts` | flags, output |
 
