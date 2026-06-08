@@ -2,6 +2,7 @@ import { useCurrentFrame } from "remotion";
 import { CARET_BG, CODE_CHROME, COLORS, FLOAT_SHADOW } from "../brand/tokens";
 import { FONTS } from "../brand/fonts";
 import { CARD_ENTER, useMotion, type MotionSpec } from "../motion/useMotion";
+import { CHARS_PER_FRAME, codeTypingDoneFrame, totalChars, typeStartFor } from "../motion/timing";
 import { CODE_BG, type CodeLine } from "../code/highlight";
 
 type Props = {
@@ -9,22 +10,20 @@ type Props = {
   tokens: CodeLine[];
   motion?: MotionSpec;
   fontSize?: number;
+  /** Per-node chrome override (node `style.chrome`). Falls back to the theme's `CODE_CHROME`. */
+  chrome?: "window" | "minimal" | "none";
 };
 
-const CHARS_PER_FRAME = 2.6;
-const typeStartFor = (motion?: MotionSpec) => (motion?.delay ?? 12) + 6;
-const totalChars = (tokens: CodeLine[]) =>
-  tokens.reduce((n, line) => n + line.reduce((m, t) => m + t.content.length, 0) + 1, 0);
-
-/** Frame at which the typewriter finishes — the output panel waits for this. */
-export const codeTypingDoneFrame = (tokens: CodeLine[], motion?: MotionSpec) =>
-  typeStartFor(motion) + Math.ceil(totalChars(tokens) / CHARS_PER_FRAME);
+// Frame-timing helpers now live in motion/timing.ts (pure, Remotion-free, shared with
+// node scripts). Re-exported so existing importers keep resolving from here.
+export { codeTypingDoneFrame };
 
 /** Floating code window with a single-caret typewriter over pre-tokenized code. */
-export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = CARD_ENTER, fontSize = 22 }) => {
+export const CodeWindow: React.FC<Props> = ({ filename, tokens, motion = CARD_ENTER, fontSize = 22, chrome }) => {
   const frame = useCurrentFrame();
   const style = useMotion(motion);
-  const minimal = CODE_CHROME === "minimal";
+  // Per-node override wins; "minimal"/"none" are both chromeless. Undefined ⇒ theme default.
+  const minimal = (chrome ?? CODE_CHROME) !== "window";
 
   const typeStart = typeStartFor(motion);
   const total = totalChars(tokens);

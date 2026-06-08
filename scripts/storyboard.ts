@@ -13,7 +13,9 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { type Beat, type Format } from "../src/schema/beats";
+import { type Beat, type Format, type Node } from "../src/schema/beats";
+import { desugarBeat } from "../src/schema/desugar";
+import { settledFrame } from "../src/motion/timing";
 import { TEMPLATES } from "../src/templates/registry";
 import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboard";
 import { stagePublicDir } from "./_assets";
@@ -37,6 +39,22 @@ if (!file) {
 }
 
 const { theme, themeFile } = resolveTheme({ theme: getFlag("--theme"), themeFile: getFlag("--theme-file"), beatsFile: file });
+
+/** First panel kind anywhere in a beat's (desugared) tree — survives nested/authored
+ * beats where the panel lives inside a container rather than the legacy `beat.panel`. */
+const firstPanelKind = (b: Beat): string => {
+  const walk = (nodes: Node[]): string | undefined => {
+    for (const n of nodes) {
+      if (n.type === "panel") return n.panel.kind;
+      if ("children" in n && Array.isArray(n.children)) {
+        const found = walk(n.children);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+  return walk(desugarBeat(b).components as Node[]) ?? "—";
+};
 
 /** Short label for a beat's backdrop (omitted background = the procedural default). */
 const bgTag = (b: Beat): string => {
@@ -69,7 +87,7 @@ parsed.beats.forEach((b, i) => {
   const start = `${(t.start / FPS).toFixed(1)}s`.padStart(6);
   const dur = `${(t.dur / FPS).toFixed(1)}s`.padStart(5);
   const layout = b.layout.padEnd(6);
-  const panel = (b.panel?.kind ?? "—").padEnd(14);
+  const panel = firstPanelKind(b).padEnd(14);
   const bg = bgTag(b).padEnd(8);
   console.log(`  ${String(i + 1).padStart(2)}  @${start}  ${dur}  ${layout}  ${panel}  ${bg}  ${b.headline}`);
 });
@@ -109,9 +127,14 @@ const TRANSPARENT_PX =
 console.log(`\nrendering ${parsed.beats.length} stills…`);
 const cells: StoryboardCell[] = parsed.beats.map((b, i) => {
   const out = join(tmp, `beat-${i}.png`);
+  // Pick a frame where content has settled: the later of the beat midpoint and the
+  // tree's settled frame (code typed + panel revealed), capped inside the beat.
+  const t = timings[i];
+  const settled = settledFrame(desugarBeat(b).components as Node[]);
+  const frame = t.start + Math.min(t.dur - 2, Math.max(Math.floor(t.dur / 2), settled));
   const res = spawnSync(
     bin,
-    ["still", entry, "Changelog", out, `--props=${propsPath}`, `--frame=${timings[i].mid}`, "--scale=0.33", ...pub],
+    ["still", entry, "Changelog", out, `--props=${propsPath}`, `--frame=${frame}`, "--scale=0.33", ...pub],
     { stdio: ["ignore", "ignore", "inherit"], env },
   );
   let img = TRANSPARENT_PX;
@@ -120,7 +143,7 @@ const cells: StoryboardCell[] = parsed.beats.map((b, i) => {
   } else {
     console.warn(`  ! beat ${i + 1} still failed — placeholder used`);
   }
-  return { img, headline: b.headline ?? "", panel: b.panel?.kind ?? "—", seconds: `${(b.durationInFrames / FPS).toFixed(1)}s` };
+  return { img, headline: b.headline ?? "", panel: firstPanelKind(b), seconds: `${(b.durationInFrames / FPS).toFixed(1)}s` };
 });
 
 const sheetProps: StoryboardProps = { format: fmt, name, cells };
