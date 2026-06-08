@@ -69,6 +69,22 @@ const pub = staged ? [`--public-dir=${staged}`] : [];
 const res = frame
   ? spawnSync(bin, ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`, ...pub], { stdio: "inherit", env })
   : spawnSync(bin, ["render", ...common, join(outDir, `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg", ...pub], { stdio: "inherit", env });
+
+// `--poster [frame]` renders a still for the social thumbnail (most platforms
+// otherwise grab frame 0). Default to a settled frame near the end of the first
+// beat, where its content has fully revealed — never frame 0.
+const posterFlag = getFlag("--poster");
+if (!frame && args.includes("--poster") && (res.status ?? 0) === 0) {
+  const firstDur = parsed.beats[0]?.durationInFrames ?? 60;
+  const total = parsed.beats.reduce((n, b) => n + b.durationInFrames, 0);
+  const posterFrame =
+    posterFlag && /^\d+$/.test(posterFlag) ? Number(posterFlag) : Math.max(1, Math.min(firstDur - 8, total - 1));
+  spawnSync(
+    bin,
+    ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-poster.png`), `--props=${propsPath}`, `--frame=${posterFrame}`, ...pub],
+    { stdio: "inherit", env },
+  );
+}
 if (staged) rmSync(staged, { recursive: true, force: true });
 
 process.exit(res.status ?? 0);
