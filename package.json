@@ -36,7 +36,9 @@
     "test": "bun test",
     "check": "tsc --noEmit",
     "check:motion": "tsx scripts/check-motion.ts",
-    "check:render": "tsx scripts/smoke.ts",
+    "check:render": "tsx scripts/smoke.ts && tsx scripts/regression.ts",
+    "check:skill": "tsx scripts/sync-skill.ts --check",
+    "regression": "tsx scripts/regression.ts",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
