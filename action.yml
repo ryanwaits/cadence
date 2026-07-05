@@ -17,10 +17,6 @@ inputs:
     description: "the structural arc: changelog | launch | milestone | announcement | showcase"
     required: false
     default: "changelog"
-  template:
-    description: "DEPRECATED — alias for `kind` (the arc). Use `kind`. Legacy values: changelog-reel | feature-launch | milestone"
-    required: false
-    default: ""
   format:
     description: "16x9 | 1x1 | 9x16"
     required: false
@@ -63,10 +59,7 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        args=(--release "${{ inputs.repo }}" --format "${{ inputs.format }}")
-        # `template` is the deprecated alias for the arc; when set it wins (back-compat),
-        # else use the canonical `kind` input.
-        if [ -n "${{ inputs.template }}" ]; then args+=(--template "${{ inputs.template }}"); else args+=(--kind "${{ inputs.kind }}"); fi
+        args=(--release "${{ inputs.repo }}" --format "${{ inputs.format }}" --kind "${{ inputs.kind }}")
         [ -n "${{ inputs.tag }}" ] && args+=(--tag "${{ inputs.tag }}")
         [ -n "${{ inputs.install }}" ] && args+=(--install "${{ inputs.install }}")
         [ -n "${{ inputs.background }}" ] && args+=(--background "${{ inputs.background }}")

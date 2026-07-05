@@ -16,7 +16,7 @@ jobs:
         uses: ./ # consumer repos: uses: <owner>/cadence@v1
         with:
           # repo + tag default to the release that triggered this run
-          template: changelog-reel
+          kind: changelog
           format: "16x9"
           install: "npm i your-package" # the real install line for your closer
           background: "gradient:#312e81,#0b1120"
