@@ -73,5 +73,5 @@ if (args.includes("--dry-run")) {
   runScript("scripts/storyboard.ts", [jsonPath, ...passthru, ...outArgs]);
 }
 
-const passthru = ["--format", "--theme", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
+const passthru = ["--format", "--theme", "--theme-file", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
 runScript("scripts/render.ts", [jsonPath, ...passthru, ...outArgs]);

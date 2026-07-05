@@ -74,7 +74,7 @@ Render a video automatically on every GitHub release — free, on your own runne
 
 ```yaml
 # .github/workflows/release-video.yml
-- uses: ryanwaits/cadence@v1
+- uses: ryanwaits/cadence@v1   # until v1 exists, pin @main or the latest release tag
   with:
     install: "npm i your-pkg"
     format: "16x9"

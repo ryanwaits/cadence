@@ -37,6 +37,10 @@ inputs:
     description: "path to a theme JSON (from `cadence study ...`) for brand colors"
     required: false
     default: ""
+  upload:
+    description: "attach the rendered MP4 to the triggering release (needs contents: write)"
+    required: false
+    default: "false"
 
 outputs:
   video:
@@ -71,3 +75,10 @@ runs:
         mp4=$(ls -t out/*.mp4 | head -1)
         cp "$mp4" "$GITHUB_WORKSPACE/cadence.mp4"
         echo "video=$GITHUB_WORKSPACE/cadence.mp4" >> "$GITHUB_OUTPUT"
+    - name: Upload to release
+      if: ${{ inputs.upload == 'true' && inputs.tag != '' }}
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release upload "${{ inputs.tag }}" cadence.mp4 --clobber --repo "${{ inputs.repo }}"

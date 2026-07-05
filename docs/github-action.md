@@ -12,27 +12,39 @@ name: Changelog video on release
 on:
   release:
     types: [published]
+permissions:
+  contents: write   # required only if you set upload: "true"
 jobs:
   video:
     runs-on: ubuntu-latest
     steps:
       - id: video
-        uses: <owner>/<this-repo>@v1
+        uses: <owner>/<this-repo>@v1   # until v1 exists, pin @main or the latest release tag
         with:
           install: "npm i your-package"          # real install line for the closer
           kind: changelog                         # the arc: changelog | launch | milestone | announcement | showcase
           format: "16x9"                          # or 1x1 | 9x16
           background: "gradient:#312e81,#0b1120"  # or image:/solid:
           # theme-file: themes/yourbrand.json     # optional brand colors
+          upload: "true"                          # attach the MP4 to the triggering release
       - uses: actions/upload-artifact@v4
         with: { name: cadence, path: "${{ steps.video.outputs.video }}" }
-      - env: { GH_TOKEN: "${{ github.token }}" }
-        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.video.outputs.video }}" --repo "${{ github.repository }}"
 ```
 
 `repo` and `tag` default to the release that triggered the run. It reads the
 release notes with the runner's `GITHUB_TOKEN`, parses them into a manifest,
 applies the kind (the arc), and renders. The MP4 is exposed as `outputs.video`.
+
+`upload: "true"` attaches the MP4 to the triggering release for you (needs
+`permissions: contents: write` in the calling workflow) — this replaces the
+hand-written `gh release upload` step from earlier versions of this doc. If
+you'd rather do it yourself (e.g. to upload to a different release), skip
+`upload` and add your own step:
+
+```yaml
+      - env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ steps.video.outputs.video }}" --repo "${{ github.repository }}"
+```
 
 ## Brand colors
 
@@ -54,6 +66,8 @@ cadence study --from-url https://yourbrand.dev --name yourbrand   # → themes/y
 
 ## Status
 
-Built and self-contained; validate by pushing this repo to GitHub and publishing a
-test release (the workflow at `.github/workflows/example-release-video.yml` runs it
-against this repo). Not yet exercised in CI.
+Built and self-contained; `--theme-file` now forwards correctly on the real render
+path (fixed in plan 003), and `upload: "true"` absorbs the manual release-upload
+step. Validate by pushing this repo to GitHub and publishing a test release (the
+workflow at `.github/workflows/example-release-video.yml` runs it against this
+repo). Not yet exercised in CI.
