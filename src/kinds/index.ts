@@ -64,8 +64,6 @@ const showcaseEntry: KindEntry = {
 
 /**
  * Off-the-shelf kinds (structural arcs). A manifest + a kind name → beats.
- * Back-compat alias keys (`feature-launch`, `changelog-reel`) resolve to the
- * same entries so existing callers keep working through the rename.
  */
 export const KINDS: Record<string, KindEntry> = {
   launch,
@@ -73,9 +71,6 @@ export const KINDS: Record<string, KindEntry> = {
   milestone: milestoneEntry,
   announcement: announcementEntry,
   showcase: showcaseEntry,
-  // back-compat aliases (pre-rename names)
-  "feature-launch": launch,
-  "changelog-reel": changelog,
 };
 
 export type { Kind, KindOpts, KindMeta, BackgroundSpec } from "./types";

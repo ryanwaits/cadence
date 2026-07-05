@@ -9,7 +9,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { author, parseBackground } from "./_author";
-import { KINDS } from "../src/kinds";
 import { runScript } from "./_pkg";
 import { resolveOutDir } from "./_theme";
 
@@ -30,18 +29,9 @@ if (!release && !changelog) {
 }
 
 // `--kind` (the structural arc) vs `--template` (the styling layer) — the same split
-// as the rest of the CLI. `--template` historically named the ARC; keep that working
-// as a DEPRECATED alias when its value is a known kind, otherwise it's the styling
-// template (stamped into the beats so the look travels with them).
-const kindFlag = flag("--kind");
-const templateFlag = flag("--template");
-let kind = kindFlag;
-let styleTemplate = templateFlag;
-if (!kindFlag && templateFlag && KINDS[templateFlag]) {
-  console.error("· note: --template naming the arc is deprecated — use --kind (treating it as the kind)");
-  kind = templateFlag;
-  styleTemplate = undefined;
-}
+// as the rest of the CLI.
+const kind = flag("--kind");
+const styleTemplate = flag("--template");
 
 const statValue = flag("--stat-value");
 const { beats, kind: resolvedKind, manifest } = author({

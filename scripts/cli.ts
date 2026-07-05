@@ -4,10 +4,10 @@
  *   cadence create --release stx-labs/clarinet --install "brew install clarinet"
  *   cadence create src/content/x.beats.ts --format 9x16   # a beats file → video
  *   cadence study --from-url https://acme.dev --name acme
- *   cadence audit src/content/x.beats.ts
- *   cadence redesign src/content/x.beats.ts --theme slate
+ *   cadence edit src/content/x.beats.ts
+ *   cadence fork src/content/x.beats.ts --theme slate
  */
-import { type KindEntry, KINDS } from "../src/kinds";
+import { KINDS } from "../src/kinds";
 import { TEMPLATES } from "../src/templates/registry";
 import { THEMES } from "../src/theme";
 import { runScript } from "./_pkg";
@@ -16,8 +16,13 @@ import { resolveCreateScript } from "./_route";
 const [rawSub, ...rest] = process.argv.slice(2);
 
 // Legacy verb aliases → canonical intent verbs.
-const ALIAS: Record<string, string> = { make: "create", theme: "study" };
+const ALIAS: Record<string, string> = { make: "create", theme: "study", audit: "edit", redesign: "fork" };
 const sub = rawSub ? (ALIAS[rawSub] ?? rawSub) : rawSub;
+if (rawSub && ALIAS[rawSub]) {
+  console.error(
+    `· note: "cadence ${rawSub}" is deprecated — use "cadence ${ALIAS[rawSub]}"${rawSub === "redesign" ? ' (then `cadence create <file>` to render)' : ""}`,
+  );
+}
 
 // Verb → script. `create` is resolved dynamically (repo flow vs. beats file).
 const SCRIPTS: Record<string, string> = {
@@ -29,8 +34,6 @@ const SCRIPTS: Record<string, string> = {
   storyboard: "scripts/storyboard.ts", // a beats file → a preview sheet (no MP4)
   inspect: "scripts/inspect.ts", // a beats file → computed regions/timings/colors (json)
   study: "scripts/theme.ts", // brand color / URL / screenshot → a theme
-  audit: "scripts/audit.ts", // check a beats file for issues
-  redesign: "scripts/redesign.ts", // re-skin a beats file
   changes: "scripts/changes.ts", // a repo → an UpdateManifest
   art: "scripts/generate-art.ts", // optional painterly background pack
   capabilities: "scripts/capabilities.ts", // the machine-readable beat vocabulary (json)
@@ -41,22 +44,19 @@ const HELP = `cadence — turn a repo / release into a changelog or announcement
 author (kind → a durable beats file, no render):
   new        a kind + source → a beats file you own   cadence new launch --release owner/name --install "npm i pkg"
   fork       a beats file → a restyled/retargeted copy cadence fork x.beats.json --template terminal --format 9x16
-  edit       validate + normalize a beats file (gate)  cadence edit x.beats.json   (the skill supplies the NL edit)
+  edit       validate + normalize + heuristic checks   cadence edit x.beats.json   (the skill supplies the NL edit)
 
 render:
   create     a repo OR a beats file → a video     cadence create --release owner/name --install "npm i pkg"
   storyboard a beats file → a preview sheet         cadence storyboard x.beats.json (or: cadence create … --dry-run)
   inspect    computed regions/timings/colors (json)  cadence inspect x.beats.json --beat <id>
-  redesign   re-skin a beats file (new look)        cadence redesign x.beats.json --theme slate
 
 setup + checks:
   study      a brand color / URL → a theme         cadence study --from-url https://acme.dev --name acme
-  audit      check a beats file for issues          cadence audit x.beats.json
   capabilities  the full beat vocabulary (json)     cadence capabilities   (every node/panel/token/preset + defaults)
   guide      interactive walkthrough (start here)   cadence guide
 
 utilities:
-  render     a beats file → a video (create delegates here for beats files)
   changes    a repo → an UpdateManifest (json)
   art        generate painterly backgrounds (optional pack, needs OPENAI_API_KEY)
   kinds      list structural arcs (launch, changelog, milestone, …)
@@ -64,7 +64,7 @@ utilities:
   themes     list token themes (colors/fonts)
 
 axes: kind = which beats in what order · template = how it looks · theme = colors/fonts
-flags shared by create/render/redesign: --format 16x9|1x1|9x16, --template <style>, --theme <name>, --theme-file <path>, --frame <n>, --out <dir>
+flags shared by create/render/fork: --format 16x9|1x1|9x16, --template <style>, --theme <name>, --theme-file <path>, --frame <n>, --out <dir>
 outputs: new/fork write to <project>/.cadence/<slug>.beats.json (else ./); renders to <project>/.cadence/out (else ./out). override with --out
 preview before rendering: cadence storyboard <beats>  ·  cadence create … --dry-run  (plan + one still per beat, no MP4)`;
 
@@ -73,12 +73,9 @@ if (!sub || sub === "help" || sub === "--help") {
   process.exit(0);
 }
 if (sub === "kinds") {
-  // Structural arcs (which beats, what order). Dedupe back-compat alias keys
-  // that point at an entry already shown; print each entry's listing metadata.
-  const seen = new Set<KindEntry>();
-  const entries = Object.values(KINDS).filter((e) => !seen.has(e) && (seen.add(e), true));
+  // Structural arcs (which beats, what order). Print each entry's listing metadata.
   console.log("kinds (structural arcs — which beats, what order):\n");
-  for (const e of entries) {
+  for (const e of Object.values(KINDS)) {
     console.log(`  ${e.meta.name.padEnd(14)} ${e.meta.description}`);
     console.log(`  ${" ".repeat(14)} when: ${e.meta.whenToUse}\n`);
   }

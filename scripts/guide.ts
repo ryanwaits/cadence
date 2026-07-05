@@ -9,15 +9,7 @@ import { createInterface } from "node:readline/promises";
 import { resolve } from "node:path";
 import { KINDS } from "../src/kinds";
 
-/** Canonical kind names (dedupe the back-compat alias keys that point at the same entry). */
-const kindNames = (() => {
-  const seen = new Set<unknown>();
-  const names: string[] = [];
-  for (const [k, v] of Object.entries(KINDS)) {
-    if (!seen.has(v)) { seen.add(v); names.push(k); }
-  }
-  return names;
-})();
+const kindNames = Object.keys(KINDS);
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
