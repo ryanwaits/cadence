@@ -24,11 +24,14 @@ export function parseBackground(s?: string): BackgroundSpec | undefined {
   const [kind, rest] = [s.slice(0, s.indexOf(":")), s.slice(s.indexOf(":") + 1)];
   if (kind === "gradient") {
     const [from, to] = rest.split(",");
-    return { gradient: [from, to], angle: 155, treatment: "kenburns" };
+    if (from && to) return { gradient: [from, to], angle: 155, treatment: "kenburns" };
+  } else if (kind === "solid" && rest) {
+    return { solid: rest, treatment: "static" };
+  } else if (kind === "image" && rest) {
+    return { src: rest.includes("/") ? rest : `backgrounds/${rest}`, treatment: "kenburns" };
   }
-  if (kind === "solid") return { solid: rest, treatment: "static" };
-  if (kind === "image") return { src: rest.includes("/") ? rest : `backgrounds/${rest}`, treatment: "kenburns" };
-  return undefined;
+  console.error(`unknown --background "${s}" (expected: shapes | gradient:#a,#b | solid:#hex | image:file.png)`);
+  process.exit(1);
 }
 
 /** Where the beats come from. Exactly one of these may be set; none ⇒ placeholder. */
@@ -72,8 +75,12 @@ export function buildManifest(src: ManifestSource): UpdateManifest {
       ["release", "view", ...(src.tag ? [src.tag] : []), "--repo", src.release, "--json", "tagName,name,publishedAt,body"],
       { encoding: "utf8" },
     );
+    if (res.error) {
+      console.error(`✗ could not run gh — is the GitHub CLI installed? (${res.error.message})`);
+      process.exit(1);
+    }
     if (res.status !== 0) {
-      console.error(res.stderr);
+      console.error(res.stderr || `gh release view failed for ${src.release}`);
       process.exit(1);
     }
     const r = JSON.parse(res.stdout);

@@ -6,7 +6,6 @@
  *   cadence redesign src/content/mainnet-launch.beats.ts --theme slate
  *   cadence redesign x.beats.ts --background "gradient:#312e81,#0b1120" --enter rise
  */
-import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -14,7 +13,7 @@ import { changelogSchema, type Beat } from "../src/schema/beats";
 import type { Node } from "../src/schema/composition";
 import { normalizeVideo } from "../src/schema/normalize";
 import { ENTER_PRESETS, EXIT_PRESETS } from "../src/motion/names";
-import { binPath, pkgFile } from "./_pkg";
+import { runScript } from "./_pkg";
 
 const args = process.argv.slice(2);
 const flag = (n: string) => {
@@ -96,5 +95,4 @@ writeFileSync(outBeats, JSON.stringify(parsed));
 console.error(`· redesigned ${name} → ${outBeats}`);
 
 const passthru = ["--theme", "--theme-file", "--format", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
-const res = spawnSync(binPath("tsx"), [pkgFile("scripts/render.ts"), outBeats, ...passthru], { stdio: "inherit" });
-process.exit(res.status ?? 0);
+runScript("scripts/render.ts", [outBeats, ...passthru]);

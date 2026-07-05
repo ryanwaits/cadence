@@ -11,7 +11,7 @@
  */
 import { type Format } from "../src/schema/beats";
 import { resolveBeat } from "../src/resolve";
-import { loadBeats } from "./_beats";
+import { loadBeatsOrExit } from "./_beats";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -27,7 +27,7 @@ if (!file) {
   process.exit(1);
 }
 
-const parsed = await loadBeats(file);
+const parsed = await loadBeatsOrExit(file);
 const format = (getFlag("--format") as Format | undefined) ?? parsed.format;
 const beatId = getFlag("--beat");
 

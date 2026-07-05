@@ -7,11 +7,11 @@
  *   cadence audit src/content/x.beats.ts
  *   cadence redesign src/content/x.beats.ts --theme slate
  */
-import { spawnSync } from "node:child_process";
 import { type KindEntry, KINDS } from "../src/kinds";
 import { TEMPLATES } from "../src/templates/registry";
 import { THEMES } from "../src/theme";
-import { binPath, pkgFile } from "./_pkg";
+import { runScript } from "./_pkg";
+import { resolveCreateScript } from "./_route";
 
 const [rawSub, ...rest] = process.argv.slice(2);
 
@@ -98,24 +98,9 @@ if (sub === "themes") {
   process.exit(0);
 }
 
-// `create` merges the repo flow (make) and the beats-file flow (render): a
-// positional beats-like file routes to render; otherwise to make.
-function resolveScript(verb: string, args: string[]): string | undefined {
-  if (verb === "create") {
-    const beatsFile = args.find((a) => !a.startsWith("-") && /\.(beats\.)?(ts|js|json)$/.test(a));
-    const dryRun = args.includes("--dry-run");
-    // beats-file flow: --dry-run → storyboard (preview sheet), else render (MP4).
-    if (beatsFile) return dryRun ? "scripts/storyboard.ts" : "scripts/render.ts";
-    // repo flow: make.ts handles --dry-run itself (generates beats → storyboard).
-    return "scripts/make.ts";
-  }
-  return SCRIPTS[verb];
-}
-
-const script = resolveScript(sub, rest);
+const script = sub === "create" ? resolveCreateScript(rest) : SCRIPTS[sub];
 if (!script) {
   console.error(`unknown command "${rawSub}".\n\n${HELP}`);
   process.exit(1);
 }
-const res = spawnSync(binPath("tsx"), [pkgFile(script), ...rest], { stdio: "inherit" });
-process.exit(res.status ?? 0);
+runScript(script, rest);

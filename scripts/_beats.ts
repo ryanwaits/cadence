@@ -8,6 +8,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { ZodError } from "zod";
 import { changelogSchema, type Beat, type ChangelogVideo } from "../src/schema/beats";
 import { normalizeVideo } from "../src/schema/normalize";
 
@@ -21,6 +22,31 @@ export async function loadBeats(file: string): Promise<ChangelogVideo> {
     ? JSON.parse(readFileSync(resolve(file), "utf8"))
     : (await import(pathToFileURL(resolve(file)).href)).default;
   return changelogSchema.parse(normalizeVideo(raw));
+}
+
+/** Print a schema/load failure as issue paths (not a raw ZodError stack) or a
+ * one-line message for anything else (e.g. ENOENT). Shared by every verb so
+ * bad beats files fail the same, readable way everywhere (was: only `edit`). */
+export function printBeatsError(file: string, err: unknown): void {
+  if (err instanceof ZodError) {
+    console.error(`✗ invalid beats file ${file} — fix these:\n`);
+    for (const issue of err.issues) {
+      console.error(`  ${issue.path.length ? issue.path.join(".") : "(root)"}: ${issue.message}`);
+    }
+  } else {
+    console.error(`✗ could not load ${file}: ${(err as Error).message}`);
+  }
+}
+
+/** `loadBeats`, but print a formatted error and exit(1) instead of throwing —
+ * for verbs that have no additional recovery to do on a load failure. */
+export async function loadBeatsOrExit(file: string): Promise<ChangelogVideo> {
+  try {
+    return await loadBeats(file);
+  } catch (err) {
+    printBeatsError(file, err);
+    process.exit(1);
+  }
 }
 
 export type BeatTiming = { start: number; mid: number; dur: number };

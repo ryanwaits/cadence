@@ -6,12 +6,11 @@
  *   tsx scripts/make.ts --release owner/name --kind launch --template terminal --format 9x16
  *   tsx scripts/make.ts --changelog ./CHANGELOG.md --product my-pkg --install "npm i my-pkg" --frame 230
  */
-import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { author, parseBackground } from "./_author";
 import { KINDS } from "../src/kinds";
-import { binPath, pkgFile } from "./_pkg";
+import { runScript } from "./_pkg";
 import { resolveOutDir } from "./_theme";
 
 const args = process.argv.slice(2);
@@ -26,7 +25,7 @@ const flag = (n: string) => {
 const release = flag("--release");
 const changelog = flag("--changelog");
 if (!release && !changelog) {
-  console.error("usage: make.ts --release <owner/name> | --changelog <path> [--kind K] [--template <style>] [--background B] [--format F] [--theme T] [--frame N]");
+  console.error("usage: cadence create --release <owner/name> | --changelog <path> [--kind K] [--template <style>] [--background B] [--format F] [--theme T] [--frame N]");
   process.exit(1);
 }
 
@@ -71,10 +70,8 @@ const outArgs = ["--out", outDir];
 if (args.includes("--dry-run")) {
   // repo → storyboard. --frame is meaningless here; --theme-file is supported.
   const passthru = ["--format", "--theme", "--theme-file"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
-  const res = spawnSync(binPath("tsx"), [pkgFile("scripts/storyboard.ts"), jsonPath, ...passthru, ...outArgs], { stdio: "inherit" });
-  process.exit(res.status ?? 0);
+  runScript("scripts/storyboard.ts", [jsonPath, ...passthru, ...outArgs]);
 }
 
 const passthru = ["--format", "--theme", "--frame"].flatMap((f) => (flag(f) ? [f, flag(f)!] : []));
-const res = spawnSync(binPath("tsx"), [pkgFile("scripts/render.ts"), jsonPath, ...passthru, ...outArgs], { stdio: "inherit" });
-process.exit(res.status ?? 0);
+runScript("scripts/render.ts", [jsonPath, ...passthru, ...outArgs]);

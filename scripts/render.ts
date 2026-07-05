@@ -12,7 +12,7 @@ import { basename, join, resolve } from "node:path";
 import { type Format } from "../src/schema/beats";
 import { TEMPLATES } from "../src/templates/registry";
 import { stagePublicDir } from "./_assets";
-import { loadBeats } from "./_beats";
+import { loadBeatsOrExit } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
 import { assertTemplate, resolveOutDir, resolveTheme } from "./_theme";
 
@@ -26,12 +26,12 @@ const getFlag = (name: string) => {
 
 const file = args.find((a) => !a.startsWith("-"));
 if (!file) {
-  console.error("usage: bun run render <beats.ts> [--format 16x9|1x1|9x16] [--frame N]");
+  console.error("usage: cadence render <beats.ts|.json> [--format 16x9|1x1|9x16] [--frame N]");
   process.exit(1);
 }
 
 // Accept either a `.beats.ts` module or a plain `.json` beats file.
-const parsed = await loadBeats(file);
+const parsed = await loadBeatsOrExit(file);
 
 const fmt = getFlag("--format") as Format | undefined;
 if (fmt) parsed.format = fmt;
@@ -70,11 +70,18 @@ const res = frame
   ? spawnSync(bin, ["still", ...common, join(outDir, `${name}-${parsed.format}${suffix}-f${frame}.png`), `--props=${propsPath}`, `--frame=${frame}`, ...pub], { stdio: "inherit", env })
   : spawnSync(bin, ["render", ...common, join(outDir, `${name}-${parsed.format}${suffix}.mp4`), `--props=${propsPath}`, "--image-format=jpeg", ...pub], { stdio: "inherit", env });
 
+// A launch failure (e.g. remotion binary missing) must never read as a silent
+// success — res.status would be null, and `?? 0` would exit green.
+if (res.error) {
+  console.error(`✗ failed to launch remotion: ${res.error.message}`);
+  process.exit(1);
+}
+
 // `--poster [frame]` renders a still for the social thumbnail (most platforms
 // otherwise grab frame 0). Default to a settled frame near the end of the first
 // beat, where its content has fully revealed — never frame 0.
 const posterFlag = getFlag("--poster");
-if (!frame && args.includes("--poster") && (res.status ?? 0) === 0) {
+if (!frame && args.includes("--poster") && res.status === 0) {
   const firstDur = parsed.beats[0]?.durationInFrames ?? 60;
   const total = parsed.beats.reduce((n, b) => n + b.durationInFrames, 0);
   const posterFrame =
@@ -87,4 +94,4 @@ if (!frame && args.includes("--poster") && (res.status ?? 0) === 0) {
 }
 if (staged) rmSync(staged, { recursive: true, force: true });
 
-process.exit(res.status ?? 0);
+process.exit(res.status ?? 1);

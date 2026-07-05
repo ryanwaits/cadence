@@ -19,7 +19,7 @@ import { TEMPLATES } from "../src/templates/registry";
 import type { StoryboardCell, StoryboardProps } from "../src/components/Storyboard";
 import { stagePublicDir } from "./_assets";
 import { auditBeats, ICON, rankFindings } from "./_audit";
-import { beatTimings, FPS, loadBeats } from "./_beats";
+import { beatTimings, FPS, loadBeatsOrExit } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
 import { assertTemplate, resolveOutDir, resolveTheme } from "./_theme";
 
@@ -79,7 +79,7 @@ const bgTag = (b: Beat): string => {
   return "shapes";
 };
 
-const parsed = await loadBeats(file);
+const parsed = await loadBeatsOrExit(file);
 const fmt = (getFlag("--format") as Format | undefined) ?? parsed.format;
 parsed.format = fmt;
 

@@ -12,9 +12,8 @@
  *   cadence edit hero.beats.json "tighten the closer and swap to a 9:16 format"
  *   cadence edit --explain          # dump allowed component types / regions / panel kinds
  */
-import { ZodError } from "zod";
 import { ICON, auditBeats, rankFindings } from "./_audit";
-import { FPS, loadBeats } from "./_beats";
+import { FPS, loadBeats, printBeatsError } from "./_beats";
 import { explainVocabulary } from "./_explain";
 
 const args = process.argv.slice(2);
@@ -36,7 +35,7 @@ if (!file) {
 
 // The NL instruction (if any) is the SKILL's prompt — logged for provenance,
 // never consumed by the engine.
-const instruction = args.filter((a) => a !== file && !a.startsWith("-"))[1];
+const instruction = args.filter((a) => a !== file && !a.startsWith("-"))[0];
 if (instruction) console.log(`(instruction logged: ${instruction})`);
 
 // 1. Load + validate. loadBeats already parses with the schema; we re-parse the
@@ -46,15 +45,7 @@ let parsed: Awaited<ReturnType<typeof loadBeats>>;
 try {
   parsed = await loadBeats(file);
 } catch (err) {
-  if (err instanceof ZodError) {
-    console.error("✗ invalid beats file — fix these, then re-run `cadence edit`:\n");
-    for (const issue of err.issues) {
-      const path = issue.path.length ? issue.path.join(".") : "(root)";
-      console.error(`  ${path}: ${issue.message}`);
-    }
-    process.exit(1);
-  }
-  console.error(`✗ could not load ${file}: ${(err as Error).message}`);
+  printBeatsError(file, err);
   process.exit(1);
 }
 

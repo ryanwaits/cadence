@@ -5,7 +5,7 @@
  *
  *   cadence audit src/content/streams-launch.beats.ts
  */
-import { loadBeats } from "./_beats";
+import { loadBeatsOrExit } from "./_beats";
 import { auditBeats, ICON, rankFindings } from "./_audit";
 
 const file = process.argv.slice(2).find((a) => !a.startsWith("-"));
@@ -14,7 +14,7 @@ if (!file) {
   process.exit(1);
 }
 
-const parsed = await loadBeats(file);
+const parsed = await loadBeatsOrExit(file);
 const beats = parsed.beats;
 const findings = rankFindings(auditBeats(beats));
 const issues = findings.filter((f) => f.level !== "info").length;
