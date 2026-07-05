@@ -206,18 +206,21 @@ shorthand. A node is `{ type, placement, …props }`:
 `references/authoring.md` has the exact component/placement schema.
 
 ## Panel picker (`panel.kind`) — choose by what the change produces
-| kind | shows | use for |
-|------|-------|---------|
-| `feed` | rows streaming in | live events/logs/a feed |
-| `data-table` | columns + rows | a query/list result, parsed output |
-| `browser` | Finder-style folder/file rows | a file/folder listing (`list({ prefix, delimiter })`) |
-| `status` | health/check rows (ok/syncing/error/idle) | CLI check output, service/test status |
-| `stat` | one big number | milestones, counts |
-| `proof` | a signature + drawn ✓ | signed/verifiable output |
-| `stream-resume` | a resume cursor + rows | resumable streams/iterators |
-| `fork` | a fork (orphan archived, new tip) | reorg/finality/branch handling |
-| `upload-progress` | a progress bar + pause/resume | long-running ops, bulk export |
-| `diagram` | a small pipeline (one filled node) | architecture, "how it works" |
+<!-- BEGIN GENERATED:panel-picker — run `bun run sync-skill`; do not edit by hand -->
+| kind | use for |
+|------|---------|
+| `feed` | live events / logs / a feed |
+| `upload-progress` | long-running / bulk ops |
+| `data-table` | a query / list result |
+| `status` | service / test health |
+| `proof` | signed / verifiable output |
+| `stream-resume` | resumable streams / iterators |
+| `fork` | reorg / finality |
+| `stat` | one big number (milestones, counts) |
+| `diagram` | architecture / how-it-works |
+| `browser` | file / folder listing |
+| `quote` | a pull-quote / testimonial |
+<!-- END GENERATED:panel-picker -->
 
 Exact fields per kind: `references/authoring.md`.
 
@@ -249,6 +252,8 @@ Exact fields per kind: `references/authoring.md`.
 
 > Full machine vocabulary (every prop with type/default/range/example): `cadence capabilities`. Engine sha256:62e9293cb9fec349b04d936de377f18640bcf8e54c024690f06067d537f70f94
 <!-- END GENERATED:vocabulary -->
+
+If `cadence capabilities` reports a different `schemaDigest` than the Engine sha embedded above, this skill copy is stale — trust `cadence capabilities` / `cadence edit --explain` output over these tables.
 
 ## Compose within a region — layout containers (v2)
 The top level is region-routed (`header/lead/trailing/footer`); to arrange content

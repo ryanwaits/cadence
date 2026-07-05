@@ -266,6 +266,12 @@ Pick the kind that visualizes the *result* of the code. Exact shapes:
   edges: [{ from: "node", to: "idx", label: "events" }, { from: "idx", to: "api", label: "decoded" }] }
 ```
 
+**quote** — a pull-quote / testimonial card.
+```ts
+{ kind: "quote", text: "This cut our indexing time from days to minutes.",
+  author: "Jane Doe", role: "CTO, Acme" }
+```
+
 Adding a brand-new panel kind is a code change (a component in
 `src/components/panels/` + the registry + the schema), not something to author in
 a beats file. If a request needs a visual none of these cover, say so and design
@@ -347,9 +353,11 @@ beat starts → code window types out (panel absent)
 
 This is automatic — `ChangelogScene` computes when typing ends and delays the
 panel. That's why code+panel beats need ~235 frames: the panel's clock doesn't
-start until the code is done. Tuning knobs live in code, not in beats:
-`CHARS_PER_FRAME` (typing speed, `CodeWindow.tsx`) and `OUTPUT_GAP` (the pause,
-`ChangelogScene.tsx`).
+start until the code is done. The tuning knobs live in the template's
+`motion.timing` token (`typingSpeed`, `outputGap`, `settle`, `enterDuration`,
+`exitDuration`) — every temporal degree of freedom, not in code constants —
+with per-element `motion` overrides winning where set. `cadence capabilities`
+enumerates the current values/ranges.
 
 ## Title typography
 

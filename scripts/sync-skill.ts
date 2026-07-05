@@ -44,28 +44,37 @@ const VOCAB = [
   `> Full machine vocabulary (every prop with type/default/range/example): \`cadence capabilities\`. Engine ${cap.engine.schemaDigest}`,
 ].join("\n");
 
-const fillVocabulary = (md: string): string =>
+// Same drift-lock story as VOCAB: the panel-picker table in SKILL.md is filled
+// from the registry (`cap.panels.kinds`), so a new panel kind can't go missing
+// from the hand-facing docs without also failing `sync-skill --check`.
+const PANEL_PICKER = [
+  "| kind | use for |",
+  "|------|---------|",
+  ...cap.panels.kinds.map((k) => `| \`${k.kind}\` | ${k.use} |`),
+].join("\n");
+
+const fillBlock = (md: string, name: string, content: string): string =>
   md.replace(
-    /(<!-- BEGIN GENERATED:vocabulary[^>]*-->)[\s\S]*?(<!-- END GENERATED:vocabulary -->)/,
-    `$1\n${VOCAB}\n$2`,
+    new RegExp(`(<!-- BEGIN GENERATED:${name}[^>]*-->)[\\s\\S]*?(<!-- END GENERATED:${name} -->)`),
+    `$1\n${content}\n$2`,
   );
 
 const canonical = readFileSync(SKILL_PATH, "utf8");
-const filled = fillVocabulary(canonical);
+const filled = fillBlock(fillBlock(canonical, "vocabulary", VOCAB), "panel-picker", PANEL_PICKER);
 
 if (CHECK) {
   if (filled !== canonical) {
-    console.error("✗ SKILL.md GENERATED:vocabulary block is stale — run `bun run sync-skill`.");
+    console.error("✗ SKILL.md GENERATED block(s) are stale — run `bun run sync-skill`.");
     process.exit(1);
   }
-  console.log("✓ SKILL.md generated block is in sync with the registry.");
+  console.log("✓ SKILL.md generated block(s) are in sync with the registry.");
   process.exit(0);
 }
 
-// Regenerate the block in the canonical SKILL.md before syncing copies.
+// Regenerate the block(s) in the canonical SKILL.md before syncing copies.
 if (filled !== canonical) {
   writeFileSync(SKILL_PATH, filled);
-  console.log("✓ regenerated SKILL.md GENERATED:vocabulary block");
+  console.log("✓ regenerated SKILL.md GENERATED block(s)");
 }
 
 // 1. Frontmatter (name, description) + body from the canonical SKILL.md.
