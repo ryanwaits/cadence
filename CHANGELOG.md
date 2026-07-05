@@ -1,5 +1,18 @@
 # @waits/cadence
 
+## 0.13.0
+
+### Minor Changes
+
+- 6c6e78e: refactor(cli)!: consolidate the verb surface. `audit` → `edit` (deprecated alias kept), `redesign` → `fork --background/--enter/--exit` + `create` (alias kept, no auto-render), `make`/`theme` aliases now print deprecation notes. Removed: the `feature-launch`/`changelog-reel` kind aliases, the `--template`-as-kind shim, and the Action's deprecated `template` input (use `kind`).
+
+### Patch Changes
+
+- 278f588: fix(action): forward --theme-file through the repo→render path (the Action's theme-file input previously no-oped on the MP4); add an `upload: true` input that attaches the MP4 to the triggering release.
+- e862699: ci: add a CI workflow (check, test, check:motion, check:skill). docs(skill): panel-picker table is now generated from the registry (adds the missing `quote` kind); authoring.md gains the quote panel and the correct template motion.timing model; skill copies carry a digest self-check note.
+- adc157a: fix(cli): `create` no longer misroutes when a flag value ends in .json/.ts; invalid beats files print issue paths instead of stack traces in every verb; spawn launch failures exit non-zero; unknown --background errors instead of silently using the default; `gh`-missing gets a clear message.
+- 97f4308: Fail loudly on bad theming inputs instead of silently rendering wrong-looking (or `#NaNNaNNaN`) output: `deriveTheme` rejects invalid hex colors, `--theme-file` and `.cadence/theme.json` are validated against a new `themeConfigSchema` before a render starts, unknown `--template` names exit with the valid list, and `cadence study` validates `--accent` and hardens the `--from-url` fetch. `cadence study` also now defaults its output to the discoverable `.cadence/theme.json` when one exists, so the happy path (`study` → `create`) no longer silently ignores the theme it just wrote.
+
 ## 0.12.0
 
 ### Minor Changes
