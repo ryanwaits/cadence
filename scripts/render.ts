@@ -14,7 +14,7 @@ import { TEMPLATES } from "../src/templates/registry";
 import { stagePublicDir } from "./_assets";
 import { loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
-import { resolveOutDir, resolveTheme } from "./_theme";
+import { assertTemplate, resolveOutDir, resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -38,7 +38,7 @@ if (fmt) parsed.format = fmt;
 const frame = getFlag("--frame");
 
 // Template (stylistic layer): `--template` wins; else the doc's `template` field.
-const templateName = getFlag("--template") ?? parsed.template;
+const templateName = assertTemplate(getFlag("--template") ?? parsed.template);
 if (templateName) parsed.template = templateName;
 
 const rawTheme = getFlag("--theme");

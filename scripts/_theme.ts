@@ -11,9 +11,11 @@
  * Theme precedence:  --theme-file  >  --theme <name>  >  .cadence/theme.json  >  default.
  * Output dir:        --out <dir>   >  <project>/.cadence/out               >  ./out.
  */
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { THEMES } from "../src/theme";
+import { themeConfigSchema } from "../src/theme/schema";
+import { TEMPLATES } from "../src/templates/registry";
 
 /** Walk up from `start` (max 6 levels) for a `.cadence` directory. */
 export function findCadenceDir(start: string): string | undefined {
@@ -70,5 +72,31 @@ export function resolveTheme(opts: { theme?: string; themeFile?: string; beatsFi
     console.error(`unknown --theme "${theme}". have: ${Object.keys(THEMES).join(", ")}`);
     process.exit(1);
   }
+  if (themeFile) {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(readFileSync(resolve(themeFile), "utf8"));
+    } catch (e) {
+      console.error(`✗ could not read theme file ${themeFile}: ${(e as Error).message}`);
+      process.exit(1);
+    }
+    const result = themeConfigSchema.safeParse(raw);
+    if (!result.success) {
+      console.error(`✗ invalid theme file ${themeFile} — fix these:\n`);
+      for (const issue of result.error.issues) {
+        console.error(`  ${issue.path.join(".") || "(root)"}: ${issue.message}`);
+      }
+      process.exit(1);
+    }
+  }
   return { theme, themeFile };
+}
+
+/** Exit with the valid template list on an unknown `--template` name. */
+export function assertTemplate(name?: string): string | undefined {
+  if (name && !TEMPLATES[name]) {
+    console.error(`unknown --template "${name}". have: ${Object.keys(TEMPLATES).join(", ")}`);
+    process.exit(1);
+  }
+  return name;
 }

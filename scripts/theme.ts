@@ -11,9 +11,10 @@
  * from a screenshot, hand the image to your agent (Claude/Cursor/Codex) — it reads
  * the palette and writes a themes/<name>.json. See the cadence skill.
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { deriveTheme } from "../src/theme/derive";
+import { findCadenceDir } from "./_theme";
 
 const args = process.argv.slice(2);
 const flag = (n: string) => {
@@ -35,7 +36,12 @@ const saturated = (hex: string) => {
 };
 
 async function accentFromUrl(url: string): Promise<string | undefined> {
-  const html = await fetch(url).then((r) => r.text());
+  const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) {
+    console.error(`couldn't reach ${url}: ${res.status} ${res.statusText}`);
+    return undefined;
+  }
+  const html = await res.text();
   const meta = html.match(/<meta[^>]+name=["']theme-color["'][^>]+content=["'](#[0-9a-fA-F]{3,6})["']/i);
   if (meta) return meta[1].toLowerCase();
   const counts = new Map<string, number>();
@@ -49,19 +55,32 @@ async function accentFromUrl(url: string): Promise<string | undefined> {
 let accent = flag("--accent");
 const fromUrl = flag("--from-url");
 if (!accent && fromUrl) {
-  accent = await accentFromUrl(fromUrl);
+  try {
+    accent = await accentFromUrl(fromUrl);
+  } catch (e) {
+    console.error(`couldn't reach ${fromUrl}: ${(e as Error).message}`);
+    process.exit(1);
+  }
   console.error(accent ? `· extracted accent ${accent} from ${fromUrl}` : `· couldn't find an accent at ${fromUrl}`);
 }
 if (!accent) {
-  console.error("usage: theme.ts --accent '#10b981' [--ink #0f172a] [--paper #f6f7f9] [--gold #c08a2e] --name <name>");
-  console.error("   or: theme.ts --from-url https://example.com --name <name>");
+  console.error("usage: cadence study --accent '#10b981' [--ink #0f172a] [--paper #f6f7f9] [--gold #c08a2e] --name <name>");
+  console.error("   or: cadence study --from-url https://example.com --name <name>");
   process.exit(1);
 }
+
+if (!/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(accent)) {
+  console.error(`✗ --accent must be a hex color (e.g. "#10b981"), got "${accent}"`);
+  process.exit(1);
+}
+if (!accent.startsWith("#")) accent = `#${accent}`;
 
 const name = flag("--name") ?? "brand";
 const theme = deriveTheme({ name, accent, ink: flag("--ink"), paper: flag("--paper"), gold: flag("--gold") });
 
-const out = flag("--out") ?? join("themes", `${name}.json`);
+const cad = findCadenceDir(process.cwd());
+const out = flag("--out") ?? (cad ? join(cad, "theme.json") : join("themes", `${name}.json`));
+if (existsSync(out)) console.error(`· replacing existing ${out}`);
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(theme, null, 2));
 
@@ -94,4 +113,8 @@ cadence create <beats> --theme-file ${out}
 const designOut = out.replace(/\.json$/, ".design.md");
 writeFileSync(designOut, designMd);
 
-console.log(`✓ ${name} theme (accent ${accent}) → ${out}\n  design summary → ${designOut}\n  render with:  cadence create <beats> --theme-file ${out}`);
+const usageHint =
+  cad && out === join(cad, "theme.json")
+    ? "auto-discovered — cadence create/storyboard will pick it up with no --theme-file needed"
+    : `render with:  cadence create <beats> --theme-file ${out}`;
+console.log(`✓ ${name} theme (accent ${accent}) → ${out}\n  design summary → ${designOut}\n  ${usageHint}`);

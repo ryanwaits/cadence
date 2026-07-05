@@ -16,7 +16,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { loadBeats } from "./_beats";
-import { findCadenceDir } from "./_theme";
+import { assertTemplate, findCadenceDir } from "./_theme";
 import type { Format } from "../src/schema/beats";
 
 const args = process.argv.slice(2);
@@ -51,7 +51,7 @@ if (kind) {
 const parsed = await loadBeats(file);
 
 // --template → top-level doc field (one look per video, mirrors --format).
-const template = flag("--template");
+const template = assertTemplate(flag("--template"));
 if (template) parsed.template = template;
 
 // --format → top-level doc field.

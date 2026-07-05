@@ -26,10 +26,14 @@ function resolveActiveTheme(): ThemeConfig {
     try {
       return JSON.parse(json) as ThemeConfig;
     } catch {
-      /* fall through to a named preset */
+      console.warn("[cadence] REMOTION_VIDEO_THEME_JSON could not be parsed — falling back to a named/default theme");
     }
   }
-  return THEMES[process.env.REMOTION_VIDEO_THEME ?? "default"] ?? defaultTheme;
+  const name = process.env.REMOTION_VIDEO_THEME ?? "default";
+  if (!THEMES[name]) {
+    console.warn(`[cadence] unknown theme "${name}" — falling back to default`);
+  }
+  return THEMES[name] ?? defaultTheme;
 }
 
 export const activeTheme: ThemeConfig = resolveActiveTheme();

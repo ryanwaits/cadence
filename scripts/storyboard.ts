@@ -21,7 +21,7 @@ import { stagePublicDir } from "./_assets";
 import { auditBeats, ICON, rankFindings } from "./_audit";
 import { beatTimings, FPS, loadBeats } from "./_beats";
 import { binPath, pkgFile } from "./_pkg";
-import { resolveOutDir, resolveTheme } from "./_theme";
+import { assertTemplate, resolveOutDir, resolveTheme } from "./_theme";
 
 const args = process.argv.slice(2);
 const getFlag = (name: string) => {
@@ -84,7 +84,7 @@ const fmt = (getFlag("--format") as Format | undefined) ?? parsed.format;
 parsed.format = fmt;
 
 // Template (stylistic layer): `--template` wins; else the doc's `template` field.
-const templateName = getFlag("--template") ?? parsed.template;
+const templateName = assertTemplate(getFlag("--template") ?? parsed.template);
 if (templateName) parsed.template = templateName;
 
 const themeLabel = themeFile ? `custom (${basename(themeFile)})` : (theme ?? "default");

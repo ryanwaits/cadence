@@ -5,6 +5,7 @@ import type { CodeTheme, ThemeConfig, ThemeFonts } from "./types";
 function parseHex(hex: string): { r: number; g: number; b: number } {
   let h = hex.replace("#", "").trim();
   if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) throw new Error(`invalid hex color "${hex}" — expected #rgb or #rrggbb`);
   return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
 }
 const rgba = (hex: string, a: number) => {

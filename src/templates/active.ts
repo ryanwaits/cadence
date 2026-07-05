@@ -16,10 +16,14 @@ function resolveActiveTemplate(): TemplateStyle {
     try {
       return JSON.parse(json) as TemplateStyle;
     } catch {
-      /* fall through to a named preset */
+      console.warn("[cadence] REMOTION_VIDEO_TEMPLATE_JSON could not be parsed — falling back to a named/default template");
     }
   }
-  return TEMPLATES[process.env.REMOTION_VIDEO_TEMPLATE ?? "field-notebook"] ?? fieldNotebook;
+  const name = process.env.REMOTION_VIDEO_TEMPLATE ?? "field-notebook";
+  if (!TEMPLATES[name]) {
+    console.warn(`[cadence] unknown template "${name}" — falling back to field-notebook`);
+  }
+  return TEMPLATES[name] ?? fieldNotebook;
 }
 
 export const activeTemplate: TemplateStyle = resolveActiveTemplate();
