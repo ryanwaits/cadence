@@ -67,7 +67,7 @@ cadence study --from-url https://yourbrand.dev --name yourbrand   # → themes/y
 ## Status
 
 Built and self-contained; `--theme-file` now forwards correctly on the real render
-path (fixed in plan 003), and `upload: "true"` absorbs the manual release-upload
-step. Validate by pushing this repo to GitHub and publishing a test release (the
-workflow at `.github/workflows/example-release-video.yml` runs it against this
-repo). Not yet exercised in CI.
+path, and `upload: "true"` absorbs the manual release-upload step. Validate by
+pushing this repo to GitHub and publishing a test release (the workflow at
+`.github/workflows/example-release-video.yml` runs it against this repo). Not yet
+exercised in CI.
