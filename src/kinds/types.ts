@@ -28,7 +28,7 @@ export type KindOpts = {
   headline?: string;
   /** For the milestone template: a big number to feature. */
   stat?: { value: string; label: string; sub?: string };
-  /** Opening style. `"install-open"` (feature-launch default) opens on the install
+  /** Opening style. `"install-open"` (launch default) opens on the install
    * terminal + feature pills and closes on a hero title; `"title-open"` keeps the
    * classic title opener + install closer. */
   flow?: "install-open" | "title-open";
