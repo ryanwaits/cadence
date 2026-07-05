@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: video
-        uses: ryanwaits/cadence@v1
+        uses: ryanwaits/cadence@v1   # until v1 exists, pin @main or the latest release tag
         with:
           install: "npm i your-pkg"   # the real install line shown in the closer
 ```
@@ -67,16 +67,11 @@ real inputs:
 | ------------ | ------------------------------------------------------- | -------------------------------- |
 | `install`    | Real install command shown in the closer                | `"npm i your-pkg"`               |
 | `kind`       | the structural arc: `changelog` \| `launch` \| `milestone` \| `announcement` \| `showcase` | `changelog` (default)            |
-| `template`   | DEPRECATED — alias for `kind` (the arc); legacy `changelog-reel` / `feature-launch` accepted | _(unset)_                        |
 | `format`     | `16x9` \| `1x1` \| `9x16`                                | `9x16` for a vertical reel       |
 | `background` | `gradient:#a,#b` \| `solid:#hex` \| `image:file.png`    | `gradient:#312e81,#0b1120`       |
 | `theme-file` | Path to a committed theme JSON for brand colors         | `themes/yourbrand.json`          |
 | `repo`       | `owner/name` to read the release from                   | defaults to the current repo     |
 | `tag`        | Release tag to render                                   | defaults to the triggering release |
-
-> Note: the Action's `kind` input is the structural arc; `template` is its deprecated
-> alias (kept so existing workflows don't break). The CLI uses the same split —
-> `--kind <arc>` for the arc, `--template <style>` for the look.
 
 ### Branding CI renders
 

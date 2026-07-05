@@ -21,8 +21,7 @@ theme = colors/fonts.**
 
 - **`kind`** — the structural arc (which beats, in what order). Chosen with
   `cadence new <kind>`. Members: `launch`, `changelog`, `milestone`,
-  `announcement`, `showcase` (the old `feature-launch` / `changelog-reel` still
-  work as aliases). List: `cadence kinds`.
+  `announcement`, `showcase`. List: `cadence kinds`.
 - **`template`** — the stylistic layer (type scale, weight, spacing, surfaces,
   motion, default backgrounds). Members: `field-notebook` (default — warm paper),
   `terminal` (dark monospace IDE; binds the `midnight` theme), `instructional`
@@ -248,5 +247,5 @@ single `stat` (`{ "kind": "stat", "value": "10,000,000", "label": "events decode
   exact fields: every beat field, panel kind, motion, format, background,
   sequencing, typography.
 - `cadence kinds | templates | themes` — list each axis.
-- `cadence audit <beats.json>` — heuristic pacing/legibility checks (advisory, no
-  auto-fix).
+- `cadence edit <beats.json>` — heuristic pacing/legibility checks (advisory, no
+  auto-fix) alongside the validate/normalize gate.

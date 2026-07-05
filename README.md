@@ -80,10 +80,12 @@ Panels visualize what a change *produces* — pick by result:
 ## CLI
 
 ```
+cadence new    <kind> ...          kind + source → a beats file you own (no render)
+cadence edit   <beats.json>        validate + normalize + heuristic checks (gate)
+cadence fork   <beats.json>        restyle/retarget a beats file (no render)
+cadence storyboard <beats.json>    preview: plan + one still per beat (no MP4)
 cadence create <repo|beats.json>   build a video (repo flow, or a beats file)
 cadence study  --from-url <url>    a brand URL / color → a theme JSON
-cadence audit  <beats.json>        heuristic checks on a beats file (no auto-fix)
-cadence redesign <beats.json>      re-skin a beats file (new theme / background)
 cadence themes | templates         list built-ins
 cadence guide                      interactive walkthrough
 ```

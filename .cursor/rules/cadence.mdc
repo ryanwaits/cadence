@@ -19,8 +19,7 @@ Cadence has three orthogonal choices. One sentence:
 **theme = what color/font; template = how big/heavy/spaced/animated; kind = what beats in what order.**
 
 - **`kind`** = the structural arc — *which* beats, in *what* order. Members:
-  `launch`, `changelog`, `milestone`, `announcement`, `showcase` (the old
-  `feature-launch` / `changelog-reel` still work as aliases). List: `cadence kinds`.
+  `launch`, `changelog`, `milestone`, `announcement`, `showcase`. List: `cadence kinds`.
 - **`template`** = the stylistic layer — *how it looks* (type scale, weight,
   spacing, surfaces, motion personality, default backgrounds), and it **binds a
   default theme**. Members: `field-notebook` (default — the warm paper look),
@@ -48,7 +47,6 @@ cadence fork <beats.json> [--template|--format|--headline|--name|--out]  # resty
 cadence storyboard <beats.json>     # preview: plan + one still per beat → a sheet (no MP4)
 cadence create <repo|beats.json>    # the build verb (repo → video, or a beats file → video)
 cadence create … --dry-run          # same preview, straight from a repo (no MP4)
-cadence audit <beats.json>          # heuristic checks on a beats file (ranked, no auto-fix)
 cadence capabilities                # the full machine vocabulary (every prop/default/range) → json
 cadence inspect <beats.json> --beat <id>  # what a beat RESOLVED to: regions, reveal timings, colors → json
 cadence study --from-url <url>      # a brand URL/color → a theme JSON
